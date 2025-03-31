@@ -1,1 +1,5 @@
 pyinstaller --add-data "scan.ico;." --add-data "quick_start_guide.html;." --hidden-import heatmaps.py --hidden-import surface_figures.py --icon=scan.ico --onedir --windowed --noconfirm main.py
+
+or
+
+pyinstaller --noconfirm main.spec
