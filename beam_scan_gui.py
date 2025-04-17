@@ -1,18 +1,32 @@
 import sys
+
 import numpy as np
-from PySide6.QtCore import QEvent, Qt, QObject, QRegularExpression
-from PySide6.QtGui import QIcon, QMouseEvent, QRegularExpressionValidator, QAction
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QMessageBox
-from PySide6.QtWidgets import QLabel, QLineEdit, QPushButton, QCheckBox
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QFrame, QFileDialog
+from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt
+from PySide6.QtGui import QAction, QIcon, QMouseEvent, QRegularExpressionValidator
+from PySide6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QFileDialog,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 from qt_material import apply_stylesheet
+
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.installEventFilter(self)
         self.create_gui()
-        
+
     def create_gui(self) -> None:
         input_box_width = 130
         input_box_height = 28
@@ -21,14 +35,16 @@ class MainWindow(QMainWindow):
         window_width = 550
         window_height = 500
 
-        self.setFixedSize(window_width,window_height)
+        self.setFixedSize(window_width, window_height)
         if hasattr(sys, 'frozen'):  # Check if running from the bundled app
             icon_path = sys._MEIPASS + '/scan.ico'  # type: ignore
         else:
             icon_path = 'scan.ico'  # Use the local icon file in dev mode
         self.setWindowIcon(QIcon(icon_path))
         apply_stylesheet(self, theme='dark_lightgreen.xml', invert_secondary=True)
-        self.setStyleSheet(self.styleSheet() + """QLineEdit, QTextEdit {color: lightgreen;}""")
+        self.setStyleSheet(
+            self.styleSheet() + """QLineEdit, QTextEdit {color: lightgreen;}"""
+        )
 
         # Create the validator for numerical inputs
         number_regex = QRegularExpression(r'^-?\d*\.?\d*$')
@@ -118,7 +134,7 @@ class MainWindow(QMainWindow):
         self.xy_profile_cb.setChecked(True)
         self.i_prime_cb = QCheckBox("I' vs Divergence")
         self.i_prime_cb.setChecked(True)
-        
+
         # Create labels for the statistics display
         self.stat_serial_number = QLabel('Serial Number: ')
         self.stat_serial_number.setFixedSize(stat_label_width, stat_label_height)
@@ -220,7 +236,7 @@ class MainWindow(QMainWindow):
         container.setLayout(h_main_layout)
 
         self.setCentralWidget(container)
-    
+
     def clear_stats(self) -> None:
         default_stat_labels = {
             self.stat_serial_number: 'Serial Number: ',
@@ -236,24 +252,42 @@ class MainWindow(QMainWindow):
             self.stat_peak_cup_current: 'Peak Beam Current (nA): ',
             self.stat_peak_total_current: 'Total Current at Peak (µA): ',
             self.stat_fwhm_area: 'FWHM Area (mm²): ',
-            self.stat_fwqm_area: 'FWQM Area (mm²): '
+            self.stat_fwqm_area: 'FWQM Area (mm²): ',
         }
         for label, default_text in default_stat_labels.items():
             label.setText(default_text)
 
-    def update_stat_label(self, label: QLabel, stat_value: tuple[float, float] | float | np.float64 | str | int, name: str) -> None:
+    def update_stat_label(
+        self,
+        label: QLabel,
+        stat_value: tuple[float, float] | float | np.float64 | str | int,
+        name: str,
+    ) -> None:
         current_text = label.text()
         new_text = '#####'
-        one_decimal_place_floats = ('peak_cup_current', 'beam_voltage', 'extractor_voltage')
-        three_decimal_place_floats = ('step_size', 'peak_total_current', 'FWHM_area', 'FWQM_area')
+        one_decimal_place_floats = (
+            'peak_cup_current',
+            'beam_voltage',
+            'extractor_voltage',
+        )
+        three_decimal_place_floats = (
+            'step_size',
+            'peak_total_current',
+            'FWHM_area',
+            'FWQM_area',
+        )
 
         if type(stat_value) == str or type(stat_value) == int:
             new_text = current_text + f'{stat_value}'
         elif type(stat_value) == tuple:
             new_text = current_text + f'({stat_value[0]:.0f}, {stat_value[1]:.0f})'
-        elif (type(stat_value) == float or type(stat_value) == np.float64) and name in one_decimal_place_floats:
+        elif (
+            type(stat_value) == float or type(stat_value) == np.float64
+        ) and name in one_decimal_place_floats:
             new_text = current_text + f'{stat_value:.1f}'
-        elif (type(stat_value) == float or type(stat_value) == np.float64) and name in three_decimal_place_floats:
+        elif (
+            type(stat_value) == float or type(stat_value) == np.float64
+        ) and name in three_decimal_place_floats:
             new_text = current_text + f'{stat_value:.3f}'
 
         label.setText(new_text)
@@ -262,8 +296,8 @@ class MainWindow(QMainWindow):
         """
         Event filter to capture mouse button press events and clear focus from the currently focused widget.
 
-        This method listens for mouse button press events and, when such an event occurs, 
-        it checks which widget is currently focused. If a widget is focused, it clears 
+        This method listens for mouse button press events and, when such an event occurs,
+        it checks which widget is currently focused. If a widget is focused, it clears
         the focus from that widget.
 
         Args:
@@ -271,15 +305,18 @@ class MainWindow(QMainWindow):
             event (QEvent): The event that is being processed, typically a mouse button press event.
 
         Returns:
-            bool: Returns the result of the parent class's eventFilter method, which determines 
+            bool: Returns the result of the parent class's eventFilter method, which determines
                 whether the event was handled or not.
 
         Notes:
-            This filter is useful when you want to ensure that no widget retains focus 
-            after a mouse button press, which can help in resetting focus or preventing 
+            This filter is useful when you want to ensure that no widget retains focus
+            after a mouse button press, which can help in resetting focus or preventing
             unintended focus-related behaviors in the UI.
         """
-        if isinstance(event, QMouseEvent) and event.type() == QEvent.Type.MouseButtonPress:
+        if (
+            isinstance(event, QMouseEvent)
+            and event.type() == QEvent.Type.MouseButtonPress
+        ):
             focused_widget = QApplication.focusWidget()
             if focused_widget is not None:
                 focused_widget.clearFocus()
@@ -287,9 +324,13 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:
         # Confirm the user wants to exit the application.
-        reply = QMessageBox.question(self, 'Confirmation',
-                                     'Are you sure you want to close the window?',
-                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+        reply = QMessageBox.question(
+            self,
+            'Confirmation',
+            'Are you sure you want to close the window?',
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
         if reply == QMessageBox.StandardButton.Yes:
             event.accept()
         else:
@@ -301,73 +342,76 @@ class MainWindow(QMainWindow):
             parent=parent,
             caption='Save CSV File',
             dir=filename,
-            filter='CSV Files (*.csv);;All Files (*)'
+            filter='CSV Files (*.csv);;All Files (*)',
         )
 
         if not filename:
             return None
-        
+
         return filename
 
     @staticmethod
     def csv_load_error_message(parent, error, traceback) -> None:
-        title='Error'
-        message=f'Failed to load beam scan data.\n\nTry another csv file.\n\n{error}\n\n{traceback}'
+        title = 'Error'
+        message = f'Failed to load beam scan data.\n\nTry another csv file.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(parent, title, message)
 
     @staticmethod
     def heatmap_error_message(parent, error, traceback) -> None:
-        title='Error'
-        message=f'An error occurred.\n\nUnable to plot heatmap.\n\n{error}\n\n{traceback}'
+        title = 'Error'
+        message = (
+            f'An error occurred.\n\nUnable to plot heatmap.\n\n{error}\n\n{traceback}'
+        )
         QMessageBox.critical(parent, title, message)
 
     @staticmethod
     def surface_error_message(parent, error, traceback) -> None:
-        title='Error'
-        message=f'An error occurred.\n\nUnable to plot 3D surface.\n\n{error}\n\n{traceback}'
+        title = 'Error'
+        message = f'An error occurred.\n\nUnable to plot 3D surface.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(parent, title, message)
 
     @staticmethod
     def cross_sections_error_message(parent, error, traceback) -> None:
-        title='Error'
-        message=f'An error occurred.\n\nUnable to plot XY cross sections.\n\n{error}\n\n{traceback}'
+        title = 'Error'
+        message = f'An error occurred.\n\nUnable to plot XY cross sections.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(parent, title, message)
 
     @staticmethod
     def i_prime_error_message(parent, error, traceback) -> None:
-        title='Error'
-        message=f'An error occurred.\n\nUnable to plot Angular Intensity cross sections.\n\n{error}\n\n{traceback}'
+        title = 'Error'
+        message = f'An error occurred.\n\nUnable to plot Angular Intensity cross sections.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(parent, title, message)
 
     @staticmethod
     def quick_start_guide_error_message(parent) -> None:
-        title='Error'
-        message='An error occurred.\n\nUnable to find quick start guide.'
+        title = 'Error'
+        message = 'An error occurred.\n\nUnable to find quick start guide.'
         QMessageBox.critical(parent, title, message)
-    
+
     @staticmethod
     def area_calculation_error_message(parent) -> None:
-        title='Error'
-        message='An error occurred.\n\nFWHM and FWQM extend beyond scan range limits.\nUnable to calculate areas.'
+        title = 'Error'
+        message = 'An error occurred.\n\nFWHM and FWQM extend beyond scan range limits.\nUnable to calculate areas.'
         QMessageBox.critical(parent, title, message)
 
     @staticmethod
     def fwqm_area_calculation_error_message(parent) -> None:
-        title='Error'
-        message='An error occurred.\n\nFWQM extends beyond scan range limits.\nUnable to calculate area.'
+        title = 'Error'
+        message = 'An error occurred.\n\nFWQM extends beyond scan range limits.\nUnable to calculate area.'
         QMessageBox.critical(parent, title, message)
 
     @staticmethod
     def csv_export_error_message(parent) -> None:
-        title='Error'
-        message='An error occurred.\n\nCould not export CSV. Try selecting another beam scan csv file.'
+        title = 'Error'
+        message = 'An error occurred.\n\nCould not export CSV. Try selecting another beam scan csv file.'
         QMessageBox.critical(parent, title, message)
 
     @staticmethod
     def empty_fcup_inputs_error_message(parent, error, traceback) -> None:
-        title='Error'
-        message=f'An error occurred.\n\nInput distance to cup and cup diameter measurements.\n\n{error}\n\n{traceback}'
+        title = 'Error'
+        message = f'An error occurred.\n\nInput distance to cup and cup diameter measurements.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(parent, title, message)
+
 
 if __name__ == '__main__':
     app = QApplication([])

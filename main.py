@@ -1,26 +1,28 @@
 import sys
-import pandas as pd
+import traceback
 import webbrowser
-import plotly.io as pio
+from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
 import plotly.graph_objects as go
+import plotly.io as pio
+
 from beam_scan_analysis import ScanData
 from beam_scan_gui import MainWindow, QApplication
-from beam_scan_plotting import Heatmap, Surface, XYCrossSections, IPrime
+from beam_scan_plotting import Heatmap, IPrime, Surface, XYCrossSections
 from load_scan_data import CSVLoader
-from pathlib import Path
-from datetime import datetime
-import traceback
-
 
 VERSION = '1.7.3'
+
 
 class App:
     """
     A class for managing the application logic and GUI interactions.
 
-    This class creates an instance of the PyQt application, sets up the user interface (UI), 
-    and handles interactions between the user and the beam scan analysis process. It is responsible 
-    for selecting and loading CSV data, configuring the scan analysis, and invoking plot generation 
+    This class creates an instance of the PyQt application, sets up the user interface (UI),
+    and handles interactions between the user and the beam scan analysis process. It is responsible
+    for selecting and loading CSV data, configuring the scan analysis, and invoking plot generation
     through the `Surface` and `Heatmap` classes.
 
     Attributes:
@@ -34,25 +36,26 @@ class App:
 
     Methods:
         __init__() -> None:
-            Initializes the application and the GUI, sets up the event handlers for button clicks, 
+            Initializes the application and the GUI, sets up the event handlers for button clicks,
             and applies a dark theme to the GUI.
-        
+
         select_csv_handler() -> None:
             Handles the selection of a CSV file, loads the scan data, and updates the GUI with the relevant information.
 
         analyze_beam_scan_handler() -> None:
-            Handles the analysis of the beam scan data, including retrieving inputs from the GUI and invoking plot 
+            Handles the analysis of the beam scan data, including retrieving inputs from the GUI and invoking plot
             generation for the surface and heatmap.
 
         run() -> None:
             Starts the application event loop, initiating the GUI and processing user interactions.
     """
+
     def __init__(self) -> None:
         self.app = QApplication([])
         self.gui = MainWindow()
         self.gui.setWindowTitle(f'Beam Scan Analysis v{VERSION}')
         self.csv_loader: CSVLoader = CSVLoader()
-        self.z_scaled: list[int|float|None] = [None, None]
+        self.z_scaled: list[int | float | None] = [None, None]
         self.csv_filepath: str
         self.scan_data: ScanData
         self.beam_voltage: str
@@ -66,7 +69,9 @@ class App:
         self.gui.exit_option.triggered.connect(QApplication.quit)
         self.gui.save_3D_surface_option.triggered.connect(self.save_3d_surface_html)
         self.gui.save_heatmap_option.triggered.connect(self.save_heatmap_html)
-        self.gui.save_xy_profiles_option.triggered.connect(self.save_x_cross_section_html)
+        self.gui.save_xy_profiles_option.triggered.connect(
+            self.save_x_cross_section_html
+        )
         self.gui.save_i_prime_option.triggered.connect(self.save_i_prime_html)
         self.gui.open_quick_start_guide.triggered.connect(self.open_quick_start_guide)
 
@@ -76,9 +81,9 @@ class App:
         """
         Handle CSV file selection, load scan data, and update the GUI.
 
-        This method allows the user to select a CSV file containing beam scan data using the `select_csv` function. 
-        If a valid file is selected, the scan data is loaded and stored in `self.scan_data`. The method then enables the 
-        "Plot" button and populates relevant fields in the GUI (e.g., serial number, beam voltage, and extractor voltage) 
+        This method allows the user to select a CSV file containing beam scan data using the `select_csv` function.
+        If a valid file is selected, the scan data is loaded and stored in `self.scan_data`. The method then enables the
+        "Plot" button and populates relevant fields in the GUI (e.g., serial number, beam voltage, and extractor voltage)
         with the corresponding values from the loaded scan data. If the csv file was a "well structured" csv file, then
         the solenoid current and test stand values will also be populated.
 
@@ -93,9 +98,13 @@ class App:
                 self.gui.plot_button.setDisabled(False)
                 self.gui.serial_number_input.setText(self.scan_data.serial_num)
                 self.gui.beam_voltage_input.setText(str(self.scan_data.beam_voltage))
-                self.gui.ext_voltage_input.setText(str(self.scan_data.extractor_voltage))
+                self.gui.ext_voltage_input.setText(
+                    str(self.scan_data.extractor_voltage)
+                )
                 if self.scan_data.well_structured_csv:
-                    self.gui.solenoid_current_input.setText(str(self.scan_data.solenoid_current))
+                    self.gui.solenoid_current_input.setText(
+                        str(self.scan_data.solenoid_current)
+                    )
                     self.gui.test_stand_input.setText(str(self.scan_data.test_stand))
                 if self.scan_data.fcup_diameter:
                     self.gui.fcup_diameter_input.setText(self.scan_data.fcup_diameter)
@@ -103,15 +112,17 @@ class App:
                     self.gui.fcup_distance_input.setText(self.scan_data.fcup_distance)
             except Exception as e:
                 full_traceback = traceback.format_exc()
-                self.gui.csv_load_error_message(parent=self.gui, error=e, traceback=full_traceback)
-            
+                self.gui.csv_load_error_message(
+                    parent=self.gui, error=e, traceback=full_traceback
+                )
+
     def plot_beam_scan_handler(self) -> None:
         """
         Handle the analysis of the beam scan data and plotting of surface, heatmap, and x/y profiles.
 
-        This method retrieves the serial number, beam voltage, and extractor voltage from the GUI inputs and stores them 
-        in the `self.scan_data` object. Additionally, it retrieves the solenoid current and test stand information from 
-        the GUI. Then, it creates instances of the `Surface`, `Heatmap`, `XCrossSection`, and `YCrossSection` classes, passing the necessary data, and calls 
+        This method retrieves the serial number, beam voltage, and extractor voltage from the GUI inputs and stores them
+        in the `self.scan_data` object. Additionally, it retrieves the solenoid current and test stand information from
+        the GUI. Then, it creates instances of the `Surface`, `Heatmap`, `XCrossSection`, and `YCrossSection` classes, passing the necessary data, and calls
         their respective `plot_surface`, `plot_heatmap`, and `plot_cross_section` methods to visualize the data.
 
         Returns:
@@ -127,7 +138,9 @@ class App:
             self.fcup_diameter: float = float(self.gui.fcup_diameter_input.text())
         except Exception as e:
             full_traceback = traceback.format_exc()
-            self.gui.empty_fcup_inputs_error_message(parent=self.gui, error=e, traceback=full_traceback)
+            self.gui.empty_fcup_inputs_error_message(
+                parent=self.gui, error=e, traceback=full_traceback
+            )
             return
 
         try:
@@ -144,40 +157,56 @@ class App:
         except:
             self.scan_data.extractor_voltage = None
 
-        self.z_scaled = [None, None] # reset the scaling
+        self.z_scaled = [None, None]  # reset the scaling
         if self.gui.lower_bound_input.text() != '':
             self.z_scaled[0] = float(self.gui.lower_bound_input.text())
         if self.gui.upper_bound_input.text() != '':
             self.z_scaled[1] = float(self.gui.upper_bound_input.text())
-        
+
         if self.gui.surface_cb.isChecked():
             try:
-                surface = Surface(self.scan_data, self.solenoid, self.test_stand, self.z_scaled)
+                surface = Surface(
+                    self.scan_data, self.solenoid, self.test_stand, self.z_scaled
+                )
                 surface.plot_surface()
             except Exception as e:
                 full_traceback = traceback.format_exc()
-                self.gui.surface_error_message(parent=self.gui, error=e, traceback=full_traceback)
+                self.gui.surface_error_message(
+                    parent=self.gui, error=e, traceback=full_traceback
+                )
         if self.gui.heatmap_cb.isChecked():
             try:
-                heatmap = Heatmap(self.scan_data, self.solenoid, self.test_stand, self.z_scaled)
+                heatmap = Heatmap(
+                    self.scan_data, self.solenoid, self.test_stand, self.z_scaled
+                )
                 heatmap.plot_heatmap()
             except Exception as e:
                 full_traceback = traceback.format_exc()
-                self.gui.heatmap_error_message(parent=self.gui, error=e, traceback=full_traceback)
+                self.gui.heatmap_error_message(
+                    parent=self.gui, error=e, traceback=full_traceback
+                )
         if self.gui.xy_profile_cb.isChecked():
             try:
-                xy_cross_section = XYCrossSections(self.scan_data, self.solenoid, self.test_stand, self.z_scaled)
+                xy_cross_section = XYCrossSections(
+                    self.scan_data, self.solenoid, self.test_stand, self.z_scaled
+                )
                 xy_cross_section.plot_cross_sections()
             except Exception as e:
                 full_traceback = traceback.format_exc()
-                self.gui.cross_sections_error_message(parent=self.gui, error=e, traceback=full_traceback)
+                self.gui.cross_sections_error_message(
+                    parent=self.gui, error=e, traceback=full_traceback
+                )
         if self.gui.i_prime_cb.isChecked():
             try:
-                i_prime = IPrime(self.scan_data, self.solenoid, self.test_stand, self.z_scaled)
+                i_prime = IPrime(
+                    self.scan_data, self.solenoid, self.test_stand, self.z_scaled
+                )
                 i_prime.plot_i_prime(self.fcup_diameter, self.fcup_distance)
             except Exception as e:
                 full_traceback = traceback.format_exc()
-                self.gui.i_prime_error_message(parent=self.gui, error=e, traceback=full_traceback)
+                self.gui.i_prime_error_message(
+                    parent=self.gui, error=e, traceback=full_traceback
+                )
 
     def display_stats(self, scan_data: ScanData) -> None:
         summary_keys_and_stat_labels = {
@@ -194,7 +223,7 @@ class App:
             'peak_cup_current': self.gui.stat_peak_cup_current,
             'peak_total_current': self.gui.stat_peak_total_current,
             'FWHM_area': self.gui.stat_fwhm_area,
-            'FWQM_area': self.gui.stat_fwqm_area
+            'FWQM_area': self.gui.stat_fwqm_area,
         }
         self.gui.clear_stats()
         stats: dict = scan_data.display_summary()
@@ -202,7 +231,7 @@ class App:
             self.gui.update_stat_label(stat_label, stats[key], key)
 
     def export_to_csv(self) -> None:
-        try: # check if csv data has been loaded
+        try:  # check if csv data has been loaded
             scan_datetime: str = self.scan_data.scan_datetime
             step_size: float = self.scan_data.step_size
             polarity: str = self.scan_data.polarity
@@ -216,21 +245,25 @@ class App:
             fcup_distance: str = self.gui.fcup_distance_input.text().strip()
             fcup_diameter: str = self.gui.fcup_diameter_input.text().strip()
             default_filename = f'SN-{serial_number} {polarity} Beam Scan @ {beam_voltage},{extractor_voltage} kV & {solenoid_current} A on TS{test_stand}.csv'
-            data = pd.DataFrame({
-                'X': self.scan_data.x_location,
-                'Y': self.scan_data.y_location,
-                'cup_current': self.scan_data.cup_current,
-                'screen_current': self.scan_data.screen_current,
-                'total_current': self.scan_data.total_current,
-            })
+            data = pd.DataFrame(
+                {
+                    'X': self.scan_data.x_location,
+                    'Y': self.scan_data.y_location,
+                    'cup_current': self.scan_data.cup_current,
+                    'screen_current': self.scan_data.screen_current,
+                    'total_current': self.scan_data.total_current,
+                }
+            )
         except:
             self.gui.csv_export_error_message(parent=self.gui)
             return None
-        
-        filename = self.gui.get_save_filename(parent=self.gui, filename=default_filename)
-        if not filename: # if the user cancels, return None
+
+        filename = self.gui.get_save_filename(
+            parent=self.gui, filename=default_filename
+        )
+        if not filename:  # if the user cancels, return None
             return None
-        
+
         with open(filename, 'w') as f:
             f.write(f'CSV export version,2\n')
             f.write(f'Serial Number,{serial_number}\n')
@@ -245,7 +278,7 @@ class App:
             f.write(f'F-Cup Distance (mm),{fcup_distance}\n')
             f.write(f'F-Cup Diameter (mm),{fcup_diameter}\n')
 
-        data.to_csv(filename, index=False, mode='a') # append the data
+        data.to_csv(filename, index=False, mode='a')  # append the data
 
     def save_3d_surface_html(self) -> None:
         try:
@@ -263,7 +296,9 @@ class App:
             surface.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
             full_traceback = traceback.format_exc()
-            self.gui.surface_error_message(parent=self.gui, error=e, traceback=full_traceback)
+            self.gui.surface_error_message(
+                parent=self.gui, error=e, traceback=full_traceback
+            )
 
     def save_heatmap_html(self) -> None:
         try:
@@ -281,7 +316,9 @@ class App:
             heatmap.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
             full_traceback = traceback.format_exc()
-            self.gui.heatmap_error_message(parent=self.gui, error=e, traceback=full_traceback)
+            self.gui.heatmap_error_message(
+                parent=self.gui, error=e, traceback=full_traceback
+            )
 
     def save_x_cross_section_html(self) -> None:
         try:
@@ -294,12 +331,16 @@ class App:
             beam_voltage = self.gui.beam_voltage_input.text()
             ext_voltage = self.gui.ext_voltage_input.text()
             default_filename = f'{scan_date} SN-{serial_num} @ {beam_voltage}_{ext_voltage} kV & {solenoid} A on TS{test_stand} XY Cross Section.html'
-            cross_section = XYCrossSections(self.scan_data, solenoid, test_stand, self.z_scaled)
+            cross_section = XYCrossSections(
+                self.scan_data, solenoid, test_stand, self.z_scaled
+            )
             fig = cross_section.plot_cross_sections(show=False)
             cross_section.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
             full_traceback = traceback.format_exc()
-            self.gui.cross_sections_error_message(parent=self.gui, error=e, traceback=full_traceback)
+            self.gui.cross_sections_error_message(
+                parent=self.gui, error=e, traceback=full_traceback
+            )
 
     def save_i_prime_html(self) -> None:
         try:
@@ -313,11 +354,15 @@ class App:
             ext_voltage = self.gui.ext_voltage_input.text()
             default_filename = f'{scan_date} SN-{serial_num} @ {beam_voltage}_{ext_voltage} kV & {solenoid} A on TS{test_stand} Ang Int vs Divergence Angle.html'
             i_prime = IPrime(self.scan_data, solenoid, test_stand, self.z_scaled)
-            fig = i_prime.plot_i_prime(self.fcup_diameter, self.fcup_distance, show=False)
+            fig = i_prime.plot_i_prime(
+                self.fcup_diameter, self.fcup_distance, show=False
+            )
             i_prime.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
             full_traceback = traceback.format_exc()
-            self.gui.i_prime_error_message(parent=self.gui, error=e, traceback=full_traceback)
+            self.gui.i_prime_error_message(
+                parent=self.gui, error=e, traceback=full_traceback
+            )
 
     def open_quick_start_guide(self) -> None:
         script_dir = Path(__file__).parent
@@ -333,7 +378,7 @@ class App:
         """
         Start the application event loop.
 
-        This method initializes the application event loop by calling `exec()` on the app instance. 
+        This method initializes the application event loop by calling `exec()` on the app instance.
         Once the event loop completes, it exits the application with the corresponding exit code.
 
         Returns:
@@ -341,6 +386,7 @@ class App:
         """
         exit_code: int = self.app.exec()
         sys.exit(exit_code)
+
 
 if __name__ == '__main__':
     app = App()
