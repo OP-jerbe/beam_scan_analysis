@@ -1,4 +1,4 @@
-pyinstaller --add-data "scan.ico;." --add-data "quick_start_guide.html;." --hidden-import heatmaps.py --hidden-import surface_figures.py --icon=scan.ico --onedir --windowed --noconfirm main.py
+pyinstaller --add-data "scan.ico;." --add-data "quick_start_guide.html;." --hidden-import heatmaps.py --hidden-import surface_figures.py --icon=scan.ico --onedir --windowed --noconfirm --log-level=ERROR main.py
 
 or
 
