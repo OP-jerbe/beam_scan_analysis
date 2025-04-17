@@ -9,11 +9,11 @@ import plotly.graph_objects as go
 import plotly.io as pio
 
 from beam_scan_analysis import ScanData
-from beam_scan_gui import MainWindow, QApplication
+from beam_scan_gui import MainWindow, OverrideCentroidWindow, QApplication
 from beam_scan_plotting import Heatmap, IPrime, Surface, XYCrossSections
 from load_scan_data import CSVLoader
 
-VERSION = '1.7.3'
+VERSION = '1.7.4'
 
 
 class App:
@@ -66,6 +66,9 @@ class App:
         self.gui.select_csv_button.clicked.connect(self.select_csv_handler)
         self.gui.plot_button.clicked.connect(self.plot_beam_scan_handler)
         self.gui.export_csv_option.triggered.connect(self.export_to_csv)
+        self.gui.override_centroid_option.triggered.connect(
+            self.override_centroid_handler
+        )
         self.gui.exit_option.triggered.connect(QApplication.quit)
         self.gui.save_3D_surface_option.triggered.connect(self.save_3d_surface_html)
         self.gui.save_heatmap_option.triggered.connect(self.save_heatmap_html)
@@ -76,6 +79,21 @@ class App:
         self.gui.open_quick_start_guide.triggered.connect(self.open_quick_start_guide)
 
         self.gui.show()
+
+    def override_centroid_handler(self) -> None:
+        if self.gui.override_centroid_option.isChecked():
+            self.override_centroid_window = OverrideCentroidWindow()
+            self.override_centroid_window.centroid_set.connect(
+                self.receive_centroid_values
+            )
+            self.override_centroid_window.window_closed_without_input.connect(
+                lambda: self.gui.override_centroid_option.setChecked(False)
+            )
+            self.override_centroid_window.show()
+
+    def receive_centroid_values(self, x: float, y: float) -> None:
+        self.Xc = x
+        self.Yc = y
 
     def select_csv_handler(self) -> None:
         """
@@ -110,6 +128,8 @@ class App:
                     self.gui.fcup_diameter_input.setText(self.scan_data.fcup_diameter)
                 if self.scan_data.fcup_distance:
                     self.gui.fcup_distance_input.setText(self.scan_data.fcup_distance)
+                if self.gui.override_centroid_option.isChecked():
+                    self.gui.override_centroid_option.setChecked(False)
             except Exception as e:
                 full_traceback = traceback.format_exc()
                 self.gui.csv_load_error_message(
@@ -168,6 +188,10 @@ class App:
                 surface = Surface(
                     self.scan_data, self.solenoid, self.test_stand, self.z_scaled
                 )
+                if self.gui.override_centroid_option.isChecked():
+                    centroid = self.override_centroid_window.get_override_values()
+                    if centroid is not None:
+                        surface.centroid = centroid
                 surface.plot_surface()
             except Exception as e:
                 full_traceback = traceback.format_exc()
@@ -179,6 +203,10 @@ class App:
                 heatmap = Heatmap(
                     self.scan_data, self.solenoid, self.test_stand, self.z_scaled
                 )
+                if self.gui.override_centroid_option.isChecked():
+                    centroid = self.override_centroid_window.get_override_values()
+                    if centroid is not None:
+                        heatmap.centroid = centroid
                 heatmap.plot_heatmap()
             except Exception as e:
                 full_traceback = traceback.format_exc()
@@ -201,6 +229,10 @@ class App:
                 i_prime = IPrime(
                     self.scan_data, self.solenoid, self.test_stand, self.z_scaled
                 )
+                if self.gui.override_centroid_option.isChecked():
+                    centroid = self.override_centroid_window.get_override_values()
+                    if centroid is not None:
+                        i_prime.centroid = centroid
                 i_prime.plot_i_prime(self.fcup_diameter, self.fcup_distance)
             except Exception as e:
                 full_traceback = traceback.format_exc()

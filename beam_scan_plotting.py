@@ -366,8 +366,13 @@ class IPrime(Plotter):
         super().__init__(scan_data, solenoid, test_stand, z_scale)
 
     def plot_i_prime(
-        self, fcup_diameter: float, fcup_distance: float, show=True
+        self,
+        fcup_diameter: float,
+        fcup_distance: float,
+        show=True,
     ) -> Figure | None:
+        Xc = self.centroid[0]
+        Yc = self.centroid[1]
         fig = make_subplots(
             rows=1, cols=2, subplot_titles=['X Cross Section', 'Y Cross Section']
         )
@@ -378,8 +383,8 @@ class IPrime(Plotter):
             fcup_distance, fcup_diameter
         )
 
-        y_idx: int = int(np.abs(grid_y[:, 0] - self.centroid[1]).argmin())
-        x_idx: int = int(np.abs(grid_x[0, :] - self.centroid[0]).argmin())
+        y_idx: int = int(np.abs(grid_y[:, 0] - Yc).argmin())
+        x_idx: int = int(np.abs(grid_x[0, :] - Xc).argmin())
         self.x_slice = pd.DataFrame(
             {
                 'X Coordinate': grid_x[y_idx, :],
@@ -395,8 +400,8 @@ class IPrime(Plotter):
             }
         )
 
-        x_center: float = self.centroid[0]  # equivalent to 0 radians on x-slice
-        y_center: float = self.centroid[1]  # equivalent to 0 radians on y-slice
+        x_center: float = Xc  # equivalent to 0 radians on x-slice
+        y_center: float = Yc  # equivalent to 0 radians on y-slice
         dist_from_x_center: NDArray[np.float64] = (
             np.asarray(self.x_slice['X Coordinate'] - x_center) / 1000
         )  # millimeters
