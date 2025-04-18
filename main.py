@@ -218,6 +218,10 @@ class App:
                 xy_cross_section = XYCrossSections(
                     self.scan_data, self.solenoid, self.test_stand, self.z_scaled
                 )
+                if self.gui.override_centroid_option.isChecked():
+                    centroid = self.override_centroid_window.get_override_values()
+                    if centroid is not None:
+                        xy_cross_section.centroid = centroid
                 xy_cross_section.plot_cross_sections()
             except Exception as e:
                 full_traceback = traceback.format_exc()
