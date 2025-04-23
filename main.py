@@ -13,7 +13,7 @@ from beam_scan_gui import MainWindow, OverrideCentroidWindow, QApplication
 from beam_scan_plotting import Heatmap, IPrime, Plotter, Surface, XYCrossSections
 from load_scan_data import CSVLoader
 
-VERSION = '1.9.0'
+VERSION = '1.9.1'
 
 
 class App:
@@ -270,8 +270,9 @@ class App:
     def export_to_csv(self) -> None:
         try:  # check if csv data has been loaded
             scan_datetime: str = self.scan_data.scan_datetime
+            date_obj = datetime.strptime(scan_datetime, '%m/%d/%Y %I:%M %p')
+            scan_date = date_obj.strftime('%Y-%m-%d %H_%M')
             step_size: float = self.scan_data.step_size
-            polarity: str = self.scan_data.polarity
             serial_number: str = self.gui.serial_number_input.text().strip()
             beam_voltage: str = self.gui.beam_voltage_input.text().strip()
             extractor_voltage: str = self.gui.ext_voltage_input.text().strip()
@@ -281,7 +282,7 @@ class App:
             pressure: str = self.scan_data.pressure
             fcup_distance: str = self.gui.fcup_distance_input.text().strip()
             fcup_diameter: str = self.gui.fcup_diameter_input.text().strip()
-            default_filename = f'SN-{serial_number} {polarity} Beam Scan @ {beam_voltage},{extractor_voltage} kV & {solenoid_current} A on TS{test_stand}.csv'
+            default_filename = f'{scan_date} SN-{serial_number} @ {beam_voltage}_{extractor_voltage} kV & {solenoid_current} A on TS{test_stand}.csv'
             data = pd.DataFrame(
                 {
                     'X': self.scan_data.x_location,
@@ -319,8 +320,8 @@ class App:
 
     def save_3d_surface_html(self) -> None:
         try:
-            scan_data_datetime = self.scan_data.scan_datetime
-            date_obj = datetime.strptime(scan_data_datetime, '%m/%d/%Y %I:%M %p')
+            scan_datetime = self.scan_data.scan_datetime
+            date_obj = datetime.strptime(scan_datetime, '%m/%d/%Y %I:%M %p')
             scan_date = date_obj.strftime('%Y-%m-%d %H_%M')
             serial_num = self.gui.serial_number_input.text()
             solenoid = self.gui.solenoid_current_input.text()
