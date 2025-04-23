@@ -73,6 +73,7 @@ class MainWindow(QMainWindow):
         self.save_heatmap_option = QAction('Save Heatmap', self)
         self.save_xy_profiles_option = QAction('Save XY-Profiles', self)
         self.save_i_prime_option = QAction("Save I' vs Divergence Angle", self)
+        self.save_all_figures_option = QAction('Save all', self)
         self.open_quick_start_guide = QAction('Quick Start Guide', self)
 
         # Add the action objects to the menu bar items
@@ -83,6 +84,7 @@ class MainWindow(QMainWindow):
         self.save_menu.addAction(self.save_heatmap_option)
         self.save_menu.addAction(self.save_xy_profiles_option)
         self.save_menu.addAction(self.save_i_prime_option)
+        self.save_menu.addAction(self.save_all_figures_option)
         self.help_menu.addAction(self.open_quick_start_guide)
 
         # Create data entry fields and labels

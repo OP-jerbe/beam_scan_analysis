@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -117,6 +119,34 @@ class Plotter:
             fig.write_html(file_path)
         else:
             pass
+
+    @staticmethod
+    def save_all_as_html(
+        titles_and_figs: dict[str, Figure | None],
+        filename: str,
+        default_dir: str | None = None,
+        parent=None,
+    ) -> None:
+        if default_dir is None:
+            default_dir = ''
+
+        folder_path = QFileDialog.getExistingDirectory(
+            parent=parent,
+            caption='Select folder to save figures',
+            dir=default_dir,
+            options=QFileDialog.Option.ShowDirsOnly,
+        )
+
+        if not folder_path:
+            return
+
+        folder = Path(folder_path)
+        for title, fig in titles_and_figs.items():
+            if fig is None:
+                continue
+            file_name = f'{filename} {title}'
+            full_path = folder / file_name
+            fig.write_html(str(full_path))
 
 
 class Surface(Plotter):
