@@ -5,8 +5,6 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-import plotly.graph_objects as go
-import plotly.io as pio
 
 from beam_scan_analysis import ScanData
 from beam_scan_gui import MainWindow, OverrideCentroidWindow, QApplication
