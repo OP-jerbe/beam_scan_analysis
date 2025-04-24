@@ -11,7 +11,7 @@ from beam_scan_gui import MainWindow, OverrideCentroidWindow, QApplication
 from beam_scan_plotting import Heatmap, IPrime, Plotter, Surface, XYCrossSections
 from load_scan_data import CSVLoader
 
-VERSION = '1.9.2'
+VERSION = '1.10.0'
 
 
 class App:
@@ -74,7 +74,8 @@ class App:
             self.save_x_cross_section_html
         )
         self.gui.save_i_prime_option.triggered.connect(self.save_i_prime_html)
-        self.gui.save_all_figures_option.triggered.connect(self.save_all_figures)
+        self.gui.save_all_html_option.triggered.connect(self.save_all_html)
+        self.gui.save_all_png_option.triggered.connect(self.save_all_png)
         self.gui.open_quick_start_guide.triggered.connect(self.open_quick_start_guide)
 
         self.gui.show()
@@ -402,7 +403,7 @@ class App:
                 parent=self.gui, error=e, traceback=full_traceback
             )
 
-    def save_all_figures(self) -> None:
+    def save_all_html(self) -> None:
         try:
             scan_data_datetime = self.scan_data.scan_datetime
             date_obj = datetime.strptime(scan_data_datetime, '%m/%d/%Y %I:%M %p')
@@ -437,6 +438,51 @@ class App:
             default_filename = f'{scan_date} SN-{serial_num} @ {beam_voltage}_{ext_voltage} kV & {solenoid} A on TS{test_stand}'
 
             Plotter.save_all_as_html(
+                plots,
+                default_filename,
+            )
+
+        except Exception as e:
+            full_traceback = traceback.format_exc()
+            self.gui.i_prime_error_message(
+                parent=self.gui, error=e, traceback=full_traceback
+            )
+
+    def save_all_png(self) -> None:
+        try:
+            scan_data_datetime = self.scan_data.scan_datetime
+            date_obj = datetime.strptime(scan_data_datetime, '%m/%d/%Y %I:%M %p')
+            scan_date = date_obj.strftime('%Y-%m-%d %H_%M')
+            serial_num = self.gui.serial_number_input.text()
+            solenoid = self.gui.solenoid_current_input.text()
+            test_stand = self.gui.test_stand_input.text()
+            beam_voltage = self.gui.beam_voltage_input.text()
+            ext_voltage = self.gui.ext_voltage_input.text()
+            self.fcup_diameter = float(self.gui.fcup_diameter_input.text())
+            self.fcup_distance = float(self.gui.fcup_distance_input.text())
+            surface = Surface(self.scan_data, solenoid, test_stand, self.z_scaled)
+            surface_fig = surface.plot_surface(show=False)
+            heatmap = Heatmap(self.scan_data, solenoid, test_stand, self.z_scaled)
+            heatmap_fig = heatmap.plot_heatmap(show=False)
+            cross_section = XYCrossSections(
+                self.scan_data, solenoid, test_stand, self.z_scaled
+            )
+            cross_section_fig = cross_section.plot_cross_sections(show=False)
+            i_prime = IPrime(self.scan_data, solenoid, test_stand, self.z_scaled)
+            i_prime_fig = i_prime.plot_i_prime(
+                self.fcup_diameter, self.fcup_distance, show=False
+            )
+
+            plots = {
+                '3D Surface.png': surface_fig,
+                'Heatmap.png': heatmap_fig,
+                'XY Cross Section.png': cross_section_fig,
+                'Ang Int vs Divergence Angle.png': i_prime_fig,
+            }
+
+            default_filename = f'{scan_date} SN-{serial_num} @ {beam_voltage}_{ext_voltage} kV & {solenoid} A on TS{test_stand}'
+
+            Plotter.save_all_as_png(
                 plots,
                 default_filename,
             )
