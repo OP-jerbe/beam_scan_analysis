@@ -5,3 +5,6 @@ exclude = ["data", "outputs"]
 [format]
 quote-style = "single"
 indent-style = "space"
+
+[lint]
+ignore = ["E722"]
