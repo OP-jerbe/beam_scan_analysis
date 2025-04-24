@@ -17,7 +17,7 @@ def heatmap(self, grid_x, grid_y, grid_z) -> go.Heatmap:
             zauto=False,
             zmin=self.z_scale[0],
             zmax=self.z_scale[1],
-            colorbar=dict(title='Cup Current', titleside='right'),
+            colorbar=dict(title=dict(text='Cup Current', side='right')),
         )
     else:  # Autoscale
         heatmap = go.Heatmap(
@@ -25,10 +25,7 @@ def heatmap(self, grid_x, grid_y, grid_z) -> go.Heatmap:
             x=np.linspace(grid_x.min(), grid_x.max(), grid_z.shape[1]),
             y=np.linspace(grid_y.min(), grid_y.max(), grid_z.shape[0]),
             colorscale=self.color,
-            colorbar=dict(
-                title='Cup Current',
-                titleside='right',
-            ),
+            colorbar=dict(title=dict(text='Cup Current', side='right')),
         )
 
     return heatmap
