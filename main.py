@@ -301,7 +301,7 @@ class App:
             return None
 
         with open(filename, 'w') as f:
-            f.write(f'CSV export version,2\n')
+            f.write('CSV export version,2\n')
             f.write(f'Serial Number,{serial_number}\n')
             f.write(f'Scan Datetime,{scan_datetime}\n')
             f.write(f'Step Size (mm),{step_size}\n')

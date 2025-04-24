@@ -284,16 +284,16 @@ class MainWindow(QMainWindow):
             'FWQM_area',
         )
 
-        if type(stat_value) == str or type(stat_value) == int:
+        if type(stat_value) is str or type(stat_value) is int:
             new_text = current_text + f'{stat_value}'
-        elif type(stat_value) == tuple:
+        elif type(stat_value) is tuple:
             new_text = current_text + f'({stat_value[0]:.0f}, {stat_value[1]:.0f})'
         elif (
-            type(stat_value) == float or type(stat_value) == np.float64
+            type(stat_value) is float or type(stat_value) is np.float64
         ) and name in one_decimal_place_floats:
             new_text = current_text + f'{stat_value:.1f}'
         elif (
-            type(stat_value) == float or type(stat_value) == np.float64
+            type(stat_value) is float or type(stat_value) is np.float64
         ) and name in three_decimal_place_floats:
             new_text = current_text + f'{stat_value:.3f}'
 
