@@ -105,8 +105,9 @@ class Plotter:
         # Set the default 3D surface renderer to be the user's browser
         pio.renderers.default = 'browser'
 
+    @staticmethod
     def save_as_html(
-        self, fig: Figure | None, default_filename: str | None = None, parent=None
+        fig: Figure | None, default_filename: str | None = None, parent=None
     ) -> None:
         if not default_filename:
             default_filename = ''
@@ -200,10 +201,10 @@ class Surface(Plotter):
             self.x_slice,
             self.y_slice,
         )
-        if not show:
+        if show is False:
             return fig
-        else:
-            fig.show()
+
+        fig.show()
 
 
 class Heatmap(Plotter):
@@ -333,10 +334,10 @@ class Heatmap(Plotter):
         )
 
         # Show the plot
-        if not show:
+        if show is False:
             return fig
-        else:
-            fig.show()
+
+        fig.show()
 
 
 class XYCrossSections(Plotter):
@@ -411,10 +412,10 @@ class XYCrossSections(Plotter):
                 matches='y',
             )
 
-        if not show:
+        if show is False:
             return fig
-        else:
-            fig.show()
+
+        fig.show()
 
 
 class IPrime(Plotter):
@@ -511,10 +512,10 @@ class IPrime(Plotter):
         fig.update_yaxes(title_text='Angular Intensity (mA/sr)', row=1, col=1)
         fig.update_yaxes(row=1, col=2, matches='y')
 
-        if not show:
+        if show is False:
             return fig
-        else:
-            fig.show()
+
+        fig.show()
 
 
 if __name__ == '__main__':
