@@ -284,8 +284,8 @@ class Heatmap(Plotter):
             x=self.scan_data.x_location.max(),
             y=1,
             yref='paper',
-            text=f'Cup current = {self.peak_cup_current * 1e9:.1f} nA<br>'
-            f'Total current = {self.peak_total_current * 1e6:.3f} µA<br>'
+            text=f'Cup current = {self.peak_cup_current * 1e9:.1f} nA <br>'
+            f'Total current = {self.peak_total_current * 1e6:.3f} µA <br>'
             f'Settings = {self.beam_voltage}/{self.extractor_voltage} kV & {self.solenoid} A',
             showarrow=False,
             align='left',
@@ -298,7 +298,7 @@ class Heatmap(Plotter):
             yref='paper',
             text=f'FWHM Area = {self.fwhm_enclosed_area:.3f} mm²<br>'
             f'FWQM Area = {self.fwqm_enclosed_area:.3f} mm²<br>'
-            f'x,y = ({self.peak_location[0]:.0f},{self.peak_location[1]:.0f})',
+            f'peak = ({self.peak_location[0]:.0f},{self.peak_location[1]:.0f})',
             showarrow=False,
             align='right',
             xanchor='right',
@@ -381,7 +381,10 @@ class XYCrossSections(Plotter):
             col=2,
         )
 
-        fig.update_layout(showlegend=False, title_text='Beam Current Cross Sections')
+        fig.update_layout(
+            showlegend=False,
+            title_text=f'{self.serial_number} Beam Current Cross Sections',
+        )
 
         if any(value is not None for value in self.z_scale):
             fig.update_xaxes(title_text='X Location', row=1, col=1)
@@ -390,7 +393,6 @@ class XYCrossSections(Plotter):
                 title_text='Cup Current (A)', row=1, col=1, range=self.z_scale
             )
             fig.update_yaxes(
-                title_text='Cup Current (A)',
                 row=1,
                 col=2,
                 range=self.z_scale,
@@ -401,7 +403,6 @@ class XYCrossSections(Plotter):
             fig.update_xaxes(title_text='Y Location', row=1, col=2)
             fig.update_yaxes(title_text='Cup Current (A)', row=1, col=1)
             fig.update_yaxes(
-                title_text='Cup Current (A)',
                 row=1,
                 col=2,
                 matches='y',
@@ -498,15 +499,14 @@ class IPrime(Plotter):
         )
 
         fig.update_layout(
-            showlegend=False, title_text='Angular Intensity vs Divergence Angle'
+            showlegend=False,
+            title_text=f'{self.serial_number} Angular Intensity vs Divergence Angle',
         )
 
         fig.update_xaxes(title_text='X Divergence Angle (mRad)', row=1, col=1)
         fig.update_xaxes(title_text='Y Divergence Angle (mRad)', row=1, col=2)
         fig.update_yaxes(title_text='Angular Intensity (mA/sr)', row=1, col=1)
-        fig.update_yaxes(
-            title_text='Angular Intensity (mA/sr)', row=1, col=2, matches='y'
-        )
+        fig.update_yaxes(row=1, col=2, matches='y')
 
         if not show:
             return fig
