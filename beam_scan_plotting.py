@@ -13,6 +13,9 @@ import heatmaps
 import surface_figures
 from beam_scan_analysis import ScanData
 
+PNG_WIDTH = 700
+PNG_HEIGHT = 500
+
 
 class Plotter:
     """
@@ -174,7 +177,7 @@ class Plotter:
                 continue
             file_name = f'{filename} {title}'
             full_path = folder / file_name
-            fig.write_image(str(full_path), width=600, height=500)
+            fig.write_image(str(full_path), width=PNG_WIDTH, height=PNG_HEIGHT)
 
 
 class Surface(Plotter):
