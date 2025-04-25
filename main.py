@@ -11,7 +11,8 @@ from beam_scan_gui import MainWindow, OverrideCentroidWindow, QApplication
 from beam_scan_plotting import Heatmap, IPrime, Plotter, Surface, XYCrossSections
 from load_scan_data import CSVLoader
 
-VERSION = '1.10.2'
+APP_VERSION = '1.10.2'
+CSV_EXPORT_VERSION = '2'
 
 
 class App:
@@ -51,7 +52,7 @@ class App:
     def __init__(self) -> None:
         self.app = QApplication([])
         self.gui = MainWindow()
-        self.gui.setWindowTitle(f'Beam Scan Analysis v{VERSION}')
+        self.gui.setWindowTitle(f'Beam Scan Analysis v{APP_VERSION}')
         self.csv_loader: CSVLoader = CSVLoader()
         self.z_scaled: list[int | float | None] = [None, None]
         self.csv_filepath: str
@@ -178,9 +179,9 @@ class App:
             self.scan_data.extractor_voltage = None
 
         self.z_scaled = [None, None]  # reset the scaling
-        if self.gui.lower_bound_input.text() != '':
+        if self.gui.lower_bound_input.text():
             self.z_scaled[0] = float(self.gui.lower_bound_input.text())
-        if self.gui.upper_bound_input.text() != '':
+        if self.gui.upper_bound_input.text():
             self.z_scaled[1] = float(self.gui.upper_bound_input.text())
 
         if self.gui.surface_cb.isChecked():
@@ -302,7 +303,7 @@ class App:
             return None
 
         with open(filename, 'w') as f:
-            f.write('CSV export version,2\n')
+            f.write(f'CSV export version,{CSV_EXPORT_VERSION}\n')
             f.write(f'Serial Number,{serial_number}\n')
             f.write(f'Scan Datetime,{scan_datetime}\n')
             f.write(f'Step Size (mm),{step_size}\n')
