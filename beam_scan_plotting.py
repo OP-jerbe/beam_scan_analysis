@@ -174,7 +174,7 @@ class Plotter:
                 continue
             file_name = f'{filename} {title}'
             full_path = folder / file_name
-            fig.write_image(str(full_path))
+            fig.write_image(str(full_path), width=600, height=500)
 
 
 class Surface(Plotter):
@@ -390,7 +390,6 @@ class XYCrossSections(Plotter):
                 title_text='Cup Current (A)', row=1, col=1, range=self.z_scale
             )
             fig.update_yaxes(
-                title_text='Cup Current (A)',
                 row=1,
                 col=2,
                 range=self.z_scale,
@@ -401,7 +400,6 @@ class XYCrossSections(Plotter):
             fig.update_xaxes(title_text='Y Location', row=1, col=2)
             fig.update_yaxes(title_text='Cup Current (A)', row=1, col=1)
             fig.update_yaxes(
-                title_text='Cup Current (A)',
                 row=1,
                 col=2,
                 matches='y',
@@ -504,9 +502,7 @@ class IPrime(Plotter):
         fig.update_xaxes(title_text='X Divergence Angle (mRad)', row=1, col=1)
         fig.update_xaxes(title_text='Y Divergence Angle (mRad)', row=1, col=2)
         fig.update_yaxes(title_text='Angular Intensity (mA/sr)', row=1, col=1)
-        fig.update_yaxes(
-            title_text='Angular Intensity (mA/sr)', row=1, col=2, matches='y'
-        )
+        fig.update_yaxes(row=1, col=2, matches='y')
 
         if not show:
             return fig
