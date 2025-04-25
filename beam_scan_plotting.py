@@ -174,7 +174,7 @@ class Plotter:
                 continue
             file_name = f'{filename} {title}'
             full_path = folder / file_name
-            fig.write_image(str(full_path))
+            fig.write_image(str(full_path), width=600, height=500)
 
 
 class Surface(Plotter):
