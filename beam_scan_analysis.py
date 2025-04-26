@@ -4,6 +4,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
+from numpy import float64
 
 # from PySide6.QtWidgets import QFileDialog
 # import sys
@@ -47,13 +48,13 @@ class ScanData:
         return indeces[self.polarity]
 
     def create_grid(self) -> tuple[NDArray, NDArray, NDArray]:
-        x: NDArray[np.float64] = self.x_location.to_numpy()
-        y: NDArray[np.float64] = self.y_location.to_numpy()
-        z: NDArray[np.float64] = self.cup_current.to_numpy()
+        x: NDArray[float64] = self.x_location.to_numpy()
+        y: NDArray[float64] = self.y_location.to_numpy()
+        z: NDArray[float64] = self.cup_current.to_numpy()
 
-        grid_x: NDArray[np.float64]
-        grid_y: NDArray[np.float64]
-        grid_z: NDArray[np.float64]
+        grid_x: NDArray[float64]
+        grid_y: NDArray[float64]
+        grid_z: NDArray[float64]
 
         # Create grid for interpolation
         interp_num: int = 1000
@@ -210,7 +211,7 @@ class ScanData:
 
     def compute_angular_intensity(
         self, distance: int | float, diameter: int | float
-    ) -> NDArray[np.float64]:
+    ) -> NDArray[float64]:
         """
         Computes the angular intensity of the collected cup current based on the given distance (in mm) to the cup
         and the aperture diameter (in mm).
