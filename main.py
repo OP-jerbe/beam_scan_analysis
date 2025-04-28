@@ -53,7 +53,6 @@ class App:
         self.app = QApplication([])
         self.gui = MainWindow()
         self.gui.setWindowTitle(f'Beam Scan Analysis v{APP_VERSION}')
-        # self.csv_loader: CSVLoader = CSVLoader()
         self.z_scaled: list[int | float | None] = [None, None]
         self.csv_filepath: str
         self.scan_data: ScanData
