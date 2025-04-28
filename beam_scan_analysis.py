@@ -3,8 +3,8 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from numpy.typing import NDArray
 from numpy import float64
+from numpy.typing import NDArray
 
 # from PySide6.QtWidgets import QFileDialog
 # import sys
