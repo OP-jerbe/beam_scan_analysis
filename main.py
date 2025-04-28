@@ -53,7 +53,7 @@ class App:
         self.app = QApplication([])
         self.gui = MainWindow()
         self.gui.setWindowTitle(f'Beam Scan Analysis v{APP_VERSION}')
-        self.csv_loader: CSVLoader = CSVLoader()
+        # self.csv_loader: CSVLoader = CSVLoader()
         self.z_scaled: list[int | float | None] = [None, None]
         self.csv_filepath: str
         self.scan_data: ScanData
@@ -109,10 +109,10 @@ class App:
         Returns:
             None
         """
-        self.csv_filepath = self.csv_loader.select_csv()
+        self.csv_filepath = CSVLoader.select_csv()
         if self.csv_filepath != '':
             try:
-                self.scan_data = self.csv_loader.load_scan_data(self.csv_filepath)
+                self.scan_data = CSVLoader.load_scan_data(self.csv_filepath)
                 self.display_stats(self.scan_data)
                 self.gui.plot_button.setDisabled(False)
                 self.gui.serial_number_input.setText(self.scan_data.serial_num)

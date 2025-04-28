@@ -272,7 +272,6 @@ if __name__ == '__main__':
     from load_scan_data import CSVLoader
 
     QApplication([])
-    csv_loader: CSVLoader = CSVLoader()
-    filepath: str = csv_loader.select_csv()
-    scan_data: ScanData = csv_loader.load_scan_data(filepath)
+    filepath: str = CSVLoader.select_csv()
+    scan_data: ScanData = CSVLoader.load_scan_data(filepath)
     print(scan_data.display_summary())

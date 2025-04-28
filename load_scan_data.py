@@ -9,7 +9,8 @@ from beam_scan_analysis import ScanData
 class CSVLoader:
     def __init__(self): ...
 
-    def select_csv(self) -> str:
+    @staticmethod
+    def select_csv() -> str:
         """
         Open a file dialog to select a CSV file.
 
@@ -38,7 +39,8 @@ class CSVLoader:
 
         return filepath
 
-    def load_scan_data(self, filepath: str) -> ScanData:
+    @staticmethod
+    def load_scan_data(filepath: str) -> ScanData:
         """
         Load scan data from a CSV file and return a ScanData object.
 
@@ -301,7 +303,6 @@ if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
     QApplication([])
-    loader = CSVLoader()
-    filepath = loader.select_csv()
-    scan_data = loader.load_scan_data(filepath)
+    filepath = CSVLoader.select_csv()
+    scan_data = CSVLoader.load_scan_data(filepath)
     print(scan_data.display_summary())
