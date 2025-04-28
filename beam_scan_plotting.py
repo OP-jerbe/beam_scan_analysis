@@ -218,7 +218,9 @@ class Heatmap(Plotter):
         super().__init__(scan_data, solenoid, test_stand, z_scale)
 
     def plot_heatmap(self, show=True) -> None | Figure:
-        heatmap = heatmaps.heatmap(self, self.grid_x, self.grid_y, self.grid_z)
+        heatmap = heatmaps.heatmap(
+            self.grid_x, self.grid_y, self.grid_z, self.z_scale, self.color
+        )
         contour_size = (max(self.levels) - min(self.levels)) - 1e-9
 
         # Create contour
