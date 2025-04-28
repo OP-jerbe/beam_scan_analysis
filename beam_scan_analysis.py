@@ -178,7 +178,6 @@ class ScanData:
         )  # Y-axis
         contours = np.column_stack([x_contour, y_contour])
         if not np.allclose(contours[0], contours[-1]):
-            # contours = np.vstack([contours, contours[0]])  # Append the first point to the end to ensure the contour is closed in order to calculate area
             return 0.0  # i.e. do not try to calculate area if contour goes off of the stage limits
         x_contour = contours[:, 1]
         y_contour = contours[:, 0]
@@ -229,7 +228,7 @@ class ScanData:
 
         _, _, cup_current = self.create_grid()
         cup_current_in_milliamps = cup_current * 1000  # milliamps
-        half_angle = np.tan(0.5 * diameter / (distance))  # radians
+        half_angle = np.tan(0.5 * diameter / distance)  # radians
         solid_angle = np.pi * half_angle**2  # steradians
         return cup_current_in_milliamps / solid_angle  # milliamps/steradian
 
@@ -265,32 +264,6 @@ class ScanData:
             'test_stand': self.test_stand,
             'centroid': self.compute_weighted_centroid(),
         }
-
-    def to_csv(self, filename: str, index: bool = False) -> None:
-        """
-        Save scan data to a CSV file.
-
-        Args:
-            filename (str): The path of the CSV file to save the data to.
-            index (bool, optional): Whether to write row names (index) to the file. Defaults to False.
-
-        Returns:
-            None: This function does not return any value. It saves the data to a CSV file.
-
-        Notes:
-            The data saved includes `x_location`, `y_location`, `cup_current`, `screen_current`,
-            and `total_current` from the current object.
-        """
-        data = pd.DataFrame(
-            {
-                'x_location': self.x_location,
-                'y_location': self.y_location,
-                'cup_current': self.cup_current,
-                'screen_current': self.screen_current,
-                'total_current': self.total_current,
-            }
-        )
-        data.to_csv(filename, index=index)
 
 
 if __name__ == '__main__':
