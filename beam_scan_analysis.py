@@ -205,6 +205,7 @@ class ScanData:
 
         Xc = float(np.sum(x * np.abs(cup_current)) / total_current)
         Yc = float(np.sum(y * np.abs(cup_current)) / total_current)
+        print(f'Centroid = ({Xc:.1f}, {Yc:.1f})')
 
         return Xc, Yc
 
