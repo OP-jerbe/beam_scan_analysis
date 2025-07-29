@@ -16,6 +16,10 @@ from skimage import (
 
 @dataclass
 class ScanData:
+    """
+    A class to hold the beam scan data.
+    """
+
     serial_num: str
     scan_datetime: str
     step_size: float
