@@ -11,7 +11,7 @@ from beam_scan_gui import MainWindow, OverrideCentroidWindow, QApplication
 from beam_scan_plotting import Heatmap, IPrime, Plotter, Surface, XYCrossSections
 from load_scan_data import CSVLoader
 
-APP_VERSION = '1.10.3'
+APP_VERSION = '1.11.0'
 CSV_EXPORT_VERSION = '2'
 
 
@@ -255,6 +255,7 @@ class App:
             'beam_voltage': self.gui.stat_beam_voltage,
             'extractor_voltage': self.gui.stat_ext_voltage,
             'beam_supply_current': self.gui.stat_beam_supply_current,
+            'centroid': self.gui.stat_centroid_location,
             'peak_location': self.gui.stat_peak_location,
             'peak_cup_current': self.gui.stat_peak_cup_current,
             'peak_total_current': self.gui.stat_peak_total_current,

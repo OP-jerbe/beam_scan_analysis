@@ -163,6 +163,8 @@ class MainWindow(QMainWindow):
         self.stat_ext_voltage.setFixedSize(stat_label_width, stat_label_height)
         self.stat_beam_supply_current = QLabel('Beam Supply Current (µA): ')
         self.stat_beam_supply_current.setFixedSize(stat_label_width, stat_label_height)
+        self.stat_centroid_location = QLabel('Centroid Location: ')
+        self.stat_centroid_location.setFixedSize(stat_label_width, stat_label_height)
         self.stat_peak_location = QLabel('Peak Location: ')
         self.stat_peak_location.setFixedSize(stat_label_width, stat_label_height)
         self.stat_peak_cup_current = QLabel('Peak Beam Current (nA): ')
@@ -226,6 +228,7 @@ class MainWindow(QMainWindow):
         v_sub2_main_layout.addWidget(self.stat_beam_voltage)
         v_sub2_main_layout.addWidget(self.stat_ext_voltage)
         v_sub2_main_layout.addWidget(self.stat_beam_supply_current)
+        v_sub2_main_layout.addWidget(self.stat_centroid_location)
         v_sub2_main_layout.addWidget(self.stat_peak_location)
         v_sub2_main_layout.addWidget(self.stat_peak_cup_current)
         v_sub2_main_layout.addWidget(self.stat_peak_total_current)
@@ -257,6 +260,7 @@ class MainWindow(QMainWindow):
             self.stat_beam_voltage: 'Beam Voltage (kV): ',
             self.stat_ext_voltage: 'Extractor Voltage (kV): ',
             self.stat_beam_supply_current: 'Beam Supply Current (µA): ',
+            self.stat_centroid_location: 'Centroid Location: ',
             self.stat_peak_location: 'Peak Location: ',
             self.stat_peak_cup_current: 'Peak Beam Current (nA): ',
             self.stat_peak_total_current: 'Total Current at Peak (µA): ',
