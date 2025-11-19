@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
@@ -40,6 +40,15 @@ class ScanData:
     fcup_diameter: str | None
     well_structured_csv: bool
 
+    interp_num: int = field(init=False)
+    grid_x: NDArray[float64] = field(init=False)
+    grid_y: NDArray[float64] = field(init=False)
+    grid_z: NDArray[float64] = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.interp_num = 500
+        self.grid_x, self.grid_y, self.grid_z = self.create_grid(self.interp_num)
+
     def _peak_idx(self) -> int | str:
         """
         Get the index of the peak value in `cup_current` based on polarity.
@@ -51,35 +60,34 @@ class ScanData:
         indeces = {'NEG': self.cup_current.idxmin(), 'POS': self.cup_current.idxmax()}
         return indeces[self.polarity]
 
-    def create_grid(self) -> tuple[NDArray, NDArray, NDArray]:
+    def create_grid(
+        self, interp_num: int
+    ) -> tuple[NDArray[float64], NDArray[float64], NDArray[float64]]:
         x: NDArray[float64] = self.x_location.to_numpy()
         y: NDArray[float64] = self.y_location.to_numpy()
         z: NDArray[float64] = self.cup_current.to_numpy()
 
-        grid_x: NDArray[float64]
-        grid_y: NDArray[float64]
-        grid_z: NDArray[float64]
-
         # Create grid for interpolation
-        interp_num: int = 1000
-        grid_x, grid_y = np.meshgrid(
+        self.grid_x, self.grid_y = np.meshgrid(
             np.linspace(x.min(), x.max(), interp_num),
             np.linspace(y.min(), y.max(), interp_num),
         )
 
         # Interpolate data to grid
-        grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
+        self.grid_z = griddata((x, y), z, (self.grid_x, self.grid_y), method='cubic')
 
-        return grid_x, grid_y, grid_z
+        return self.grid_x, self.grid_y, self.grid_z
 
     def fwhm_area(self) -> float:
-        x, y, z = self.create_grid()
         half_max = self.half_max()
 
         # Calculate the area enclosed by the contour lines at half max of cup current
         try:
             fwhm_enclosed_area: float = (
-                self.area_enclosed_by_contour(x, y, z, half_max) * 1e-6
+                self.area_enclosed_by_contour(
+                    self.grid_x, self.grid_y, self.grid_z, half_max
+                )
+                * 1e-6
             )  # sq-mm
         except Exception as e:
             fwhm_enclosed_area: float = 0.0
@@ -89,13 +97,15 @@ class ScanData:
         return fwhm_enclosed_area
 
     def fwqm_area(self) -> float:
-        x, y, z = self.create_grid()
         quarter_max = self.quarter_max()
 
         # Calculate the area enclosed by the contour lines at quarter max of cup current
         try:
             fwqm_enclosed_area: float = (
-                self.area_enclosed_by_contour(x, y, z, quarter_max) * 1e-6
+                self.area_enclosed_by_contour(
+                    self.grid_x, self.grid_y, self.grid_z, quarter_max
+                )
+                * 1e-6
             )  # sq-mm
         except Exception as e:
             fwqm_enclosed_area: float = 0.0
@@ -198,17 +208,15 @@ class ScanData:
             tuple: (Xc, Yc) - centroid coordinates.
         """
 
-        x, y, cup_current = self.create_grid()
-
         # Zero out the cup current measurements that are below the threshold so that the centroid is calculated from strong beam current readings.
         # This gets rid of the contribution from the noise to find the centroid.
         threshold: float = self.half_max()
-        cup_current = np.where(abs(cup_current) < abs(threshold), 0, cup_current)
+        cup_current = np.where(abs(self.grid_z) < abs(threshold), 0, self.grid_z)
 
         total_current = float(np.sum(np.abs(cup_current)))  # Use absolute values
 
-        Xc = float(np.sum(x * np.abs(cup_current)) / total_current)
-        Yc = float(np.sum(y * np.abs(cup_current)) / total_current)
+        Xc = float(np.sum(self.grid_x * np.abs(cup_current)) / total_current)
+        Yc = float(np.sum(self.grid_y * np.abs(cup_current)) / total_current)
         # print(f'Centroid = ({Xc:.1f}, {Yc:.1f})')
 
         return Xc, Yc
@@ -231,8 +239,7 @@ class ScanData:
             NDArray[np.float64]: Computed angular intensity values in milliamps per steradian.
         """
 
-        _, _, cup_current = self.create_grid()
-        cup_current_in_milliamps = cup_current * 1000  # milliamps
+        cup_current_in_milliamps = self.grid_z * 1000  # milliamps
         half_angle = np.tan(0.5 * diameter / distance)  # radians
         solid_angle = np.pi * half_angle**2  # steradians
         return cup_current_in_milliamps / solid_angle  # milliamps/steradian
