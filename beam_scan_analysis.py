@@ -40,14 +40,34 @@ class ScanData:
     fcup_diameter: str | None
     well_structured_csv: bool
 
+    interp_override_flag: bool = False
+
     interp_num: int = field(init=False)
     grid_x: NDArray[float64] = field(init=False)
     grid_y: NDArray[float64] = field(init=False)
     grid_z: NDArray[float64] = field(init=False)
 
     def __post_init__(self) -> None:
-        self.interp_num = 500
-        self.grid_x, self.grid_y, self.grid_z = self.create_grid(self.interp_num)
+        # if the override option is not checked
+        if not self.interp_override_flag:
+            self.interp_num = 500
+            self.grid_x, self.grid_y, self.grid_z = self.create_grid(self.interp_num)
+            return
+
+        ##### NOT NEEDED FOR GUI BUT MAY BE USEFUL FOR LABVIEW IMPLEMENTATION -- DO NOT DELETE #####
+        # if the override option is checked
+        # match self.resolution:
+        #     case 'Highest':
+        #         interp_num = 65
+        #     case 'High':
+        #         interp_num = 33
+        #     case 'Med':
+        #         interp_num = 17
+        #     case 'Low':
+        #         interp_num = 9
+        #     case _:
+        #         interp_num = 500
+        # self.grid_x, self.grid_y, self.grid_z = self.create_grid(interp_num)
 
     def _peak_idx(self) -> int | str:
         """
