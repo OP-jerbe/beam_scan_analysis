@@ -94,12 +94,10 @@ class App:
 
     def disable_interp_handler(self) -> None:
         if self.gui.disable_interp_option.isChecked():
-            # Make sure there is data loaded
+            # if scan_data does not exist yet (no csv file loaded)
             if not hasattr(self, 'scan_data'):
-                self.gui.disable_interp_option.setChecked(False)
-                print('No scan data loaded!!!')
-                # probably put a popup window here telling the user to first load in data.
                 return
+            # if there is scan_data, recreate the grid
             match self.scan_data.resolution:
                 case 'Highest':
                     interp_num = 65
@@ -111,8 +109,10 @@ class App:
                     interp_num = 9
                 case _:
                     interp_num = 500
+            self.scan_data.interp_override_flag = True
             self.scan_data.create_grid(interp_num)
             return
+        self.scan_data.interp_override_flag = False
         self.scan_data.create_grid(interp_num=500)
 
     def receive_centroid_values(self, x: float, y: float) -> None:
@@ -136,6 +136,20 @@ class App:
         if self.csv_filepath != '':
             try:
                 self.scan_data = CSVLoader.load_scan_data(self.csv_filepath)
+                # if the disable interp option is checked, recreate the grid.
+                if self.gui.disable_interp_option.isChecked():
+                    match self.scan_data.resolution:
+                        case 'Highest':
+                            interp_num = 65
+                        case 'High':
+                            interp_num = 33
+                        case 'Med':
+                            interp_num = 17
+                        case 'Low':
+                            interp_num = 9
+                        case _:
+                            interp_num = 500
+                    self.scan_data.create_grid(interp_num)
                 self.display_stats(self.scan_data)
                 self.gui.plot_button.setDisabled(False)
                 self.gui.serial_number_input.setText(self.scan_data.serial_num)
