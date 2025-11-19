@@ -85,18 +85,24 @@ class Plotter:
         self.grid_y: NDArray[float64] = self.scan_data.grid_y
         self.grid_z: NDArray[float64] = self.scan_data.grid_z
 
+        self.i_prime: NDArray[np.float64] = self.scan_data.compute_angular_intensity(
+            fcup_dist, fcup_diam
+        )
+
         self.y_idx: int = int(np.abs(self.grid_y[:, 0] - self.centroid[1]).argmin())
         self.x_idx: int = int(np.abs(self.grid_x[0, :] - self.centroid[0]).argmin())
         self.x_slice = pd.DataFrame(
             {
                 'X Coordinate': self.grid_x[self.y_idx, :],
                 'Faraday Cup Current': self.grid_z[self.y_idx, :],
+                'Angular Intensity': self.i_prime[self.y_idx, :],
             }
         )
         self.y_slice = pd.DataFrame(
             {
                 'Y Coordinate': self.grid_y[:, self.x_idx],
                 'Faraday Cup Current': self.grid_z[:, self.x_idx],
+                'Angular Intensity': self.i_prime[:, self.x_idx],
             }
         )
 
@@ -455,26 +461,26 @@ class IPrime(Plotter):
             rows=1, cols=2, subplot_titles=['X Cross Section', 'Y Cross Section']
         )
 
-        i_prime: NDArray[np.float64] = self.scan_data.compute_angular_intensity(
-            self.fcup_distance, self.fcup_diameter
-        )
+        # i_prime: NDArray[np.float64] = self.scan_data.compute_angular_intensity(
+        #     self.fcup_distance, self.fcup_diameter
+        # )
 
-        y_idx: int = int(np.abs(self.grid_y[:, 0] - Yc).argmin())
-        x_idx: int = int(np.abs(self.grid_x[0, :] - Xc).argmin())
-        self.x_slice = pd.DataFrame(
-            {
-                'X Coordinate': self.grid_x[y_idx, :],
-                'Faraday Cup Current': self.grid_z[y_idx, :],
-                'Angular Intensity': i_prime[self.y_idx, :],
-            }
-        )
-        self.y_slice = pd.DataFrame(
-            {
-                'Y Coordinate': self.grid_y[:, x_idx],
-                'Faraday Cup Current': self.grid_z[:, x_idx],
-                'Angular Intensity': i_prime[:, self.x_idx],
-            }
-        )
+        # y_idx: int = int(np.abs(self.grid_y[:, 0] - Yc).argmin())
+        # x_idx: int = int(np.abs(self.grid_x[0, :] - Xc).argmin())
+        # self.x_slice = pd.DataFrame(
+        #     {
+        #         'X Coordinate': self.grid_x[y_idx, :],
+        #         'Faraday Cup Current': self.grid_z[y_idx, :],
+        #         'Angular Intensity': i_prime[self.y_idx, :],
+        #     }
+        # )
+        # self.y_slice = pd.DataFrame(
+        #     {
+        #         'Y Coordinate': self.grid_y[:, x_idx],
+        #         'Faraday Cup Current': self.grid_z[:, x_idx],
+        #         'Angular Intensity': i_prime[:, self.x_idx],
+        #     }
+        # )
 
         x_center: float = Xc  # equivalent to 0 radians on x-slice
         y_center: float = Yc  # equivalent to 0 radians on y-slice
