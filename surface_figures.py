@@ -15,7 +15,9 @@ def surface(
     self.z_scale = [
         value * scaling_factor if value is not None else None for value in self.z_scale
     ]
-    contour_size = (self.levels[1] - self.levels[0]) - 1e-9
+    contour_size = (
+        self.levels[1] - self.levels[0]
+    ) - 1e-9  # 1e-9 is a fudge factor that fixes some weird bug.
 
     if any(value is not None for value in self.z_scale):
         if contour_size > 0:
@@ -49,7 +51,8 @@ def surface(
                                 'show': True,
                                 'start': self.levels[0],
                                 'end': self.levels[1],
-                                'size': (self.levels[1] - self.levels[0]) - 1e-9,
+                                'size': (self.levels[1] - self.levels[0])
+                                - 1e-9,  # 1e-9 is a fudge factor that fixes some weird bug.
                                 'color': 'red',
                             },
                         ),
@@ -155,7 +158,8 @@ def surface(
                                 'show': True,
                                 'start': self.levels[0],
                                 'end': self.levels[1],
-                                'size': (self.levels[1] - self.levels[0]) - 1e-9,
+                                'size': (self.levels[1] - self.levels[0])
+                                - 1e-9,  # 1e-9 is a fudge factor that fixes some weird bug.
                                 'color': 'red',
                             },
                         ),
