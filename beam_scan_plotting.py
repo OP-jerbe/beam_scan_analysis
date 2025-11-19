@@ -455,19 +455,15 @@ class IPrime(Plotter):
         self,
         show=True,
     ) -> Figure | None:
-        Xc = self.centroid[0]
-        Yc = self.centroid[1]
         fig = make_subplots(
             rows=1, cols=2, subplot_titles=['X Cross Section', 'Y Cross Section']
         )
 
-        x_center: float = Xc  # equivalent to 0 radians on x-slice
-        y_center: float = Yc  # equivalent to 0 radians on y-slice
         dist_from_x_center: NDArray[np.float64] = (
-            np.asarray(self.x_slice['X Coordinate'] - x_center) / 1000
+            np.asarray(self.x_slice['X Coordinate'] - self.centroid[0]) / 1000
         )  # millimeters
         dist_from_y_center: NDArray[np.float64] = (
-            np.asarray(self.y_slice['Y Coordinate'] - y_center) / 1000
+            np.asarray(self.y_slice['Y Coordinate'] - self.centroid[1]) / 1000
         )  # millimeters
         x_angle: NDArray[np.float64] = (
             np.arctan(dist_from_x_center / self.fcup_distance) * 1000.0
