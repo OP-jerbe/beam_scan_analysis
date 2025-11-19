@@ -11,7 +11,7 @@ from beam_scan_gui import MainWindow, OverrideCentroidWindow, QApplication
 from beam_scan_plotting import Heatmap, IPrime, Plotter, Surface, XYCrossSections
 from load_scan_data import CSVLoader
 
-APP_VERSION = '1.11.0'
+APP_VERSION = '1.12.0'
 CSV_EXPORT_VERSION = '2'
 
 
