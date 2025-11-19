@@ -53,6 +53,8 @@ class App:
         self.app = QApplication([])
         self.gui = MainWindow()
         self.gui.setWindowTitle(f'Beam Scan Analysis v{APP_VERSION}')
+        self.fcup_diam = float(self.gui.fcup_diameter_input.text())
+        self.fcup_dist = float(self.gui.fcup_distance_input.text())
         self.z_scaled: list[int | float | None] = [None, None]
         self.csv_filepath: str
         self.scan_data: ScanData
@@ -224,7 +226,12 @@ class App:
         if self.gui.surface_cb.isChecked():
             try:
                 surface = Surface(
-                    self.scan_data, self.solenoid, self.test_stand, self.z_scaled
+                    self.scan_data,
+                    self.solenoid,
+                    self.fcup_diam,
+                    self.fcup_dist,
+                    self.test_stand,
+                    self.z_scaled,
                 )
                 if self.gui.override_centroid_option.isChecked():
                     centroid = self.override_centroid_window.get_override_values()
@@ -239,7 +246,12 @@ class App:
         if self.gui.heatmap_cb.isChecked():
             try:
                 heatmap = Heatmap(
-                    self.scan_data, self.solenoid, self.test_stand, self.z_scaled
+                    self.scan_data,
+                    self.solenoid,
+                    self.fcup_diam,
+                    self.fcup_dist,
+                    self.test_stand,
+                    self.z_scaled,
                 )
                 if self.gui.override_centroid_option.isChecked():
                     centroid = self.override_centroid_window.get_override_values()
@@ -254,7 +266,12 @@ class App:
         if self.gui.xy_profile_cb.isChecked():
             try:
                 xy_cross_section = XYCrossSections(
-                    self.scan_data, self.solenoid, self.test_stand, self.z_scaled
+                    self.scan_data,
+                    self.solenoid,
+                    self.fcup_diam,
+                    self.fcup_dist,
+                    self.test_stand,
+                    self.z_scaled,
                 )
                 if self.gui.override_centroid_option.isChecked():
                     centroid = self.override_centroid_window.get_override_values()
@@ -269,13 +286,18 @@ class App:
         if self.gui.i_prime_cb.isChecked():
             try:
                 i_prime = IPrime(
-                    self.scan_data, self.solenoid, self.test_stand, self.z_scaled
+                    self.scan_data,
+                    self.solenoid,
+                    self.fcup_diam,
+                    self.fcup_dist,
+                    self.test_stand,
+                    self.z_scaled,
                 )
                 if self.gui.override_centroid_option.isChecked():
                     centroid = self.override_centroid_window.get_override_values()
                     if centroid is not None:
                         i_prime.centroid = centroid
-                i_prime.plot_i_prime(self.fcup_diameter, self.fcup_distance)
+                i_prime.plot_i_prime()
             except Exception as e:
                 full_traceback = traceback.format_exc()
                 self.gui.i_prime_error_message(
@@ -367,7 +389,14 @@ class App:
             beam_voltage = self.gui.beam_voltage_input.text()
             ext_voltage = self.gui.ext_voltage_input.text()
             default_filename = f'{scan_date} SN-{serial_num} @ {beam_voltage}_{ext_voltage} kV & {solenoid} A on TS{test_stand} 3D Surface.html'
-            surface = Surface(self.scan_data, solenoid, test_stand, self.z_scaled)
+            surface = Surface(
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
+            )
             fig = surface.plot_surface(show=False)
             surface.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
@@ -387,7 +416,14 @@ class App:
             beam_voltage = self.gui.beam_voltage_input.text()
             ext_voltage = self.gui.ext_voltage_input.text()
             default_filename = f'{scan_date} SN-{serial_num} @ {beam_voltage}_{ext_voltage} kV & {solenoid} A on TS{test_stand} Heatmap.html'
-            heatmap = Heatmap(self.scan_data, solenoid, test_stand, self.z_scaled)
+            heatmap = Heatmap(
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
+            )
             fig = heatmap.plot_heatmap(show=False)
             heatmap.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
@@ -408,7 +444,12 @@ class App:
             ext_voltage = self.gui.ext_voltage_input.text()
             default_filename = f'{scan_date} SN-{serial_num} @ {beam_voltage}_{ext_voltage} kV & {solenoid} A on TS{test_stand} XY Cross Section.html'
             cross_section = XYCrossSections(
-                self.scan_data, solenoid, test_stand, self.z_scaled
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
             )
             fig = cross_section.plot_cross_sections(show=False)
             cross_section.save_as_html(fig, default_filename, parent=self.gui)
@@ -428,13 +469,16 @@ class App:
             test_stand = self.gui.test_stand_input.text()
             beam_voltage = self.gui.beam_voltage_input.text()
             ext_voltage = self.gui.ext_voltage_input.text()
-            self.fcup_diameter = float(self.gui.fcup_diameter_input.text())
-            self.fcup_distance = float(self.gui.fcup_distance_input.text())
             default_filename = f'{scan_date} SN-{serial_num} @ {beam_voltage}_{ext_voltage} kV & {solenoid} A on TS{test_stand} Ang Int vs Divergence Angle.html'
-            i_prime = IPrime(self.scan_data, solenoid, test_stand, self.z_scaled)
-            fig = i_prime.plot_i_prime(
-                self.fcup_diameter, self.fcup_distance, show=False
+            i_prime = IPrime(
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
             )
+            fig = i_prime.plot_i_prime(show=False)
             i_prime.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
             full_traceback = traceback.format_exc()
@@ -452,20 +496,42 @@ class App:
             test_stand = self.gui.test_stand_input.text()
             beam_voltage = self.gui.beam_voltage_input.text()
             ext_voltage = self.gui.ext_voltage_input.text()
-            self.fcup_diameter = float(self.gui.fcup_diameter_input.text())
-            self.fcup_distance = float(self.gui.fcup_distance_input.text())
-            surface = Surface(self.scan_data, solenoid, test_stand, self.z_scaled)
+            surface = Surface(
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
+            )
             surface_fig = surface.plot_surface(show=False)
-            heatmap = Heatmap(self.scan_data, solenoid, test_stand, self.z_scaled)
+            heatmap = Heatmap(
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
+            )
             heatmap_fig = heatmap.plot_heatmap(show=False)
             cross_section = XYCrossSections(
-                self.scan_data, solenoid, test_stand, self.z_scaled
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
             )
             cross_section_fig = cross_section.plot_cross_sections(show=False)
-            i_prime = IPrime(self.scan_data, solenoid, test_stand, self.z_scaled)
-            i_prime_fig = i_prime.plot_i_prime(
-                self.fcup_diameter, self.fcup_distance, show=False
+            i_prime = IPrime(
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
             )
+            i_prime_fig = i_prime.plot_i_prime(show=False)
 
             plots = {
                 '3D Surface.html': surface_fig,
@@ -497,20 +563,42 @@ class App:
             test_stand = self.gui.test_stand_input.text()
             beam_voltage = self.gui.beam_voltage_input.text()
             ext_voltage = self.gui.ext_voltage_input.text()
-            self.fcup_diameter = float(self.gui.fcup_diameter_input.text())
-            self.fcup_distance = float(self.gui.fcup_distance_input.text())
-            surface = Surface(self.scan_data, solenoid, test_stand, self.z_scaled)
+            surface = Surface(
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
+            )
             surface_fig = surface.plot_surface(show=False)
-            heatmap = Heatmap(self.scan_data, solenoid, test_stand, self.z_scaled)
+            heatmap = Heatmap(
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
+            )
             heatmap_fig = heatmap.plot_heatmap(show=False)
             cross_section = XYCrossSections(
-                self.scan_data, solenoid, test_stand, self.z_scaled
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
             )
             cross_section_fig = cross_section.plot_cross_sections(show=False)
-            i_prime = IPrime(self.scan_data, solenoid, test_stand, self.z_scaled)
-            i_prime_fig = i_prime.plot_i_prime(
-                self.fcup_diameter, self.fcup_distance, show=False
+            i_prime = IPrime(
+                self.scan_data,
+                solenoid,
+                self.fcup_diam,
+                self.fcup_dist,
+                test_stand,
+                self.z_scaled,
             )
+            i_prime_fig = i_prime.plot_i_prime(show=False)
 
             plots = {
                 '3D Surface.png': surface_fig,

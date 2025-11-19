@@ -58,6 +58,8 @@ class Plotter:
         self,
         scan_data: ScanData,
         solenoid: str,
+        fcup_diam: float,
+        fcup_dist: float,
         test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
@@ -189,10 +191,12 @@ class Surface(Plotter):
         self,
         scan_data: ScanData,
         solenoid: str,
+        fcup_diam: float,
+        fcup_dist: float,
         test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(scan_data, solenoid, test_stand, z_scale)
+        super().__init__(scan_data, solenoid, fcup_diam, fcup_dist, test_stand, z_scale)
 
     def plot_surface(self, show=True) -> None | Figure:
         fig = surface_figures.surface(
@@ -215,10 +219,12 @@ class Heatmap(Plotter):
         self,
         scan_data: ScanData,
         solenoid: str,
+        fcup_diam: float,
+        fcup_dist: float,
         test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(scan_data, solenoid, test_stand, z_scale)
+        super().__init__(scan_data, solenoid, fcup_diam, fcup_dist, test_stand, z_scale)
 
     def plot_heatmap(self, show=True) -> None | Figure:
         heatmap = heatmaps.heatmap(
@@ -350,10 +356,12 @@ class XYCrossSections(Plotter):
         self,
         scan_data: ScanData,
         solenoid: str,
+        fcup_diam: float,
+        fcup_dist: float,
         test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(scan_data, solenoid, test_stand, z_scale)
+        super().__init__(scan_data, solenoid, fcup_diam, fcup_dist, test_stand, z_scale)
 
     def plot_cross_sections(self, show=True) -> Figure | None:
         scaling_factor = 1e-6  # scale to microamps
@@ -428,15 +436,17 @@ class IPrime(Plotter):
         self,
         scan_data: ScanData,
         solenoid: str,
+        fcup_diam: float,
+        fcup_dist: float,
         test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(scan_data, solenoid, test_stand, z_scale)
+        super().__init__(scan_data, solenoid, fcup_diam, fcup_dist, test_stand, z_scale)
+        self.fcup_diameter = fcup_diam
+        self.fcup_distance = fcup_dist
 
     def plot_i_prime(
         self,
-        fcup_diameter: float,
-        fcup_distance: float,
         show=True,
     ) -> Figure | None:
         Xc = self.centroid[0]
@@ -446,7 +456,7 @@ class IPrime(Plotter):
         )
 
         i_prime: NDArray[np.float64] = self.scan_data.compute_angular_intensity(
-            fcup_distance, fcup_diameter
+            self.fcup_distance, self.fcup_diameter
         )
 
         y_idx: int = int(np.abs(self.grid_y[:, 0] - Yc).argmin())
@@ -475,10 +485,10 @@ class IPrime(Plotter):
             np.asarray(self.y_slice['Y Coordinate'] - y_center) / 1000
         )  # millimeters
         x_angle: NDArray[np.float64] = (
-            np.arctan(dist_from_x_center / fcup_distance) * 1000.0
+            np.arctan(dist_from_x_center / self.fcup_distance) * 1000.0
         )  # milli-radians
         y_angle: NDArray[np.float64] = (
-            np.arctan(dist_from_y_center / fcup_distance) * 1000.0
+            np.arctan(dist_from_y_center / self.fcup_distance) * 1000.0
         )  # milli-radians
 
         fig.add_trace(
@@ -535,13 +545,21 @@ if __name__ == '__main__':
     else:
         z_scale: list[int | float | None] = [None, None]
         solenoid: str = '0.3'
-    surface = Surface(scan_data, solenoid, test_stand='4', z_scale=z_scale)
+    fcup_diam = 2.5
+    fcup_dist = 205
+    surface = Surface(
+        scan_data, solenoid, fcup_diam, fcup_dist, test_stand='4', z_scale=z_scale
+    )
     surface.plot_surface()
-    heatmap = Heatmap(scan_data, solenoid, test_stand='4', z_scale=z_scale)
+    heatmap = Heatmap(
+        scan_data, solenoid, fcup_diam, fcup_dist, test_stand='4', z_scale=z_scale
+    )
     heatmap.plot_heatmap()
     xy_cross_sections = XYCrossSections(
-        scan_data, solenoid, test_stand='4', z_scale=z_scale
+        scan_data, solenoid, fcup_diam, fcup_dist, test_stand='4', z_scale=z_scale
     )
     xy_cross_sections.plot_cross_sections()
-    i_prime = IPrime(scan_data, solenoid, test_stand='4', z_scale=z_scale)
-    i_prime.plot_i_prime(fcup_diameter=2.5, fcup_distance=205)
+    i_prime = IPrime(
+        scan_data, solenoid, fcup_diam, fcup_dist, test_stand='4', z_scale=z_scale
+    )
+    i_prime.plot_i_prime()
