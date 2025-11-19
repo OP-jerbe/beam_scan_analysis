@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
+from numpy import float64
 from numpy.typing import NDArray
 from plotly.graph_objects import Figure
 from plotly.subplots import make_subplots
@@ -78,7 +79,9 @@ class Plotter:
 
         self.z_scale: list[int | float | None] = z_scale
 
-        self.grid_x, self.grid_y, self.grid_z = self.scan_data.create_grid()
+        self.grid_x: NDArray[float64] = self.scan_data.grid_x
+        self.grid_y: NDArray[float64] = self.scan_data.grid_y
+        self.grid_z: NDArray[float64] = self.scan_data.grid_z
 
         self.y_idx: int = int(np.abs(self.grid_y[:, 0] - self.centroid[1]).argmin())
         self.x_idx: int = int(np.abs(self.grid_x[0, :] - self.centroid[0]).argmin())
@@ -442,25 +445,23 @@ class IPrime(Plotter):
             rows=1, cols=2, subplot_titles=['X Cross Section', 'Y Cross Section']
         )
 
-        grid_x, grid_y, grid_z = self.scan_data.create_grid()
-
         i_prime: NDArray[np.float64] = self.scan_data.compute_angular_intensity(
             fcup_distance, fcup_diameter
         )
 
-        y_idx: int = int(np.abs(grid_y[:, 0] - Yc).argmin())
-        x_idx: int = int(np.abs(grid_x[0, :] - Xc).argmin())
+        y_idx: int = int(np.abs(self.grid_y[:, 0] - Yc).argmin())
+        x_idx: int = int(np.abs(self.grid_x[0, :] - Xc).argmin())
         self.x_slice = pd.DataFrame(
             {
-                'X Coordinate': grid_x[y_idx, :],
-                'Faraday Cup Current': grid_z[y_idx, :],
+                'X Coordinate': self.grid_x[y_idx, :],
+                'Faraday Cup Current': self.grid_z[y_idx, :],
                 'Angular Intensity': i_prime[self.y_idx, :],
             }
         )
         self.y_slice = pd.DataFrame(
             {
-                'Y Coordinate': grid_y[:, x_idx],
-                'Faraday Cup Current': grid_z[:, x_idx],
+                'Y Coordinate': self.grid_y[:, x_idx],
+                'Faraday Cup Current': self.grid_z[:, x_idx],
                 'Angular Intensity': i_prime[:, self.x_idx],
             }
         )
