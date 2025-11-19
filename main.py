@@ -67,6 +67,7 @@ class App:
         self.gui.override_centroid_option.triggered.connect(
             self.override_centroid_handler
         )
+        self.gui.disable_interp_option.triggered.connect(self.disable_interp_handler)
         self.gui.exit_option.triggered.connect(QApplication.quit)
         self.gui.save_3D_surface_option.triggered.connect(self.save_3d_surface_html)
         self.gui.save_heatmap_option.triggered.connect(self.save_heatmap_html)
@@ -90,6 +91,29 @@ class App:
                 lambda: self.gui.override_centroid_option.setChecked(False)
             )
             self.override_centroid_window.show()
+
+    def disable_interp_handler(self) -> None:
+        if self.gui.disable_interp_option.isChecked():
+            # Make sure there is data loaded
+            if not hasattr(self, 'scan_data'):
+                self.gui.disable_interp_option.setChecked(False)
+                print('No scan data loaded!!!')
+                # probably put a popup window here telling the user to first load in data.
+                return
+            match self.scan_data.resolution:
+                case 'Highest':
+                    interp_num = 65
+                case 'High':
+                    interp_num = 33
+                case 'Med':
+                    interp_num = 17
+                case 'Low':
+                    interp_num = 9
+                case _:
+                    interp_num = 500
+            self.scan_data.create_grid(interp_num)
+            return
+        self.scan_data.create_grid(interp_num=500)
 
     def receive_centroid_values(self, x: float, y: float) -> None:
         self.Xc = x
