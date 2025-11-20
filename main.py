@@ -3,19 +3,22 @@ import traceback
 import webbrowser
 from datetime import datetime
 from pathlib import Path
+from typing import NoReturn
 
 import pandas as pd
+from PySide6.QtCore import QObject, Slot
+from PySide6.QtWidgets import QApplication
 
 from beam_scan_analysis import ScanData
-from beam_scan_gui import MainWindow, OverrideCentroidWindow, QApplication
+from beam_scan_gui import MainWindow, OverrideCentroidWindow
 from beam_scan_plotting import Heatmap, IPrime, Plotter, Surface, XYCrossSections
 from load_scan_data import CSVLoader
 
-APP_VERSION = '1.12.0'
+APP_VERSION = '1.13.0'
 CSV_EXPORT_VERSION = '2'
 
 
-class App:
+class App(QObject):
     """
     A class for managing the application logic and GUI interactions.
 
@@ -50,12 +53,13 @@ class App:
     """
 
     def __init__(self) -> None:
-        self.app = QApplication([])
+        # self.app = QApplication([])
         self.gui = MainWindow()
         self.gui.setWindowTitle(f'Beam Scan Analysis v{APP_VERSION}')
         self.fcup_diam = float(self.gui.fcup_diameter_input.text())
         self.fcup_dist = float(self.gui.fcup_distance_input.text())
         self.z_scaled: list[int | float | None] = [None, None]
+        self.centroid: tuple[float, float] | None = None
         self.csv_filepath: str
         self.scan_data: ScanData
         self.beam_voltage: str
@@ -111,15 +115,16 @@ class App:
                     interp_num = 9
                 case _:
                     interp_num = 500
-            self.scan_data.interp_override_flag = True
+            self.scan_data.disable_interp_flag = True
             self.scan_data.create_grid(interp_num)
             return
-        self.scan_data.interp_override_flag = False
+        self.scan_data.disable_interp_flag = False
         self.scan_data.create_grid(interp_num=500)
 
+    @Slot(float, float)
     def receive_centroid_values(self, x: float, y: float) -> None:
-        self.Xc = x
-        self.Yc = y
+        self.Xc: float = x
+        self.Yc: float = y
 
     def select_csv_handler(self) -> None:
         """
@@ -223,6 +228,11 @@ class App:
         if self.gui.upper_bound_input.text():
             self.z_scaled[1] = float(self.gui.upper_bound_input.text())
 
+        if not self.gui.override_centroid_option.isChecked():
+            self.centroid = self.scan_data.compute_weighted_centroid()
+        else:
+            self.centroid = (self.Xc, self.Yc)
+
         if self.gui.surface_cb.isChecked():
             try:
                 surface = Surface(
@@ -230,13 +240,10 @@ class App:
                     self.solenoid,
                     self.fcup_diam,
                     self.fcup_dist,
+                    self.centroid,
                     self.test_stand,
                     self.z_scaled,
                 )
-                if self.gui.override_centroid_option.isChecked():
-                    centroid = self.override_centroid_window.get_override_values()
-                    if centroid is not None:
-                        surface.centroid = centroid
                 surface.plot_surface()
             except Exception as e:
                 full_traceback = traceback.format_exc()
@@ -250,13 +257,10 @@ class App:
                     self.solenoid,
                     self.fcup_diam,
                     self.fcup_dist,
+                    self.centroid,
                     self.test_stand,
                     self.z_scaled,
                 )
-                if self.gui.override_centroid_option.isChecked():
-                    centroid = self.override_centroid_window.get_override_values()
-                    if centroid is not None:
-                        heatmap.centroid = centroid
                 heatmap.plot_heatmap()
             except Exception as e:
                 full_traceback = traceback.format_exc()
@@ -270,13 +274,10 @@ class App:
                     self.solenoid,
                     self.fcup_diam,
                     self.fcup_dist,
+                    self.centroid,
                     self.test_stand,
                     self.z_scaled,
                 )
-                if self.gui.override_centroid_option.isChecked():
-                    centroid = self.override_centroid_window.get_override_values()
-                    if centroid is not None:
-                        xy_cross_section.centroid = centroid
                 xy_cross_section.plot_cross_sections()
             except Exception as e:
                 full_traceback = traceback.format_exc()
@@ -290,13 +291,10 @@ class App:
                     self.solenoid,
                     self.fcup_diam,
                     self.fcup_dist,
+                    self.centroid,
                     self.test_stand,
                     self.z_scaled,
                 )
-                if self.gui.override_centroid_option.isChecked():
-                    centroid = self.override_centroid_window.get_override_values()
-                    if centroid is not None:
-                        i_prime.centroid = centroid
                 i_prime.plot_i_prime()
             except Exception as e:
                 full_traceback = traceback.format_exc()
@@ -379,6 +377,11 @@ class App:
         data.to_csv(filename, index=False, mode='a')  # append the data
 
     def save_3d_surface_html(self) -> None:
+        if not self.gui.override_centroid_option.isChecked():
+            self.centroid = self.scan_data.compute_weighted_centroid()
+        else:
+            self.centroid = (self.Xc, self.Yc)
+
         try:
             scan_datetime = self.scan_data.scan_datetime
             date_obj = datetime.strptime(scan_datetime, '%m/%d/%Y %I:%M %p')
@@ -394,6 +397,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -406,6 +410,10 @@ class App:
             )
 
     def save_heatmap_html(self) -> None:
+        if not self.gui.override_centroid_option.isChecked():
+            self.centroid = self.scan_data.compute_weighted_centroid()
+        else:
+            self.centroid = (self.Xc, self.Yc)
         try:
             scan_data_datetime = self.scan_data.scan_datetime
             date_obj = datetime.strptime(scan_data_datetime, '%m/%d/%Y %I:%M %p')
@@ -421,6 +429,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -433,6 +442,11 @@ class App:
             )
 
     def save_x_cross_section_html(self) -> None:
+        if not self.gui.override_centroid_option.isChecked():
+            self.centroid = self.scan_data.compute_weighted_centroid()
+        else:
+            self.centroid = (self.Xc, self.Yc)
+
         try:
             scan_data_datetime = self.scan_data.scan_datetime
             date_obj = datetime.strptime(scan_data_datetime, '%m/%d/%Y %I:%M %p')
@@ -448,6 +462,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -460,6 +475,11 @@ class App:
             )
 
     def save_i_prime_html(self) -> None:
+        if not self.gui.override_centroid_option.isChecked():
+            self.centroid = self.scan_data.compute_weighted_centroid()
+        else:
+            self.centroid = (self.Xc, self.Yc)
+
         try:
             scan_data_datetime = self.scan_data.scan_datetime
             date_obj = datetime.strptime(scan_data_datetime, '%m/%d/%Y %I:%M %p')
@@ -475,6 +495,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -487,6 +508,10 @@ class App:
             )
 
     def save_all_html(self) -> None:
+        if not self.gui.override_centroid_option.isChecked():
+            self.centroid = self.scan_data.compute_weighted_centroid()
+        else:
+            self.centroid = (self.Xc, self.Yc)
         try:
             scan_data_datetime = self.scan_data.scan_datetime
             date_obj = datetime.strptime(scan_data_datetime, '%m/%d/%Y %I:%M %p')
@@ -501,6 +526,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -510,6 +536,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -519,6 +546,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -528,6 +556,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -554,6 +583,11 @@ class App:
             )
 
     def save_all_png(self) -> None:
+        if not self.gui.override_centroid_option.isChecked():
+            self.centroid = self.scan_data.compute_weighted_centroid()
+        else:
+            self.centroid = (self.Xc, self.Yc)
+
         try:
             scan_data_datetime = self.scan_data.scan_datetime
             date_obj = datetime.strptime(scan_data_datetime, '%m/%d/%Y %I:%M %p')
@@ -568,6 +602,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -577,6 +612,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -586,6 +622,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -595,6 +632,7 @@ class App:
                 solenoid,
                 self.fcup_diam,
                 self.fcup_dist,
+                self.centroid,
                 test_stand,
                 self.z_scaled,
             )
@@ -630,20 +668,22 @@ class App:
 
         webbrowser.open_new_tab(filepath.resolve().as_uri())
 
-    def run(self) -> None:
-        """
-        Start the application event loop.
 
-        This method initializes the application event loop by calling `exec()` on the app instance.
-        Once the event loop completes, it exits the application with the corresponding exit code.
+def run_app() -> NoReturn:
+    """
+    Start the application event loop.
 
-        Returns:
-            None
-        """
-        exit_code: int = self.app.exec()
-        sys.exit(exit_code)
+    This method initializes the application event loop by calling `exec()` on the app instance.
+    Once the event loop completes, it exits the application with the corresponding exit code.
+
+    Returns:
+        None
+    """
+    app = QApplication([])
+    _ = App()
+    exit_code: int = app.exec()
+    sys.exit(exit_code)
 
 
 if __name__ == '__main__':
-    app = App()
-    app.run()
+    run_app()

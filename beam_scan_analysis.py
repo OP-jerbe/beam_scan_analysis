@@ -40,7 +40,7 @@ class ScanData:
     fcup_diameter: str | None
     well_structured_csv: bool
 
-    interp_override_flag: bool = False
+    disable_interp_flag: bool = False
 
     interp_num: int = field(init=False)
     grid_x: NDArray[float64] = field(init=False)
@@ -49,7 +49,7 @@ class ScanData:
 
     def __post_init__(self) -> None:
         # if the override option is not checked
-        if not self.interp_override_flag:
+        if not self.disable_interp_flag:
             self.interp_num = 500
             self.grid_x, self.grid_y, self.grid_z = self.create_grid(self.interp_num)
             return

@@ -60,6 +60,7 @@ class Plotter:
         solenoid: str,
         fcup_diam: float,
         fcup_dist: float,
+        centroid: tuple[float, float],
         test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
@@ -77,7 +78,7 @@ class Plotter:
         self.peak_total_current: float = scan_data.peak_total_current()
         self.fwhm_enclosed_area: float = scan_data.fwhm_area()
         self.fwqm_enclosed_area: float = scan_data.fwqm_area()
-        self.centroid: tuple[float, float] = scan_data.compute_weighted_centroid()
+        self.centroid: tuple[float, float] = centroid
 
         self.z_scale: list[int | float | None] = z_scale
 
@@ -89,22 +90,28 @@ class Plotter:
             fcup_dist, fcup_diam
         )
 
-        self.y_idx: int = int(np.abs(self.grid_y[:, 0] - self.centroid[1]).argmin())
-        self.x_idx: int = int(np.abs(self.grid_x[0, :] - self.centroid[0]).argmin())
+        self.y_slice_idx: int = int(
+            np.abs(self.grid_y[:, 0] - self.centroid[1]).argmin()
+        )
+        self.x_slice_idx: int = int(
+            np.abs(self.grid_x[0, :] - self.centroid[0]).argmin()
+        )
         self.x_slice = pd.DataFrame(
             {
-                'X Coordinate': self.grid_x[self.y_idx, :],
-                'Faraday Cup Current': self.grid_z[self.y_idx, :],
-                'Angular Intensity': self.i_prime[self.y_idx, :],
+                'X Coordinate': self.grid_x[self.y_slice_idx, :],
+                'Faraday Cup Current': self.grid_z[self.y_slice_idx, :],
+                'Angular Intensity': self.i_prime[self.y_slice_idx, :],
             }
         )
         self.y_slice = pd.DataFrame(
             {
-                'Y Coordinate': self.grid_y[:, self.x_idx],
-                'Faraday Cup Current': self.grid_z[:, self.x_idx],
-                'Angular Intensity': self.i_prime[:, self.x_idx],
+                'Y Coordinate': self.grid_y[:, self.x_slice_idx],
+                'Faraday Cup Current': self.grid_z[:, self.x_slice_idx],
+                'Angular Intensity': self.i_prime[:, self.x_slice_idx],
             }
         )
+        self.centroid_slice_x = pd.DataFrame({})
+        self.centroid_slice_y = pd.DataFrame({})
 
         # Set the plotting color based on polarity of beam scan
         colors: dict[str, str] = {'NEG': 'viridis_r', 'POS': 'viridis'}
@@ -199,10 +206,13 @@ class Surface(Plotter):
         solenoid: str,
         fcup_diam: float,
         fcup_dist: float,
+        centroid: tuple[float, float],
         test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(scan_data, solenoid, fcup_diam, fcup_dist, test_stand, z_scale)
+        super().__init__(
+            scan_data, solenoid, fcup_diam, fcup_dist, centroid, test_stand, z_scale
+        )
 
     def plot_surface(self, show=True) -> None | Figure:
         fig = surface_figures.surface(
@@ -227,10 +237,13 @@ class Heatmap(Plotter):
         solenoid: str,
         fcup_diam: float,
         fcup_dist: float,
+        centroid: tuple[float, float],
         test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(scan_data, solenoid, fcup_diam, fcup_dist, test_stand, z_scale)
+        super().__init__(
+            scan_data, solenoid, fcup_diam, fcup_dist, centroid, test_stand, z_scale
+        )
 
     def plot_heatmap(self, show=True) -> None | Figure:
         heatmap = heatmaps.heatmap(
@@ -364,10 +377,13 @@ class XYCrossSections(Plotter):
         solenoid: str,
         fcup_diam: float,
         fcup_dist: float,
+        centroid: tuple[float, float],
         test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(scan_data, solenoid, fcup_diam, fcup_dist, test_stand, z_scale)
+        super().__init__(
+            scan_data, solenoid, fcup_diam, fcup_dist, centroid, test_stand, z_scale
+        )
 
     def plot_cross_sections(self, show=True) -> Figure | None:
         scaling_factor = 1e-6  # scale to microamps
@@ -444,10 +460,13 @@ class IPrime(Plotter):
         solenoid: str,
         fcup_diam: float,
         fcup_dist: float,
+        centroid: tuple[float, float],
         test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(scan_data, solenoid, fcup_diam, fcup_dist, test_stand, z_scale)
+        super().__init__(
+            scan_data, solenoid, fcup_diam, fcup_dist, centroid, test_stand, z_scale
+        )
         self.fcup_diameter = fcup_diam
         self.fcup_distance = fcup_dist
 
@@ -528,19 +547,44 @@ if __name__ == '__main__':
         solenoid: str = '0.3'
     fcup_diam = 2.5
     fcup_dist = 205
+    centroid = scan_data.compute_weighted_centroid()
     surface = Surface(
-        scan_data, solenoid, fcup_diam, fcup_dist, test_stand='4', z_scale=z_scale
+        scan_data,
+        solenoid,
+        fcup_diam,
+        fcup_dist,
+        centroid,
+        test_stand='4',
+        z_scale=z_scale,
     )
     surface.plot_surface()
     heatmap = Heatmap(
-        scan_data, solenoid, fcup_diam, fcup_dist, test_stand='4', z_scale=z_scale
+        scan_data,
+        solenoid,
+        fcup_diam,
+        fcup_dist,
+        centroid,
+        test_stand='4',
+        z_scale=z_scale,
     )
     heatmap.plot_heatmap()
     xy_cross_sections = XYCrossSections(
-        scan_data, solenoid, fcup_diam, fcup_dist, test_stand='4', z_scale=z_scale
+        scan_data,
+        solenoid,
+        fcup_diam,
+        fcup_dist,
+        centroid,
+        test_stand='4',
+        z_scale=z_scale,
     )
     xy_cross_sections.plot_cross_sections()
     i_prime = IPrime(
-        scan_data, solenoid, fcup_diam, fcup_dist, test_stand='4', z_scale=z_scale
+        scan_data,
+        solenoid,
+        fcup_diam,
+        fcup_dist,
+        centroid,
+        test_stand='4',
+        z_scale=z_scale,
     )
     i_prime.plot_i_prime()
