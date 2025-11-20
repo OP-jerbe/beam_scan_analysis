@@ -8,7 +8,6 @@ from typing import NoReturn
 import pandas as pd
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
-from src.view.model.beam_scan_analysis import ScanData
 
 from src.controller.beam_scan_plotting import (
     Heatmap,
@@ -18,7 +17,8 @@ from src.controller.beam_scan_plotting import (
     XYCrossSections,
 )
 from src.controller.load_scan_data import CSVLoader
-from src.view.beam_scan_gui import MainWindow, OverrideCentroidWindow
+from src.model.beam_scan_analysis import ScanData
+from src.view.main_window import MainWindow, OverrideCentroidWindow
 
 APP_VERSION = '1.13.0'
 CSV_EXPORT_VERSION = '2'
@@ -60,7 +60,7 @@ class App(QObject):
 
     def __init__(self) -> None:
         # self.app = QApplication([])
-        self.gui = MainWindow()
+        self.gui = MainWindow(version='3.0.0')
         self.gui.setWindowTitle(f'Beam Scan Analysis v{APP_VERSION}')
         self.fcup_diam = float(self.gui.fcup_diameter_input.text())
         self.fcup_dist = float(self.gui.fcup_distance_input.text())

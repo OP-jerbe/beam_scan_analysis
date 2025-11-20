@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 from PySide6.QtWidgets import QFileDialog
 
-from src.view.model.beam_scan_analysis import ScanData
+from src.model.beam_scan_analysis import ScanData
 
 
 class CSVLoader:

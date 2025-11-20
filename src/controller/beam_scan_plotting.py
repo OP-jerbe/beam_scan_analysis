@@ -9,10 +9,10 @@ from numpy.typing import NDArray
 from plotly.graph_objects import Figure
 from plotly.subplots import make_subplots
 from PySide6.QtWidgets import QFileDialog
-from src.view.model.beam_scan_analysis import ScanData
 
 import src.controller.heatmaps as heatmaps
 import src.controller.surface_figures as surface_figures
+from src.model.beam_scan_analysis import ScanData
 
 PNG_WIDTH = 700
 PNG_HEIGHT = 500

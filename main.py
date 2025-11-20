@@ -2,7 +2,8 @@ import sys
 from typing import NoReturn
 
 from PySide6.QtWidgets import QApplication
-from src.gui.main_window import MainWindow
+
+from src.view.main_window import MainWindow
 
 
 def run_app() -> NoReturn:
