@@ -301,7 +301,7 @@ class ScanData:
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
-    from load_scan_data import CSVLoader
+    from src.controller.load_scan_data import CSVLoader
 
     QApplication([])
     filepath: str = CSVLoader.select_csv()
