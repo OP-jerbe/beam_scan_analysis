@@ -1,5 +1,0 @@
-pyinstaller --add-data "scan.ico;." --add-data "quick_start_guide.html;." --icon=scan.ico --onedir --windowed --noconfirm main.py
-
-or
-
-pyinstaller --noconfirm main.spec
