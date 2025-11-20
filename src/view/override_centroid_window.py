@@ -57,6 +57,7 @@ class OverrideCentroidWindow(QWidget):
         self.override_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.override_button.setFixedHeight(28)
         self.override_button.clicked.connect(self.handle_submit)
+        self.override_button.setAutoDefault(True)
 
         # Arrange widgets in window
         main_layout = QVBoxLayout()
