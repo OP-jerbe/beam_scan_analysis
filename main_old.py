@@ -9,15 +9,15 @@ import pandas as pd
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
 
-from src.controller.beam_scan_plotting import (
+from helpers.load_scan_data import CSVLoader
+from src.model.beam_scan_analysis import ScanData
+from src.view.beam_scan_plotting import (
     Heatmap,
     IPrime,
     Plotter,
     Surface,
     XYCrossSections,
 )
-from src.controller.load_scan_data import CSVLoader
-from src.model.beam_scan_analysis import ScanData
 from src.view.main_window import MainWindow, OverrideCentroidWindow
 
 APP_VERSION = '1.13.0'

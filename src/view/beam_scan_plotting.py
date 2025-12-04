@@ -10,8 +10,8 @@ from plotly.graph_objects import Figure
 from plotly.subplots import make_subplots
 from PySide6.QtWidgets import QFileDialog
 
-import src.controller.heatmaps as heatmaps
-import src.controller.surface_figures as surface_figures
+import src.view.heatmaps as heatmaps
+import src.view.surface_figures as surface_figures
 from src.model.beam_scan_analysis import ScanData
 
 PNG_WIDTH = 700
@@ -534,7 +534,7 @@ class IPrime(Plotter):
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
-    from src.controller.load_scan_data import CSVLoader
+    from helpers.load_scan_data import CSVLoader
 
     QApplication([])
     filepath: str = CSVLoader.select_csv()
