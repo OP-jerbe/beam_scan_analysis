@@ -1,7 +1,7 @@
 import sys
 
 import numpy as np
-from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt
+from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt, Signal
 from PySide6.QtGui import QAction, QIcon, QMouseEvent, QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QApplication,
@@ -24,6 +24,9 @@ from src.view.override_centroid_window import OverrideCentroidWindow
 
 
 class MainWindow(QMainWindow):
+    select_csv_file_sig = Signal()
+    plot_beam_scan_sig = Signal()
+
     def __init__(self, version) -> None:
         super().__init__()
         self.version = version
