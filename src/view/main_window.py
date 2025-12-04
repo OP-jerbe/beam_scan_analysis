@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt, Signal
@@ -20,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 from qt_material import apply_stylesheet
 
+import helpers.helpers as h
 from src.view.override_centroid_window import OverrideCentroidWindow
 
 
@@ -43,10 +45,8 @@ class MainWindow(QMainWindow):
         window_height = 500
 
         self.setFixedSize(window_width, window_height)
-        if hasattr(sys, 'frozen'):  # Check if running from the bundled app
-            icon_path = sys._MEIPASS + '/scan.ico'  # type: ignore
-        else:
-            icon_path = 'scan.ico'  # Use the local icon file in dev mode
+        root_dir: Path = h.get_root_dir()
+        icon_path: str = str(root_dir / 'assets' / 'icon.ico')
         self.setWindowIcon(QIcon(icon_path))
         apply_stylesheet(self, theme='dark_lightgreen.xml', invert_secondary=True)
         self.setStyleSheet(
