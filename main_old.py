@@ -94,7 +94,7 @@ class App(QObject):
 
     def override_centroid_handler(self) -> None:
         if self.gui.override_centroid_option.isChecked():
-            self.override_centroid_window = OverrideCentroidWindow(self)
+            self.override_centroid_window = OverrideCentroidWindow()
             self.override_centroid_window.centroid_set.connect(
                 self.receive_centroid_values
             )
