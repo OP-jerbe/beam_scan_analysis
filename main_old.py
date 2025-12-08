@@ -20,7 +20,7 @@ from src.view.beam_scan_plotting import (
 )
 from src.view.main_window import MainWindow, OverrideCentroidWindow
 
-APP_VERSION = '1.13.0'
+APP_VERSION = '3.0.0'
 CSV_EXPORT_VERSION = '2'
 
 
@@ -59,8 +59,7 @@ class App(QObject):
     """
 
     def __init__(self) -> None:
-        # self.app = QApplication([])
-        self.gui = MainWindow(version='3.0.0')
+        self.gui = MainWindow(version=APP_VERSION)
         self.gui.setWindowTitle(f'Beam Scan Analysis v{APP_VERSION}')
         self.fcup_diam = float(self.gui.fcup_diameter_input.text())
         self.fcup_dist = float(self.gui.fcup_distance_input.text())
@@ -95,7 +94,7 @@ class App(QObject):
 
     def override_centroid_handler(self) -> None:
         if self.gui.override_centroid_option.isChecked():
-            self.override_centroid_window = OverrideCentroidWindow()
+            self.override_centroid_window = OverrideCentroidWindow(self)
             self.override_centroid_window.centroid_set.connect(
                 self.receive_centroid_values
             )
