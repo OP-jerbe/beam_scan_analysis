@@ -9,6 +9,8 @@ from numpy.typing import NDArray
 # from PySide6.QtWidgets import QFileDialog
 # import sys
 from scipy.interpolate import griddata
+from scipy.spatial import ConvexHull
+from scipy.spatial.distance import pdist
 from skimage import (
     measure,
 )  # For find_contours <conda install -c conda-forge scikit-image>
@@ -103,12 +105,24 @@ class ScanData:
 
         # Calculate the area enclosed by the contour lines at half max of cup current
         try:
-            fwhm_enclosed_area: float = (
-                self.area_enclosed_by_contour(
-                    self.grid_x, self.grid_y, self.grid_z, half_max
-                )
-                * 1e-6
-            )  # sq-mm
+            fwhm_properties: dict = self.get_contour_properties(
+                self.grid_x, self.grid_y, self.grid_z, half_max
+            )
+            fwhm_enclosed_area = fwhm_properties['area'] * 1e-6  # mm-sq
+            fwhm_max_diam = round(
+                float(fwhm_properties['max_diameter'] * 1e-3), 3
+            )  # mm
+            fwhm_min_diam = round(
+                float(fwhm_properties['min_diameter'] * 1e-3), 3
+            )  # mm
+            print(f'{fwhm_max_diam = } mm')
+            print(f'{fwhm_min_diam = } mm')
+            # fwhm_enclosed_area: float = (
+            #     self.area_enclosed_by_contour(
+            #         self.grid_x, self.grid_y, self.grid_z, half_max
+            #     )
+            #     * 1e-6
+            # )  # sq-mm
         except Exception as e:
             fwhm_enclosed_area: float = 0.0
             print(f'{e}')
@@ -121,12 +135,24 @@ class ScanData:
 
         # Calculate the area enclosed by the contour lines at quarter max of cup current
         try:
-            fwqm_enclosed_area: float = (
-                self.area_enclosed_by_contour(
-                    self.grid_x, self.grid_y, self.grid_z, quarter_max
-                )
-                * 1e-6
-            )  # sq-mm
+            fwqm_properties = self.get_contour_properties(
+                self.grid_x, self.grid_y, self.grid_z, quarter_max
+            )
+            fwqm_enclosed_area: float = fwqm_properties['area'] * 1e-6
+            fwqm_max_diam: float = round(
+                float(fwqm_properties['max_diameter'] * 1e-3), 3
+            )
+            fwqm_min_diam: float = round(
+                float(fwqm_properties['min_diameter'] * 1e-3), 3
+            )
+            print(f'{fwqm_max_diam = } mm')
+            print(f'{fwqm_min_diam = } mm')
+            # fwqm_enclosed_area: float = (
+            #     self.area_enclosed_by_contour(
+            #         self.grid_x, self.grid_y, self.grid_z, quarter_max
+            #     )
+            #     * 1e-6
+            # )  # sq-mm
         except Exception as e:
             fwqm_enclosed_area: float = 0.0
             print(f'{e}')
@@ -183,42 +209,68 @@ class ScanData:
         """
         return self.peak_cup_current() * 0.25
 
-    def area_enclosed_by_contour(
+    def get_contour_properties(
         self, x: NDArray, y: NDArray, z: NDArray, level: int | float
-    ) -> float:
+    ) -> dict:
         """
-        Calculate the area enclosed by a contour at a specified level in a 2D array.
-
-        Args:
-            x (NDArray): The x-axis values corresponding to the columns of `z`.
-            y (NDArray): The y-axis values corresponding to the rows of `z`.
-            z (NDArray): A 2D array of values from which to extract the contour.
-            level (int | float): The level at which to find the contour in `z`.
-
-        Returns:
-            float: The area enclosed by the contour at the specified level.
-
-        Notes:
-            Uses the Shoelace formula to compute the area within the closed contour.
-            Ensures the contour is closed by appending the starting point to the end
-            if necessary.
+        Calculate the area, max diameter, and min diameter of a contour.
         """
-        contour = np.array(measure.find_contours(z, level))[0]
-        x_contour = np.interp(
-            contour[:, 1], [0, z.shape[1] - 1], [x.min(), x.max()]
-        )  # X-axis
-        y_contour = np.interp(
-            contour[:, 0], [0, z.shape[0] - 1], [y.min(), y.max()]
-        )  # Y-axis
-        contours = np.column_stack([x_contour, y_contour])
-        if not np.allclose(contours[0], contours[-1]):
-            return 0.0  # i.e. do not try to calculate area if contour goes off of the stage limits
-        x_contour = contours[:, 1]
-        y_contour = contours[:, 0]
-        return 0.5 * np.abs(
+        # 1. Extract and scale the contour
+        raw_contours = measure.find_contours(z, level)
+        if not raw_contours:
+            return {'area': 0.0, 'max_diameter': 0.0, 'min_diameter': 0.0}
+
+        contour = np.array(raw_contours[0])
+
+        # Map from pixel indices (row, col) to data coordinates (y, x)
+        x_contour = np.interp(contour[:, 1], [0, z.shape[1] - 1], [x.min(), x.max()])
+        y_contour = np.interp(contour[:, 0], [0, z.shape[0] - 1], [y.min(), y.max()])
+
+        # Check if contour is closed
+        if not np.allclose(
+            [x_contour[0], y_contour[0]], [x_contour[-1], y_contour[-1]]
+        ):
+            return {'area': 0.0, 'max_diameter': 0.0, 'min_diameter': 0.0}
+
+        # 2. Calculate Area (Shoelace Formula)
+        area = 0.5 * np.abs(
             np.dot(x_contour, np.roll(y_contour, 1))
             - np.dot(y_contour, np.roll(x_contour, 1))
         )
+
+        # 3. Calculate Diameters using Convex Hull
+        points = np.column_stack([x_contour, y_contour])
+        hull = ConvexHull(points)
+        hull_points = points[hull.vertices]
+
+        # Max Diameter: The longest distance between any two points on the hull
+        max_diameter = np.max(pdist(hull_points))
+
+        # Min Diameter: The "Minimum Width" using Rotating Calipers logic
+        min_diameter = float('inf')
+        for i in range(len(hull_points)):
+            p1 = hull_points[i]
+            p2 = hull_points[(i + 1) % len(hull_points)]
+
+            # Vector along the hull edge
+            edge = p2 - p1
+            edge_length = np.linalg.norm(edge)
+            if edge_length == 0:
+                continue
+
+            # Normal vector to the edge
+            unit_normal = np.array([-edge[1], edge[0]]) / edge_length
+
+            # Width is the max span of points projected onto this normal
+            projections = np.dot(hull_points, unit_normal)
+            width = np.max(projections) - np.min(projections)
+            min_diameter = min(min_diameter, width)
+
+        return {
+            'area': area,
+            'max_diameter': max_diameter,
+            'min_diameter': min_diameter,
+        }
 
     def compute_weighted_centroid(self) -> tuple[float, float]:
         """
