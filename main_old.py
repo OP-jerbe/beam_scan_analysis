@@ -323,7 +323,11 @@ class App(QObject):
             'peak_cup_current': self.gui.stat_peak_cup_current,
             'peak_total_current': self.gui.stat_peak_total_current,
             'FWHM_area': self.gui.stat_fwhm_area,
+            'FWHM_max_diam': self.gui.stat_fwhm_max_diam,
+            'FWHM_min_diam': self.gui.stat_fwhm_min_diam,
             'FWQM_area': self.gui.stat_fwqm_area,
+            'FWQM_max_diam': self.gui.stat_fwqm_max_diam,
+            'FWQM_min_diam': self.gui.stat_fwqm_min_diam,
         }
         self.gui.clear_stats()
         stats: dict = scan_data.display_summary()

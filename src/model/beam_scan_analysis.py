@@ -109,26 +109,34 @@ class ScanData:
                 self.grid_x, self.grid_y, self.grid_z, half_max
             )
             fwhm_enclosed_area = fwhm_properties['area'] * 1e-6  # mm-sq
-            fwhm_max_diam = round(
-                float(fwhm_properties['max_diameter'] * 1e-3), 3
-            )  # mm
-            fwhm_min_diam = round(
-                float(fwhm_properties['min_diameter'] * 1e-3), 3
-            )  # mm
-            print(f'{fwhm_max_diam = } mm')
-            print(f'{fwhm_min_diam = } mm')
-            # fwhm_enclosed_area: float = (
-            #     self.area_enclosed_by_contour(
-            #         self.grid_x, self.grid_y, self.grid_z, half_max
-            #     )
-            #     * 1e-6
-            # )  # sq-mm
         except Exception as e:
             fwhm_enclosed_area: float = 0.0
             print(f'{e}')
             print('Could not calculate FWHM area.')
 
         return fwhm_enclosed_area
+
+    def fwhm_diams(self) -> dict[str, float]:
+        half_max = self.half_max()
+
+        # Calculate the area enclosed by the contour lines at half max of cup current
+        try:
+            fwhm_properties: dict = self.get_contour_properties(
+                self.grid_x, self.grid_y, self.grid_z, half_max
+            )
+            fwhm_max_diam = round(
+                float(fwhm_properties['max_diameter'] * 1e-3), 3
+            )  # mm
+            fwhm_min_diam = round(
+                float(fwhm_properties['min_diameter'] * 1e-3), 3
+            )  # mm
+            fwhm_diams = {'min': fwhm_min_diam, 'max': fwhm_max_diam}
+        except Exception as e:
+            fwhm_diams = {'min': 0.0, 'max': 0.0}
+            print(f'{e}')
+            print('Could not calculate FWHM area.')
+
+        return fwhm_diams
 
     def fwqm_area(self) -> float:
         quarter_max = self.quarter_max()
@@ -139,26 +147,34 @@ class ScanData:
                 self.grid_x, self.grid_y, self.grid_z, quarter_max
             )
             fwqm_enclosed_area: float = fwqm_properties['area'] * 1e-6
-            fwqm_max_diam: float = round(
-                float(fwqm_properties['max_diameter'] * 1e-3), 3
-            )
-            fwqm_min_diam: float = round(
-                float(fwqm_properties['min_diameter'] * 1e-3), 3
-            )
-            print(f'{fwqm_max_diam = } mm')
-            print(f'{fwqm_min_diam = } mm')
-            # fwqm_enclosed_area: float = (
-            #     self.area_enclosed_by_contour(
-            #         self.grid_x, self.grid_y, self.grid_z, quarter_max
-            #     )
-            #     * 1e-6
-            # )  # sq-mm
         except Exception as e:
             fwqm_enclosed_area: float = 0.0
             print(f'{e}')
             print('Could not calculate FWQM area.')
 
         return fwqm_enclosed_area
+
+    def fwqm_diams(self) -> dict[str, float]:
+        quarter_max = self.quarter_max()
+
+        # Calculate the area enclosed by the contour lines at quarter max of cup current
+        try:
+            fwhm_properties: dict = self.get_contour_properties(
+                self.grid_x, self.grid_y, self.grid_z, quarter_max
+            )
+            fwqm_max_diam = round(
+                float(fwhm_properties['max_diameter'] * 1e-3), 3
+            )  # mm
+            fwqm_min_diam = round(
+                float(fwhm_properties['min_diameter'] * 1e-3), 3
+            )  # mm
+            fwqm_diams = {'min': fwqm_min_diam, 'max': fwqm_max_diam}
+        except Exception as e:
+            fwqm_diams = {'min': 0.0, 'max': 0.0}
+            print(f'{e}')
+            print('Could not calculate FWHM area.')
+
+        return fwqm_diams
 
     def peak_location(self) -> tuple[float, float]:
         """
@@ -347,6 +363,10 @@ class ScanData:
             'solenoid_current': self.solenoid_current,
             'test_stand': self.test_stand,
             'centroid': self.compute_weighted_centroid(),
+            'FWHM_min_diam': self.fwhm_diams()['min'],
+            'FWHM_max_diam': self.fwhm_diams()['max'],
+            'FWQM_min_diam': self.fwqm_diams()['min'],
+            'FWQM_max_diam': self.fwqm_diams()['max'],
         }
 
 

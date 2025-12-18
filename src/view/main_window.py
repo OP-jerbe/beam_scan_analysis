@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
         stat_label_width = 250
         stat_label_height = 28
         window_width = 550
-        window_height = 500
+        window_height = 510
 
         self.setFixedSize(window_width, window_height)
         root_dir: Path = h.get_root_dir()
@@ -182,8 +182,16 @@ class MainWindow(QMainWindow):
         self.stat_peak_total_current.setFixedSize(stat_label_width, stat_label_height)
         self.stat_fwhm_area = QLabel('FWHM Area (mm²): ')
         self.stat_fwhm_area.setFixedSize(stat_label_width, stat_label_height)
+        self.stat_fwhm_max_diam = QLabel('FWHM Max Diam (mm): ')
+        self.stat_fwhm_max_diam.setFixedSize(stat_label_width, stat_label_height)
+        self.stat_fwhm_min_diam = QLabel('FWHM Min Diam (mm): ')
+        self.stat_fwhm_min_diam.setFixedSize(stat_label_width, stat_label_height)
         self.stat_fwqm_area = QLabel('FWQM Area (mm²): ')
         self.stat_fwqm_area.setFixedSize(stat_label_width, stat_label_height)
+        self.stat_fwqm_max_diam = QLabel('FWQM Max Diam (mm): ')
+        self.stat_fwqm_max_diam.setFixedSize(stat_label_width, stat_label_height)
+        self.stat_fwqm_min_diam = QLabel('FWQM Min Diam (mm): ')
+        self.stat_fwqm_min_diam.setFixedSize(stat_label_width, stat_label_height)
 
         # Arrange widgets in window
         v_labels_layout = QVBoxLayout()
@@ -242,7 +250,11 @@ class MainWindow(QMainWindow):
         v_sub2_main_layout.addWidget(self.stat_peak_cup_current)
         v_sub2_main_layout.addWidget(self.stat_peak_total_current)
         v_sub2_main_layout.addWidget(self.stat_fwhm_area)
+        v_sub2_main_layout.addWidget(self.stat_fwhm_max_diam)
+        v_sub2_main_layout.addWidget(self.stat_fwhm_min_diam)
         v_sub2_main_layout.addWidget(self.stat_fwqm_area)
+        v_sub2_main_layout.addWidget(self.stat_fwqm_max_diam)
+        v_sub2_main_layout.addWidget(self.stat_fwqm_min_diam)
 
         # Create a vertical line
         vertical_line = QFrame()
@@ -274,7 +286,11 @@ class MainWindow(QMainWindow):
             self.stat_peak_cup_current: 'Peak Beam Current (nA): ',
             self.stat_peak_total_current: 'Total Current at Peak (µA): ',
             self.stat_fwhm_area: 'FWHM Area (mm²): ',
+            self.stat_fwhm_max_diam: 'FWHM Max Diam (mm): ',
+            self.stat_fwhm_min_diam: 'FWHM Min Diam (mm): ',
             self.stat_fwqm_area: 'FWQM Area (mm²): ',
+            self.stat_fwqm_max_diam: 'FWQM Max Diam (mm): ',
+            self.stat_fwqm_min_diam: 'FWQM Min Diam (mm): ',
         }
         for label, default_text in default_stat_labels.items():
             label.setText(default_text)
@@ -296,7 +312,11 @@ class MainWindow(QMainWindow):
             'step_size',
             'peak_total_current',
             'FWHM_area',
+            'FWHM_max_diam',
+            'FWHM_min_diam',
             'FWQM_area',
+            'FWQM_max_diam',
+            'FWQM_min_diam',
         )
 
         if type(stat_value) is str or type(stat_value) is int:
