@@ -20,7 +20,7 @@ from src.view.beam_scan_plotting import (
 )
 from src.view.main_window import MainWindow, OverrideCentroidWindow
 
-APP_VERSION = '3.0.0'
+APP_VERSION = '1.14.0'
 CSV_EXPORT_VERSION = '2'
 
 
