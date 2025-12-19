@@ -23,15 +23,15 @@ class OverrideCentroidWindow(QWidget):
         self.submitted = False
         self.setWindowTitle('Override Centroid')
         self.setFixedSize(300, 100)
-        # if hasattr(sys, 'frozen'):  # Check if running from the bundled app
-        #     icon_path = sys._MEIPASS + '/scan.ico'  # type: ignore
-        # else:
-        #     icon_path = 'scan.ico'  # Use the local icon file in dev mode
-        # self.setWindowIcon(QIcon(icon_path))
-        # apply_stylesheet(self, theme='dark_lightgreen.xml', invert_secondary=True)
-        # self.setStyleSheet(
-        #     self.styleSheet() + """QLineEdit, QTextEdit {color: lightgreen;}"""
-        # )
+        if hasattr(sys, 'frozen'):  # Check if running from the bundled app
+            icon_path = sys._MEIPASS + 'assets/icon.ico'  # type: ignore
+        else:
+            icon_path = 'assets/icon.ico'  # Use the local icon file in dev mode
+        self.setWindowIcon(QIcon(icon_path))
+        apply_stylesheet(self, theme='dark_lightgreen.xml', invert_secondary=True)
+        self.setStyleSheet(
+            self.styleSheet() + """QLineEdit, QTextEdit {color: lightgreen;}"""
+        )
 
         # Create the validator for numerical inputs
         number_regex = QRegularExpression(r'^-?\d*\.?\d*$')
