@@ -124,12 +124,8 @@ class ScanData:
             fwhm_properties: dict = self.get_contour_properties(
                 self.grid_x, self.grid_y, self.grid_z, half_max
             )
-            fwhm_max_diam = round(
-                float(fwhm_properties['max_diameter'] * 1e-3), 3
-            )  # mm
-            fwhm_min_diam = round(
-                float(fwhm_properties['min_diameter'] * 1e-3), 3
-            )  # mm
+            fwhm_max_diam = fwhm_properties['max_diameter']  # mm
+            fwhm_min_diam = fwhm_properties['min_diameter']  # mm
             fwhm_diams = {'min': fwhm_min_diam, 'max': fwhm_max_diam}
         except Exception as e:
             fwhm_diams = {'min': 0.0, 'max': 0.0}
@@ -162,12 +158,8 @@ class ScanData:
             fwhm_properties: dict = self.get_contour_properties(
                 self.grid_x, self.grid_y, self.grid_z, quarter_max
             )
-            fwqm_max_diam = round(
-                float(fwhm_properties['max_diameter'] * 1e-3), 3
-            )  # mm
-            fwqm_min_diam = round(
-                float(fwhm_properties['min_diameter'] * 1e-3), 3
-            )  # mm
+            fwqm_max_diam = fwhm_properties['max_diameter']  # mm
+            fwqm_min_diam = fwhm_properties['min_diameter']  # mm
             fwqm_diams = {'min': fwqm_min_diam, 'max': fwqm_max_diam}
         except Exception as e:
             fwqm_diams = {'min': 0.0, 'max': 0.0}
@@ -231,10 +223,48 @@ class ScanData:
         """
         Calculate the area, max diameter, and min diameter of a contour.
         """
-        # 1. Extract and scale the contour
-        raw_contours = measure.find_contours(z, level)
-        if not raw_contours:
+
+        # 1. Get the contours but check to make sure they exists first
+        contours = self.get_contours(x, y, z, level)
+        if not contours:
             return {'area': 0.0, 'max_diameter': 0.0, 'min_diameter': 0.0}
+        x_contour, y_contour = contours
+
+        # 2. Calculate the min and max diameter of the contour
+        min_diameter, max_diameter = self.get_min_max_diameters(x_contour, y_contour)
+
+        # Check if contour is closed (first point (p1) equals last point (pn))
+        p1 = [x_contour[0], y_contour[0]]
+        pn = [x_contour[-1], y_contour[-1]]
+        if not np.allclose(p1, pn):
+            area = 0.0
+            min_diameter = 0.0
+            max_diameter = 0.0
+        else:
+            # 3. Calculate Area (Shoelace Formula)
+            area = 0.5 * np.abs(
+                np.dot(x_contour, np.roll(y_contour, 1))
+                - np.dot(y_contour, np.roll(x_contour, 1))
+            )
+
+        return {
+            'area': area,
+            'max_diameter': max_diameter,
+            'min_diameter': min_diameter,
+        }
+
+    @staticmethod
+    def get_contours(
+        x: NDArray[float64],
+        y: NDArray[float64],
+        z: NDArray[float64],
+        level: int | float,
+    ) -> tuple[NDArray[float64], NDArray[float64]] | None:
+        # Extract and scale the contour
+        raw_contours = measure.find_contours(z, level)
+
+        if not raw_contours:
+            return None
 
         contour = np.array(raw_contours[0])
 
@@ -242,51 +272,70 @@ class ScanData:
         x_contour = np.interp(contour[:, 1], [0, z.shape[1] - 1], [x.min(), x.max()])
         y_contour = np.interp(contour[:, 0], [0, z.shape[0] - 1], [y.min(), y.max()])
 
-        # Check if contour is closed
-        if not np.allclose(
-            [x_contour[0], y_contour[0]], [x_contour[-1], y_contour[-1]]
-        ):
-            return {'area': 0.0, 'max_diameter': 0.0, 'min_diameter': 0.0}
+        return x_contour, y_contour
 
-        # 2. Calculate Area (Shoelace Formula)
-        area = 0.5 * np.abs(
-            np.dot(x_contour, np.roll(y_contour, 1))
-            - np.dot(y_contour, np.roll(x_contour, 1))
-        )
+    @staticmethod
+    def get_min_max_diameters(x_contour, y_contour) -> tuple[float, float]:
+        """Calculate Diameters using Convex Hull"""
+        # Check if we have enough points to even make a shape
+        if len(x_contour) < 3:
+            return 0.0, 0.0
 
-        # 3. Calculate Diameters using Convex Hull
         points = np.column_stack([x_contour, y_contour])
+
+        # Create the "Rubber Band" around the points
+        # This ignores all internal points and gives us the outer boundary
         hull = ConvexHull(points)
+
+        # Extract the actual X-Y coordinates of the hull vertices
+        # hull.vertices provides the indices; points[hull.vertices] gives coordinates
         hull_points = points[hull.vertices]
 
-        # Max Diameter: The longest distance between any two points on the hull
+        # Calculate the Maximum Diameter (Feret Max)
+        # pdist finds the distance between every possible pair of hull points
+        # np.max picks the longest one
         max_diameter = np.max(pdist(hull_points))
 
-        # Min Diameter: The "Minimum Width" using Rotating Calipers logic
+        # Prepare to find the Minimum Diameter (Rotating Calipers logic)
+        # We initialize with infinity so any real width will be smaller
         min_diameter = float('inf')
-        for i in range(len(hull_points)):
+        n = len(hull_points)
+
+        # Iterate over every flat edge of the hull
+        for i in range(n):
+            # Define the edge using current point (p1) and next point (p2)
+            # The % n ensures the last point connects back to the first
             p1 = hull_points[i]
             p2 = hull_points[(i + 1) % len(hull_points)]
 
-            # Vector along the hull edge
+            # Calculate the 'edge' vector and its magnitude
             edge = p2 - p1
             edge_length = np.linalg.norm(edge)
+
+            # Safety check for duplicate points
             if edge_length == 0:
                 continue
 
-            # Normal vector to the edge
+            # Create the "Ruler" (Unit Normal)
+            # We rotate the edge 90 degrees and scale it to a length of 1
+            # This points perpendicular to the edge we are currently "resting" on
             unit_normal = np.array([-edge[1], edge[0]]) / edge_length
 
-            # Width is the max span of points projected onto this normal
+            # Project all points onto this ruler
+            # The dot product tells us where each vertex "lands" on our normal axis
             projections = np.dot(hull_points, unit_normal)
+
+            # Calculate the span (width) for this specific orientation
+            # Max - Min gives the total thickness of the shape in this direction
             width = np.max(projections) - np.min(projections)
+
+            # Update the "Minimum" if this orientation is narrower than previous ones
             min_diameter = min(min_diameter, width)
 
-        return {
-            'area': area,
-            'max_diameter': max_diameter,
-            'min_diameter': min_diameter,
-        }
+        min_diameter = float(min_diameter * 1e-3)
+        max_diameter = float(max_diameter * 1e-3)
+
+        return round(min_diameter, 3), round(max_diameter, 3)
 
     def compute_weighted_centroid(self) -> tuple[float, float]:
         """
