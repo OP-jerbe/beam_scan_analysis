@@ -105,7 +105,7 @@ class ScanData:
 
         # Calculate the area enclosed by the contour lines at half max of cup current
         try:
-            fwhm_properties: dict = self.get_contour_properties(
+            fwhm_properties: dict = self._get_contour_properties(
                 self.grid_x, self.grid_y, self.grid_z, half_max
             )
             fwhm_enclosed_area = fwhm_properties['area'] * 1e-6  # mm-sq
@@ -121,7 +121,7 @@ class ScanData:
 
         # Calculate the area enclosed by the contour lines at half max of cup current
         try:
-            fwhm_properties: dict = self.get_contour_properties(
+            fwhm_properties: dict = self._get_contour_properties(
                 self.grid_x, self.grid_y, self.grid_z, half_max
             )
             fwhm_max_diam = fwhm_properties['max_diameter']  # mm
@@ -139,7 +139,7 @@ class ScanData:
 
         # Calculate the area enclosed by the contour lines at quarter max of cup current
         try:
-            fwqm_properties = self.get_contour_properties(
+            fwqm_properties = self._get_contour_properties(
                 self.grid_x, self.grid_y, self.grid_z, quarter_max
             )
             fwqm_enclosed_area: float = fwqm_properties['area'] * 1e-6
@@ -155,7 +155,7 @@ class ScanData:
 
         # Calculate the area enclosed by the contour lines at quarter max of cup current
         try:
-            fwhm_properties: dict = self.get_contour_properties(
+            fwhm_properties: dict = self._get_contour_properties(
                 self.grid_x, self.grid_y, self.grid_z, quarter_max
             )
             fwqm_max_diam = fwhm_properties['max_diameter']  # mm
@@ -217,21 +217,22 @@ class ScanData:
         """
         return self.peak_cup_current() * 0.25
 
-    def get_contour_properties(
+    def _get_contour_properties(
         self, x: NDArray, y: NDArray, z: NDArray, level: int | float
     ) -> dict:
         """
-        Calculate the area, max diameter, and min diameter of a contour.
+        Calculate the area, max diameter, and min diameter
+        of a contour at the specified level (z-height).
         """
 
         # 1. Get the contours but check to make sure they exists first
-        contours = self.get_contours(x, y, z, level)
+        contours = self._get_contours(x, y, z, level)
         if not contours:
             return {'area': 0.0, 'max_diameter': 0.0, 'min_diameter': 0.0}
         x_contour, y_contour = contours
 
         # 2. Calculate the min and max diameter of the contour
-        min_diameter, max_diameter = self.get_min_max_diameters(x_contour, y_contour)
+        min_diameter, max_diameter = self._get_min_max_diameters(x_contour, y_contour)
 
         # Check if contour is closed (first point (p1) equals last point (pn))
         p1 = [x_contour[0], y_contour[0]]
@@ -254,7 +255,7 @@ class ScanData:
         }
 
     @staticmethod
-    def get_contours(
+    def _get_contours(
         x: NDArray[float64],
         y: NDArray[float64],
         z: NDArray[float64],
@@ -275,12 +276,13 @@ class ScanData:
         return x_contour, y_contour
 
     @staticmethod
-    def get_min_max_diameters(x_contour, y_contour) -> tuple[float, float]:
+    def _get_min_max_diameters(x_contour, y_contour) -> tuple[float, float]:
         """Calculate Diameters using Convex Hull"""
         # Check if we have enough points to even make a shape
         if len(x_contour) < 3:
             return 0.0, 0.0
 
+        # Create the x-y pairs
         points = np.column_stack([x_contour, y_contour])
 
         # Create the "Rubber Band" around the points
@@ -306,7 +308,7 @@ class ScanData:
             # Define the edge using current point (p1) and next point (p2)
             # The % n ensures the last point connects back to the first
             p1 = hull_points[i]
-            p2 = hull_points[(i + 1) % len(hull_points)]
+            p2 = hull_points[(i + 1) % n]
 
             # Calculate the 'edge' vector and its magnitude
             edge = p2 - p1
@@ -317,7 +319,7 @@ class ScanData:
                 continue
 
             # Create the "Ruler" (Unit Normal)
-            # We rotate the edge 90 degrees and scale it to a length of 1
+            # We rotate the edge 90 degrees CCW and scale it to a length of 1
             # This points perpendicular to the edge we are currently "resting" on
             unit_normal = np.array([-edge[1], edge[0]]) / edge_length
 
@@ -345,13 +347,16 @@ class ScanData:
             tuple: (Xc, Yc) - centroid coordinates.
         """
 
-        # Zero out the cup current measurements that are below the threshold so that the centroid is calculated from strong beam current readings.
+        # Zero out the cup current measurements that are below the threshold so
+        # that the centroid is calculated from strong beam current readings only.
         # This gets rid of the contribution from the noise to find the centroid.
         threshold: float = self.half_max()
         cup_current = np.where(abs(self.grid_z) < abs(threshold), 0, self.grid_z)
 
+        # Add up all of the cup_current readings greater than half_max to get the total current
         total_current = float(np.sum(np.abs(cup_current)))  # Use absolute values
 
+        # Compute a weighted average along the x and y directions to get the centroid coordinates.
         Xc = float(np.sum(self.grid_x * np.abs(cup_current)) / total_current)
         Yc = float(np.sum(self.grid_y * np.abs(cup_current)) / total_current)
         # print(f'Centroid = ({Xc:.1f}, {Yc:.1f})')
