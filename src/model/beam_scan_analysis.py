@@ -82,9 +82,9 @@ class ScanData:
     def create_grid(
         self, interp_num: int
     ) -> tuple[NDArray[float64], NDArray[float64], NDArray[float64]]:
-        x: NDArray[float64] = self.x_location.to_numpy()
-        y: NDArray[float64] = self.y_location.to_numpy()
-        z: NDArray[float64] = self.cup_current.to_numpy()
+        x = self.x_location.to_numpy()
+        y = self.y_location.to_numpy()
+        z = self.cup_current.to_numpy()
 
         # Create grid for interpolation
         self.grid_x, self.grid_y = np.meshgrid(
