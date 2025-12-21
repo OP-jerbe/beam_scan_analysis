@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QFileDialog
 from src.model.beam_scan_analysis import ScanData
 
 
-class CSVLoader:
+class ScanDataLoader:
     def __init__(self): ...
 
     @staticmethod
@@ -303,6 +303,6 @@ if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
     QApplication([])
-    filepath = CSVLoader.select_csv()
-    scan_data = CSVLoader.load_scan_data(filepath)
+    filepath = ScanDataLoader.select_csv()
+    scan_data = ScanDataLoader.load_scan_data(filepath)
     print(scan_data.display_summary())

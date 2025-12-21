@@ -423,9 +423,9 @@ class ScanData:
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
-    from helpers.load_scan_data import CSVLoader
+    from helpers.load_scan_data import ScanDataLoader
 
     QApplication([])
-    filepath: str = CSVLoader.select_csv()
-    scan_data: ScanData = CSVLoader.load_scan_data(filepath)
+    filepath: str = ScanDataLoader.select_csv()
+    scan_data: ScanData = ScanDataLoader.load_scan_data(filepath)
     print(scan_data.display_summary())

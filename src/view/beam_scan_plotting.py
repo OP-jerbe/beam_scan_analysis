@@ -534,11 +534,11 @@ class IPrime(Plotter):
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
-    from helpers.load_scan_data import CSVLoader
+    from helpers.load_scan_data import ScanDataLoader
 
     QApplication([])
-    filepath: str = CSVLoader.select_csv()
-    scan_data: ScanData = CSVLoader.load_scan_data(filepath)
+    filepath: str = ScanDataLoader.select_csv()
+    scan_data: ScanData = ScanDataLoader.load_scan_data(filepath)
     if scan_data.polarity == 'NEG':
         z_scale: list[int | float | None] = [None, None]
         solenoid: str = '2.5'

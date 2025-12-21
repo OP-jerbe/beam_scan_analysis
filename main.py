@@ -9,7 +9,7 @@ import pandas as pd
 from PySide6.QtCore import QObject, Slot
 from PySide6.QtWidgets import QApplication
 
-from helpers.load_scan_data import CSVLoader
+from helpers.load_scan_data import ScanDataLoader
 from src.model.beam_scan_analysis import ScanData
 from src.view.beam_scan_plotting import (
     Heatmap,
@@ -144,10 +144,10 @@ class App(QObject):
         Returns:
             None
         """
-        self.csv_filepath = CSVLoader.select_csv()
+        self.csv_filepath = ScanDataLoader.select_csv()
         if self.csv_filepath != '':
             try:
-                self.scan_data = CSVLoader.load_scan_data(self.csv_filepath)
+                self.scan_data = ScanDataLoader.load_scan_data(self.csv_filepath)
                 # if the disable interp option is checked, recreate the grid.
                 if self.gui.disable_interp_option.isChecked():
                     match self.scan_data.resolution:
