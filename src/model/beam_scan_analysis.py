@@ -298,18 +298,17 @@ class ScanData:
         # Prepare to find the Minimum Diameter (Rotating Calipers logic)
         # We initialize with infinity so any real width will be smaller
         min_diameter = float('inf')
-        n = len(hull_points)
 
         # Iterate over every flat edge of the hull
-        for i in range(n):
+        for i in range(len(hull_points)):
             # Define the edge using current point (p1) and next point (p2)
             # The % n ensures the last point connects back to the first
             p1 = hull_points[i]
-            p2 = hull_points[(i + 1) % n]
+            p2 = hull_points[(i + 1) % len(hull_points)]
 
             # Calculate the 'edge' vector and its magnitude
-            edge = p2 - p1
-            edge_length = np.linalg.norm(edge)
+            edge = p2 - p1  # (p2x-p1x, p2y-p1y)
+            edge_length = np.linalg.norm(edge)  # sqrt( edgex**2 + edgey**2 )
 
             # Safety check for duplicate points
             if edge_length == 0:
