@@ -12,7 +12,6 @@ class ScanData:
     def __init__(self) -> None:
         self._metadata: dict = {}
         self._data: DataFrame = DataFrame([])
-        self.x, self.y, self.z = self._create_grid(interp_num=500)
 
     def load_scan_data(self) -> None:
         """
@@ -436,7 +435,7 @@ class ScanData:
         }
         return int(peak_index[self.polarity])
 
-    def _create_grid(self, interp_num: int, method: str = 'cubic') -> tuple:
+    def _create_grid(self, interp_num: int = 500) -> tuple:
         """
         Create the meshgrid from the scan data.
 
@@ -453,13 +452,12 @@ class ScanData:
             np.linspace(y.min(), y.max(), interp_num),
         )
 
-        grid_z = griddata((x, y), z, (grid_x, grid_y), method)
+        grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
 
         return grid_x, grid_y, grid_z
 
-    def compute_angular_intensity(
-        self, distance: float, diameter: float, current: NDArray[float64]
-    ) -> NDArray[float64]:
+    @property
+    def angular_intensity(self) -> NDArray[float64]:
         """
         Computes the angular intensity of the collected cup current based on the given distance (in mm) to the cup
         and the aperture diameter (in mm).
@@ -467,20 +465,40 @@ class ScanData:
         The angular intensity is calculated as the cup current (converted to milliamps) divided by the solid angle
         subtended by the aperture. The solid angle is approximated using the formula for a small circular aperture.
 
-        Args:
-            distance (int | float): Distance from the source aperture to the faraday cup screen aperture (same unit as diameter).
-            diameter (int | float): Diameter of the cup aperture (same unit as distance).
-            current (NDArray[float64]): 2D Array of current measurements over hte
-
         Returns:
             NDArray[np.float64]: Computed angular intensity values in milliamps per steradian.
         """
 
-        cup_current = current * 1000  # milliamps
-        half_angle = np.tan(0.5 * diameter / distance)  # radians
+        cup_current = self.cup_current * 1000  # milliamps
+        half_angle = np.tan(0.5 * self.fcup_diameter / self.fcup_distance)  # radians
         solid_angle = np.pi * half_angle**2  # steradians
         angular_intensity = cup_current / solid_angle  # mA/sr
         return angular_intensity
+
+    @property
+    def weighted_centroid(self) -> tuple[float, float]:
+        """
+        Compute the weighted centroid of the beam profile, handling negative currents.
+
+        Returns:
+            tuple: (Xc, Yc) - centroid coordinates.
+        """
+        grid_x, grid_y, grid_z = self._create_grid()
+        # Zero out the cup current measurements that are below the threshold so
+        # that the centroid is calculated from strong beam current readings only.
+        # This gets rid of the contribution from the noise to find the centroid.
+        threshold: float = self.half_max
+        cup_current = np.where(abs(grid_z) < abs(threshold), 0, grid_z)
+
+        # Add up all of the cup_current readings greater than half_max to get the total current
+        total_current = float(np.sum(np.abs(cup_current)))  # Use absolute values
+
+        # Compute a weighted average along the x and y directions to get the centroid coordinates.
+        Xc = float(np.sum(grid_x * np.abs(cup_current)) / total_current)
+        Yc = float(np.sum(grid_y * np.abs(cup_current)) / total_current)
+        # print(f'Centroid = ({Xc:.1f}, {Yc:.1f})')
+
+        return Xc, Yc
 
 
 if __name__ == '__main__':
@@ -500,3 +518,4 @@ if __name__ == '__main__':
     print(f'{resolution = }')
     print(f'{polarity = }')
     print(f'{sd._peak_idx = }')
+    print(f'{sd.weighted_centroid = }')
