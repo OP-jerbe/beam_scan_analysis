@@ -360,7 +360,7 @@ class ScanData:
         return self.cup_current[self._peak_idx]
 
     @property
-    def peak_total_curren(self) -> float:
+    def peak_total_current(self) -> float:
         return self.total_current[self._peak_idx]
 
 
