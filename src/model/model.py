@@ -1,5 +1,5 @@
 import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
 import helpers.helpers as h
 
@@ -61,35 +61,25 @@ class ScanData:
                 print(f'Could not load scan data.\n\n{str(e)}')
                 raise
 
-    ###########################################################################################
-    ###########################################################################################
-    ###########################################################################################
-    ###########################################################################################
+    @property
+    def x_location(self) -> Series:
+        return self.data['X']
 
-    # # Determine whether the beam scan was taken in NEG mode or POS mode
-    # polarity: str = 'NEG'
-    # if beam_voltage > 0:  # type: ignore
-    #     polarity = 'POS'
+    @property
+    def y_location(self) -> Series:
+        return self.data['Y']
 
-    # self.serial_num = serial_number
-    # self.scan_datetime = scan_datetime
-    # self.step_size = step_size
-    # self.resolution = self._get_resolution(step_size)
-    # self.x_location = df['X']
-    # self.y_location = df['Y']
-    # self.cup_current = df['cup_current']
-    # self.screen_current = df['screen_current']
-    # self.total_current = df['total_current']
-    # self.polarity = polarity
-    # self.beam_voltage = beam_voltage
-    # self.extractor_voltage = extractor_voltage
-    # self.solenoid_current = solenoid_current
-    # self.beam_supply_current = beam_supply_current
-    # self.pressure = pressure
-    # self.test_stand = test_stand
-    # self.fcup_distance = fcup_distance
-    # self.fcup_diameter = fcup_diameter
-    # self.well_structured_csv = well_structured_csv
+    @property
+    def cup_current(self) -> Series:
+        return self.data['cup_current']
+
+    @property
+    def screen_current(self) -> Series:
+        return self.data['screen_current']
+
+    @property
+    def total_current(self) -> Series:
+        return self.data['total_current']
 
     @property
     def resolution(self) -> str:
@@ -366,15 +356,15 @@ if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
     QApplication([])
-    scan_data = ScanData()
-    scan_data.load_scan_data()
-    resolution = scan_data.resolution
-    polarity = scan_data.polarity
-    if scan_data.well_structured_csv:
+    sd = ScanData()
+    sd.load_scan_data()
+    resolution = sd.resolution
+    polarity = sd.polarity
+    if sd.well_structured_csv:
         print('This csv was output by the app.')
     else:
         print('This csv was output by labview.')
-    print(f'{scan_data.metadata = }')
+    print(f'{sd.metadata = }')
     # print(f'{scan_data.data.head()}')
     print(f'{resolution = }')
     print(f'{polarity = }')
