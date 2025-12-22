@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+from numpy import float64
+from numpy.typing import NDArray, 
 from pandas import DataFrame, Series
 from scipy.interpolate import griddata
 
@@ -420,6 +422,31 @@ class ScanData:
     @property
     def peak_total_current(self) -> float:
         return self.total_current[self._peak_idx]
+
+    def compute_angular_intensity(
+        self, distance: float, diameter: float, current: NDArray[float64]
+    ) -> NDArray[float64]:
+        """
+        Computes the angular intensity of the collected cup current based on the given distance (in mm) to the cup
+        and the aperture diameter (in mm).
+
+        The angular intensity is calculated as the cup current (converted to milliamps) divided by the solid angle
+        subtended by the aperture. The solid angle is approximated using the formula for a small circular aperture.
+
+        Args:
+            distance (int | float): Distance from the source aperture to the faraday cup screen aperture (same unit as diameter).
+            diameter (int | float): Diameter of the cup aperture (same unit as distance).
+            current (NDArray[float64]): 2D Array of current measurements over hte
+
+        Returns:
+            NDArray[np.float64]: Computed angular intensity values in milliamps per steradian.
+        """
+
+        cup_current = current * 1000  # milliamps
+        half_angle = np.tan(0.5 * diameter / distance)  # radians
+        solid_angle = np.pi * half_angle**2  # steradians
+        angular_intensity = cup_current / solid_angle  # mA/sr
+        return angular_intensity
 
 
 if __name__ == '__main__':
