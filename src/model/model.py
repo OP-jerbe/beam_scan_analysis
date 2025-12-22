@@ -38,6 +38,8 @@ class ScanData:
             case 0:
                 self._metadata, self._data = self._load_v0_csv(filepath)
 
+    # --- Scan data properties ---
+
     @property
     def x_location(self) -> Series:
         return self._data['X']
@@ -58,28 +60,7 @@ class ScanData:
     def total_current(self) -> Series:
         return self._data['total_current']
 
-    @property
-    def resolution(self) -> str:
-        match self._metadata['step_size']:
-            case 0.221:
-                resolution = 'Highest'
-            case 0.442:
-                resolution = 'High'
-            case 0.884:
-                resolution = 'Med'
-            case 1.767:
-                resolution = 'Low'
-            case _:
-                resolution = ''
-
-        return resolution
-
-    @property
-    def polarity(self) -> str:
-        if self._metadata['beam_voltage'] < 0:
-            return 'NEG'
-        else:
-            return 'POS'
+    # --- Metadata properties ---
 
     @property
     def csv_version(self) -> int:
@@ -132,6 +113,33 @@ class ScanData:
     @property
     def power(self) -> float:
         return self._metadata['power']
+
+    # --- Derived properties ---
+
+    @property
+    def resolution(self) -> str:
+        match self._metadata['step_size']:
+            case 0.221:
+                resolution = 'Highest'
+            case 0.442:
+                resolution = 'High'
+            case 0.884:
+                resolution = 'Med'
+            case 1.767:
+                resolution = 'Low'
+            case _:
+                resolution = ''
+
+        return resolution
+
+    @property
+    def polarity(self) -> str:
+        if self._metadata['beam_voltage'] < 0:
+            return 'NEG'
+        else:
+            return 'POS'
+
+    # --- csv loading methods ---
 
     def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
         # Load in the metadata from the csv file.
@@ -373,6 +381,8 @@ class ScanData:
                 return 1
             case _:
                 return 0
+
+    # --- Analysis methods ---
 
     @property
     def _peak_idx(self) -> int:
