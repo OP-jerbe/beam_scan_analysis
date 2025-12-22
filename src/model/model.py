@@ -507,6 +507,7 @@ if __name__ == '__main__':
     QApplication([])
     sd = ScanData()
     sd.load_scan_data()
+    grid_x, grid_y, grid_z = sd._create_grid()
     resolution = sd.resolution
     polarity = sd.polarity
     if sd.csv_version != 0:
@@ -515,7 +516,7 @@ if __name__ == '__main__':
         print('This csv was output by labview.')
     # print(f'{sd._metadata = }')
     # print(f'{scan_data.data.head()}')
-    print(f'{resolution = }')
-    print(f'{polarity = }')
-    print(f'{sd._peak_idx = }')
-    print(f'{sd.weighted_centroid = }')
+    # print(f'{resolution = }')
+    # print(f'{polarity = }')
+    # print(f'{sd._peak_idx = }')
+    # print(f'{sd.weighted_centroid = }')
