@@ -106,6 +106,12 @@ class ScanData:
 
         return resolution
 
+    def _get_polarity(self, beam_voltage: float) -> str:
+        if beam_voltage < 0:
+            return 'NEG'
+        else:
+            return 'POS'
+
     def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
         # Load in the metadata from the csv file.
         df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=13, usecols=[1])
