@@ -85,6 +85,54 @@ class ScanData:
     def csv_version(self) -> int:
         return self._metadata['csv_version']
 
+    @property
+    def serial_number(self) -> str:
+        return self._metadata['serial_number']
+
+    @property
+    def scan_datetime(self) -> str:
+        return self._metadata['scan_datetime']
+
+    @property
+    def step_size(self) -> float:
+        return self._metadata['step_size']
+
+    @property
+    def beam_voltage(self) -> float:
+        return self._metadata['beam_voltage']
+
+    @property
+    def extractor_voltage(self) -> float:
+        return self._metadata['extractor_voltage']
+
+    @property
+    def solenoid_current(self) -> float:
+        return self._metadata['solenoid_current']
+
+    @property
+    def test_stand(self) -> str:
+        return self._metadata['test_stand']
+
+    @property
+    def beam_supply_current(self) -> float:
+        return self._metadata['beam_supply_current']
+
+    @property
+    def pressure(self) -> float:
+        return self._metadata['pressure']
+
+    @property
+    def fcup_distance(self) -> float:
+        return self._metadata['fcup_distance']
+
+    @property
+    def fcup_diameter(self) -> float:
+        return self._metadata['fcup_diameter']
+
+    @property
+    def power(self) -> float:
+        return self._metadata['power']
+
     def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
         # Load in the metadata from the csv file.
         df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=13, usecols=[1])
