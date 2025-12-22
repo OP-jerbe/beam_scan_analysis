@@ -10,6 +10,7 @@ class ScanData:
     def __init__(self) -> None:
         self._metadata: dict = {}
         self._data: DataFrame = DataFrame([])
+        self.x, self.y, self.z = self._create_grid(interp_num=500)
 
     def load_scan_data(self) -> None:
         """
@@ -325,6 +326,7 @@ class ScanData:
             case _:
                 return 0
 
+    @property
     def _peak_idx(self) -> int:
         peak_index = {
             'NEG': self.cup_current.idxmin(),
@@ -353,6 +355,14 @@ class ScanData:
 
         return grid_x, grid_y, grid_z
 
+    @property
+    def peak_cup_current(self) -> float:
+        return self.cup_current[self._peak_idx]
+
+    @property
+    def peak_total_curren(self) -> float:
+        return self.total_current[self._peak_idx]
+
 
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
@@ -370,4 +380,4 @@ if __name__ == '__main__':
     # print(f'{scan_data.data.head()}')
     print(f'{resolution = }')
     print(f'{polarity = }')
-    print(f'{sd._peak_idx() = }')
+    print(f'{sd._peak_idx = }')
