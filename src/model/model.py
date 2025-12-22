@@ -91,8 +91,9 @@ class ScanData:
     # self.fcup_diameter = fcup_diameter
     # self.well_structured_csv = well_structured_csv
 
-    def resolution(self, step_size: float) -> str:
-        match step_size:
+    @property
+    def resolution(self) -> str:
+        match self.metadata['step_size']:
             case 0.221:
                 resolution = 'Highest'
             case 0.442:
@@ -106,8 +107,9 @@ class ScanData:
 
         return resolution
 
-    def polarity(self, beam_voltage: float) -> str:
-        if beam_voltage < 0:
+    @property
+    def polarity(self) -> str:
+        if self.metadata['beam_voltage'] < 0:
             return 'NEG'
         else:
             return 'POS'
@@ -366,8 +368,8 @@ if __name__ == '__main__':
     QApplication([])
     scan_data = ScanData()
     scan_data.load_scan_data()
-    resolution = scan_data.resolution(scan_data.metadata['step_size'])
-    polarity = scan_data.polarity(scan_data.metadata['beam_voltage'])
+    resolution = scan_data.resolution
+    polarity = scan_data.polarity
     if scan_data.well_structured_csv:
         print('This csv was output by the app.')
     else:
