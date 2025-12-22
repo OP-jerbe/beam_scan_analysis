@@ -21,45 +21,23 @@ class ScanData:
             is used to determine the scan resolution (Ultra, High, or Med).
         """
 
-        csv_loaded: bool = False
-
         filepath = h.select_file()
         if not filepath:
             return
 
-        while not csv_loaded:
-            try:
+        csv_version = self._check_version(filepath)
+        match csv_version:
+            case 3:
                 self._metadata, self._data = self._load_v3_csv(filepath)
-                csv_loaded = True
                 self.labview_csv = False
-                break
-            except CustomSkipError:
-                pass
-
-            try:
+            case 2:
                 self._metadata, self._data = self._load_v2_csv(filepath)
-                csv_loaded = True
                 self.labview_csv = False
-                break
-            except CustomSkipError:
-                pass
-
-            try:
+            case 1:
                 self._metadata, self._data = self._load_v1_csv(filepath)
-                csv_loaded = True
                 self.labview_csv = False
-                break
-            except CustomSkipError:
-                pass
-
-            try:
+            case 0:
                 self._metadata, self._data = self._load_v0_csv(filepath)
-                csv_loaded = True
-                break
-            except Exception as e:
-                # Put a pop up message here to let the user know data load failed.
-                print(f'Could not load scan data.\n\n{str(e)}')
-                raise
 
     @property
     def x_location(self) -> Series:
@@ -108,11 +86,7 @@ class ScanData:
         # Load in the metadata from the csv file.
         df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=13, usecols=[1])
 
-        # Check if csv is exported from application as version 2.
         csv_version: str = str(df.iloc[0, 0])
-        if csv_version != '3':
-            raise CustomSkipError
-
         serial_number = str(df.iloc[1, 0])
         scan_datetime = str(df.iloc[2, 0])
         step_size = float(pd.to_numeric(df.iloc[3, 0]))
@@ -158,11 +132,7 @@ class ScanData:
         # Load in the metadata from the csv file.
         df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=12, usecols=[1])
 
-        # Check if csv is exported from application as version 2.
         csv_version: str = str(df.iloc[0, 0])
-        if csv_version != '2':
-            raise CustomSkipError
-
         serial_number = str(df.iloc[1, 0])
         scan_datetime = str(df.iloc[2, 0])
         step_size = float(pd.to_numeric(df.iloc[3, 0]))
@@ -210,11 +180,7 @@ class ScanData:
         # Load in the metadata from the csv file.
         df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=8, usecols=[1])
 
-        # Check if csv is exported from application as version 1.
         csv_version: str = str(df.iloc[0, 0])
-        if csv_version != '1':
-            raise CustomSkipError
-
         serial_number = str(df.iloc[1, 0])
         scan_datetime = str(df.iloc[2, 0])
         step_size = float(pd.to_numeric(df.iloc[3, 0]))
@@ -343,13 +309,19 @@ class ScanData:
 
         return metadata, data
 
-
-class CustomSkipError(Exception):
-    """
-    Custom exception used to skip processing in specific cases.
-    """
-
-    pass
+    def _check_version(self, filepath: str) -> int:
+        # Read the first row
+        df: pd.DataFrame = pd.read_csv(filepath, header=None, usecols=[1], nrows=1)
+        csv_version: str = str(df.iloc[0, 0])
+        match csv_version:
+            case '3':
+                return 3
+            case '2':
+                return 2
+            case '1':
+                return 1
+            case _:
+                return 0
 
 
 if __name__ == '__main__':
