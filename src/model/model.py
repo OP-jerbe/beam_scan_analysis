@@ -1,5 +1,7 @@
+import numpy as np
 import pandas as pd
 from pandas import DataFrame, Series
+from scipy.interpolate import griddata
 
 import helpers.helpers as h
 
@@ -330,6 +332,27 @@ class ScanData:
         }
         return int(peak_index[self.polarity])
 
+    def _create_grid(self, interp_num: int, method: str = 'cubic') -> tuple:
+        """
+        Create the meshgrid from the scan data.
+
+        Args:
+            interp_num (int): The number of points on each axis of the grid.
+            method ({'linear', 'nearest', 'cubic'}): The method of interpolation to use.
+        """
+        x = self.x_location.to_numpy()
+        y = self.y_location.to_numpy()
+        z = self.cup_current.to_numpy()
+
+        grid_x, grid_y = np.meshgrid(
+            np.linspace(x.min(), x.max(), interp_num),
+            np.linspace(y.min(), y.max(), interp_num),
+        )
+
+        grid_z = griddata((x, y), z, (grid_x, grid_y), method)
+
+        return grid_x, grid_y, grid_z
+
 
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
@@ -343,7 +366,7 @@ if __name__ == '__main__':
         print('This csv was output by the app.')
     else:
         print('This csv was output by labview.')
-    print(f'{sd._metadata = }')
+    # print(f'{sd._metadata = }')
     # print(f'{scan_data.data.head()}')
     print(f'{resolution = }')
     print(f'{polarity = }')
