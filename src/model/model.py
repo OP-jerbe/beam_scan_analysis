@@ -6,7 +6,7 @@ import helpers.helpers as h
 
 class ScanData:
     def __init__(self) -> None:
-        self.well_structured_csv: bool = False
+        self.labview_csv: bool = True
         self.metadata: dict = {}
         self.data: DataFrame = DataFrame([])
 
@@ -31,7 +31,7 @@ class ScanData:
             try:
                 self.metadata, self.data = self._load_v3_csv(filepath)
                 csv_loaded = True
-                self.well_structured_csv = True
+                self.labview_csv = False
                 break
             except CustomSkipError:
                 pass
@@ -39,7 +39,7 @@ class ScanData:
             try:
                 self.metadata, self.data = self._load_v2_csv(filepath)
                 csv_loaded = True
-                self.well_structured_csv = True
+                self.labview_csv = False
                 break
             except CustomSkipError:
                 pass
@@ -47,7 +47,7 @@ class ScanData:
             try:
                 self.metadata, self.data = self._load_v1_csv(filepath)
                 csv_loaded = True
-                self.well_structured_csv = True
+                self.labview_csv = False
                 break
             except CustomSkipError:
                 pass
@@ -360,7 +360,7 @@ if __name__ == '__main__':
     sd.load_scan_data()
     resolution = sd.resolution
     polarity = sd.polarity
-    if sd.well_structured_csv:
+    if not sd.labview_csv:
         print('This csv was output by the app.')
     else:
         print('This csv was output by labview.')
