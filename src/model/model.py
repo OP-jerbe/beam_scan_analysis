@@ -44,76 +44,102 @@ class ScanData:
 
     @property
     def x_location(self) -> Series:
+        """
+        GETTER: Gets the x-location array of the faraday cup.
+
+        Units are in micrometers
+        """
         return self._data['X']
 
     @property
     def y_location(self) -> Series:
+        """
+        GETTER: Gets the y-location array of the faraday cup.
+
+        Units are in micrometers
+        """
         return self._data['Y']
 
     @property
     def cup_current(self) -> Series:
-        return self._data['cup_current']
+        """GETTER: Gets the cup current array in nanoamps."""
+        return self._data['cup_current'] * 1e9
 
     @property
     def screen_current(self) -> Series:
-        return self._data['screen_current']
+        """GETTER: Gets the screen current array in microamps."""
+        return self._data['screen_current'] * 1e6
 
     @property
     def total_current(self) -> Series:
+        """GETTER: Gets the total current array in microamps."""
         return self._data['total_current']
 
     # --- Metadata properties ---
 
     @property
     def csv_version(self) -> int:
+        """GETTER: Gets the csv version number."""
         return self._metadata['csv_version']
 
     @property
     def serial_number(self) -> str:
+        """GETTER: Gets the serial number of the ion source."""
         return self._metadata['serial_number']
 
     @property
     def scan_datetime(self) -> str:
+        """GETTER: Gets the timestamps of when the scan finished."""
         return self._metadata['scan_datetime']
 
     @property
     def step_size(self) -> float:
+        """GETTER: Gets the step size of faraday cup movement during the scan."""
         return self._metadata['step_size']
 
     @property
     def beam_voltage(self) -> float:
+        """GETTER: Gets the beam voltage setting in kilovolts."""
         return self._metadata['beam_voltage']
 
     @property
     def extractor_voltage(self) -> float:
+        """GETTER: Gets the extractor voltage setting in kilovolts."""
         return self._metadata['extractor_voltage']
 
     @property
     def solenoid_current(self) -> float:
+        """GETTER: Gets the solenoid current setting during the scan in amps."""
         return self._metadata['solenoid_current']
 
     @property
     def test_stand(self) -> str:
+        """GETTER: Gets the test stand number the scan was performed on."""
         return self._metadata['test_stand']
 
     @property
     def beam_supply_current(self) -> float:
+        """GETTER: Gets the beam supply current at the end of the scan in microamps."""
         return self._metadata['beam_supply_current']
 
     @property
     def pressure(self) -> float:
+        """GETTER: Gets the pressure during the beam scan in millibar."""
         return self._metadata['pressure']
 
     @property
     def fcup_distance(self) -> float:
+        """GETTER: Gets the faraday cup distance in millimeters."""
         return self._metadata['fcup_distance']
 
     @property
     def fcup_diameter(self) -> float:
+        """GETTER: Gets the faraday cup diameter in millimeters."""
         return self._metadata['fcup_diameter']
 
     @property
     def power(self) -> float:
+        """GETTER: Gets the power during the scan in watts."""
         return self._metadata['power']
 
     # --- Derived properties ---
@@ -140,6 +166,22 @@ class ScanData:
             return 'NEG'
         else:
             return 'POS'
+
+    @property
+    def peak_cup_current(self) -> float:
+        return self.cup_current[self._peak_idx]
+
+    @property
+    def peak_total_current(self) -> float:
+        return self.total_current[self._peak_idx]
+
+    @property
+    def half_max(self) -> float:
+        return self.peak_cup_current * 0.5
+
+    @property
+    def quarter_max(self) -> float:
+        return self.peak_cup_current * 0.25
 
     # --- csv loading methods ---
 
@@ -414,14 +456,6 @@ class ScanData:
         grid_z = griddata((x, y), z, (grid_x, grid_y), method)
 
         return grid_x, grid_y, grid_z
-
-    @property
-    def peak_cup_current(self) -> float:
-        return self.cup_current[self._peak_idx]
-
-    @property
-    def peak_total_current(self) -> float:
-        return self.total_current[self._peak_idx]
 
     def compute_angular_intensity(
         self, distance: float, diameter: float, current: NDArray[float64]
