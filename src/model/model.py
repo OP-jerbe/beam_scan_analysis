@@ -182,6 +182,50 @@ class ScanData:
     def quarter_max(self) -> float:
         return self.peak_cup_current * 0.25
 
+    @property
+    def angular_intensity(self) -> NDArray[float64]:
+        """
+        Computes the angular intensity of the collected cup current based on the given distance (in mm) to the cup
+        and the aperture diameter (in mm).
+
+        The angular intensity is calculated as the cup current (converted to milliamps) divided by the solid angle
+        subtended by the aperture. The solid angle is approximated using the formula for a small circular aperture.
+
+        Returns:
+            NDArray[np.float64]: Computed angular intensity values in milliamps per steradian.
+        """
+
+        cup_current = self.cup_current * 1000  # milliamps
+        half_angle = np.tan(0.5 * self.fcup_diameter / self.fcup_distance)  # radians
+        solid_angle = np.pi * half_angle**2  # steradians
+        angular_intensity = cup_current / solid_angle  # mA/sr
+        return angular_intensity
+
+    @property
+    def weighted_centroid(self) -> tuple[float, float]:
+        """
+        Compute the weighted centroid of the beam profile, handling negative currents.
+
+        Returns:
+            tuple: (Xc, Yc) - centroid coordinates.
+        """
+        grid_x, grid_y, grid_z = self._create_grid()
+        # Zero out the cup current measurements that are below the threshold so
+        # that the centroid is calculated from strong beam current readings only.
+        # This gets rid of the contribution from the noise to find the centroid.
+        threshold: float = self.half_max
+        cup_current = np.where(abs(grid_z) < abs(threshold), 0, grid_z)
+
+        # Add up all of the cup_current readings greater than half_max to get the total current
+        total_current = float(np.sum(np.abs(cup_current)))  # Use absolute values
+
+        # Compute a weighted average along the x and y directions to get the centroid coordinates.
+        Xc = float(np.sum(grid_x * np.abs(cup_current)) / total_current)
+        Yc = float(np.sum(grid_y * np.abs(cup_current)) / total_current)
+        # print(f'Centroid = ({Xc:.1f}, {Yc:.1f})')
+
+        return Xc, Yc
+
     # --- csv loading methods ---
 
     def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
@@ -455,50 +499,6 @@ class ScanData:
         grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
 
         return grid_x, grid_y, grid_z
-
-    @property
-    def angular_intensity(self) -> NDArray[float64]:
-        """
-        Computes the angular intensity of the collected cup current based on the given distance (in mm) to the cup
-        and the aperture diameter (in mm).
-
-        The angular intensity is calculated as the cup current (converted to milliamps) divided by the solid angle
-        subtended by the aperture. The solid angle is approximated using the formula for a small circular aperture.
-
-        Returns:
-            NDArray[np.float64]: Computed angular intensity values in milliamps per steradian.
-        """
-
-        cup_current = self.cup_current * 1000  # milliamps
-        half_angle = np.tan(0.5 * self.fcup_diameter / self.fcup_distance)  # radians
-        solid_angle = np.pi * half_angle**2  # steradians
-        angular_intensity = cup_current / solid_angle  # mA/sr
-        return angular_intensity
-
-    @property
-    def weighted_centroid(self) -> tuple[float, float]:
-        """
-        Compute the weighted centroid of the beam profile, handling negative currents.
-
-        Returns:
-            tuple: (Xc, Yc) - centroid coordinates.
-        """
-        grid_x, grid_y, grid_z = self._create_grid()
-        # Zero out the cup current measurements that are below the threshold so
-        # that the centroid is calculated from strong beam current readings only.
-        # This gets rid of the contribution from the noise to find the centroid.
-        threshold: float = self.half_max
-        cup_current = np.where(abs(grid_z) < abs(threshold), 0, grid_z)
-
-        # Add up all of the cup_current readings greater than half_max to get the total current
-        total_current = float(np.sum(np.abs(cup_current)))  # Use absolute values
-
-        # Compute a weighted average along the x and y directions to get the centroid coordinates.
-        Xc = float(np.sum(grid_x * np.abs(cup_current)) / total_current)
-        Yc = float(np.sum(grid_y * np.abs(cup_current)) / total_current)
-        # print(f'Centroid = ({Xc:.1f}, {Yc:.1f})')
-
-        return Xc, Yc
 
 
 if __name__ == '__main__':
