@@ -53,7 +53,7 @@ class ScanData:
                 pass
 
             try:
-                self.metadata, self.data = self._load_labview_csv(filepath)
+                self.metadata, self.data = self._load_v0_csv(filepath)
                 csv_loaded = True
                 break
             except Exception as e:
@@ -264,7 +264,7 @@ class ScanData:
 
         return metadata, data
 
-    def _load_labview_csv(self, filepath: str) -> tuple[dict, DataFrame]:
+    def _load_v0_csv(self, filepath: str) -> tuple[dict, DataFrame]:
         """Load in csv as exported from LabVIEW application."""
         data: pd.DataFrame = pd.read_csv(
             filepath, header=None, usecols=[0], nrows=7, skiprows=[3, 7]
