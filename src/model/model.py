@@ -6,7 +6,6 @@ import helpers.helpers as h
 
 class ScanData:
     def __init__(self) -> None:
-        self.labview_csv: bool = True
         self._metadata: dict = {}
         self._data: DataFrame = DataFrame([])
 
@@ -29,13 +28,10 @@ class ScanData:
         match csv_version:
             case 3:
                 self._metadata, self._data = self._load_v3_csv(filepath)
-                self.labview_csv = False
             case 2:
                 self._metadata, self._data = self._load_v2_csv(filepath)
-                self.labview_csv = False
             case 1:
                 self._metadata, self._data = self._load_v1_csv(filepath)
-                self.labview_csv = False
             case 0:
                 self._metadata, self._data = self._load_v0_csv(filepath)
 
@@ -81,6 +77,10 @@ class ScanData:
             return 'NEG'
         else:
             return 'POS'
+
+    @property
+    def csv_version(self) -> int:
+        return self._metadata['csv_version']
 
     def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
         # Load in the metadata from the csv file.
@@ -332,7 +332,7 @@ if __name__ == '__main__':
     sd.load_scan_data()
     resolution = sd.resolution
     polarity = sd.polarity
-    if not sd.labview_csv:
+    if sd.csv_version != 0:
         print('This csv was output by the app.')
     else:
         print('This csv was output by labview.')
