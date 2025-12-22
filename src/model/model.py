@@ -7,8 +7,8 @@ import helpers.helpers as h
 class ScanData:
     def __init__(self) -> None:
         self.labview_csv: bool = True
-        self.metadata: dict = {}
-        self.data: DataFrame = DataFrame([])
+        self._metadata: dict = {}
+        self._data: DataFrame = DataFrame([])
 
     def load_scan_data(self) -> None:
         """
@@ -29,7 +29,7 @@ class ScanData:
 
         while not csv_loaded:
             try:
-                self.metadata, self.data = self._load_v3_csv(filepath)
+                self._metadata, self._data = self._load_v3_csv(filepath)
                 csv_loaded = True
                 self.labview_csv = False
                 break
@@ -37,7 +37,7 @@ class ScanData:
                 pass
 
             try:
-                self.metadata, self.data = self._load_v2_csv(filepath)
+                self._metadata, self._data = self._load_v2_csv(filepath)
                 csv_loaded = True
                 self.labview_csv = False
                 break
@@ -45,7 +45,7 @@ class ScanData:
                 pass
 
             try:
-                self.metadata, self.data = self._load_v1_csv(filepath)
+                self._metadata, self._data = self._load_v1_csv(filepath)
                 csv_loaded = True
                 self.labview_csv = False
                 break
@@ -53,7 +53,7 @@ class ScanData:
                 pass
 
             try:
-                self.metadata, self.data = self._load_v0_csv(filepath)
+                self._metadata, self._data = self._load_v0_csv(filepath)
                 csv_loaded = True
                 break
             except Exception as e:
@@ -63,27 +63,27 @@ class ScanData:
 
     @property
     def x_location(self) -> Series:
-        return self.data['X']
+        return self._data['X']
 
     @property
     def y_location(self) -> Series:
-        return self.data['Y']
+        return self._data['Y']
 
     @property
     def cup_current(self) -> Series:
-        return self.data['cup_current']
+        return self._data['cup_current']
 
     @property
     def screen_current(self) -> Series:
-        return self.data['screen_current']
+        return self._data['screen_current']
 
     @property
     def total_current(self) -> Series:
-        return self.data['total_current']
+        return self._data['total_current']
 
     @property
     def resolution(self) -> str:
-        match self.metadata['step_size']:
+        match self._metadata['step_size']:
             case 0.221:
                 resolution = 'Highest'
             case 0.442:
@@ -99,7 +99,7 @@ class ScanData:
 
     @property
     def polarity(self) -> str:
-        if self.metadata['beam_voltage'] < 0:
+        if self._metadata['beam_voltage'] < 0:
             return 'NEG'
         else:
             return 'POS'
@@ -364,7 +364,7 @@ if __name__ == '__main__':
         print('This csv was output by the app.')
     else:
         print('This csv was output by labview.')
-    print(f'{sd.metadata = }')
+    print(f'{sd._metadata = }')
     # print(f'{scan_data.data.head()}')
     print(f'{resolution = }')
     print(f'{polarity = }')
