@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from numpy import float64
-from numpy.typing import NDArray, 
+from numpy.typing import NDArray
 from pandas import DataFrame, Series
 from scipy.interpolate import griddata
 
