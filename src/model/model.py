@@ -323,6 +323,13 @@ class ScanData:
             case _:
                 return 0
 
+    def _peak_idx(self) -> int:
+        peak_index = {
+            'NEG': self.cup_current.idxmin(),
+            'POS': self.cup_current.idxmax(),
+        }
+        return int(peak_index[self.polarity])
+
 
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
@@ -340,3 +347,4 @@ if __name__ == '__main__':
     # print(f'{scan_data.data.head()}')
     print(f'{resolution = }')
     print(f'{polarity = }')
+    print(f'{sd._peak_idx() = }')
