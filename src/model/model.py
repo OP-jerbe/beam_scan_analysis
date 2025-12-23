@@ -748,19 +748,11 @@ if __name__ == '__main__':
     QApplication([])
     sd = ScanData()
     sd.load_scan_data()
-    hm_contour = sd.hm_contour
-    qm_contour = sd.qm_contour
-    resolution = sd.resolution
-    polarity = sd.polarity
     print(f'{sd.csv_version = }')
-    if hm_contour:
-        print('Half-max contour exists.')
-    if qm_contour:
-        print('Quarter-max contour exists.')
     # print(f'{sd._metadata = }')
     # print(f'{scan_data.data.head()}')
-    # print(f'{resolution = }')
-    # print(f'{polarity = }')
+    # print(f'{sd.resolution = }')
+    # print(f'{sd. polarity = }')
     # print(f'{sd.weighted_centroid = }')
     print(f'{sd.hm_contour_area = }')
     print(f'{sd.hm_contour_diams = }')
