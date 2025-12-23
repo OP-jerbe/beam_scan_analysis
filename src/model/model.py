@@ -39,6 +39,27 @@ class ScanData:
             case 0:
                 self._metadata, self._data = self._load_v0_csv(filepath)
 
+    def create_grid(self, interp_num: int = 500) -> tuple:
+        """
+        Create the meshgrid from the scan data.
+
+        Args:
+            interp_num (int): The number of points on each axis of the grid.
+            method ({'linear', 'nearest', 'cubic'}): The method of interpolation to use.
+        """
+        x = self.x_location.to_numpy()
+        y = self.y_location.to_numpy()
+        z = self.cup_current.to_numpy()
+
+        grid_x, grid_y = np.meshgrid(
+            np.linspace(x.min(), x.max(), interp_num),
+            np.linspace(y.min(), y.max(), interp_num),
+        )
+
+        grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
+
+        return grid_x, grid_y, grid_z
+
     # --- Scan data properties ---
 
     @property
@@ -209,7 +230,7 @@ class ScanData:
         Returns:
             tuple: (Xc, Yc) - centroid coordinates.
         """
-        grid_x, grid_y, grid_z = self._create_grid()
+        grid_x, grid_y, grid_z = self.create_grid()
         # Zero out the cup current measurements that are below the threshold so
         # that the centroid is calculated from strong beam current readings only.
         # This gets rid of the contribution from the noise to find the centroid.
@@ -479,27 +500,6 @@ class ScanData:
         }
         return int(peak_index[self.polarity])
 
-    def _create_grid(self, interp_num: int = 500) -> tuple:
-        """
-        Create the meshgrid from the scan data.
-
-        Args:
-            interp_num (int): The number of points on each axis of the grid.
-            method ({'linear', 'nearest', 'cubic'}): The method of interpolation to use.
-        """
-        x = self.x_location.to_numpy()
-        y = self.y_location.to_numpy()
-        z = self.cup_current.to_numpy()
-
-        grid_x, grid_y = np.meshgrid(
-            np.linspace(x.min(), x.max(), interp_num),
-            np.linspace(y.min(), y.max(), interp_num),
-        )
-
-        grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
-
-        return grid_x, grid_y, grid_z
-
 
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
@@ -507,7 +507,7 @@ if __name__ == '__main__':
     QApplication([])
     sd = ScanData()
     sd.load_scan_data()
-    grid_x, grid_y, grid_z = sd._create_grid()
+    grid_x, grid_y, grid_z = sd.create_grid()
     resolution = sd.resolution
     polarity = sd.polarity
     if sd.csv_version != 0:
