@@ -289,6 +289,18 @@ class ScanData:
         peak_idx = self._peak_idx
         return self.x_location[peak_idx], self.y_location[peak_idx]
 
+    @property
+    def hm_contour(self) -> tuple[NDArray[float64], NDArray[float64]] | None:
+        """GETTER: Gets the x-y coordiates of the half-max contour."""
+        hm_contour = self._contour(self.half_max)
+        return hm_contour
+
+    @property
+    def qm_contour(self) -> tuple[NDArray[float64], NDArray[float64]] | None:
+        """GETTER: Gets the x-y coordiates of the quarter-max contour."""
+        hm_contour = self._contour(self.quarter_max)
+        return hm_contour
+
     # --- csv loading methods ---
 
     def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
@@ -549,7 +561,8 @@ if __name__ == '__main__':
     QApplication([])
     sd = ScanData()
     sd.load_scan_data()
-    grid_x, grid_y, grid_z = sd.create_grid()
+    hm_contour = sd.hm_contour
+    qm_contour = sd.qm_contour
     resolution = sd.resolution
     polarity = sd.polarity
     if sd.csv_version != 0:
@@ -562,3 +575,5 @@ if __name__ == '__main__':
     # print(f'{polarity = }')
     # print(f'{sd._peak_idx = }')
     # print(f'{sd.weighted_centroid = }')
+    # print(f'{hm_contour = }')
+    # print(f'{qm_contour = }')
