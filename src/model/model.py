@@ -15,11 +15,16 @@ class ScanData:
     def __init__(self) -> None:
         self._metadata: dict = {}
         self._data: DataFrame = DataFrame([])
+        self.interp_num: int = 500
+        self.grid_x: NDArray[float64] = np.array([])
+        self.grid_y: NDArray[float64] = np.array([])
+        self.grid_z: NDArray[float64] = np.array([])
 
     def load_scan_data(self) -> None:
         """
         Load scan data from a CSV file and return a ScanData object.
-
+        Args:
+            interp_num (int): The interpolation number for creating the grid.
         Notes:
             The function reads specific metadata from the first few rows of the CSV file
             and uses the rest of the data to populate the scan data. The beam voltage
@@ -42,48 +47,43 @@ class ScanData:
             case 0:
                 self._metadata, self._data = self._load_v0_csv(filepath)
 
-    def create_grid(self, interp_num: int = 500) -> tuple:
+        # Generate the interpolated grid
+        self.create_grid(self.interp_num)
+
+    def create_grid(self, interp_num) -> None:
         """
-        Create the meshgrid from the scan data.
+        Create the interpolated meshgrid from the scan data.
 
         Args:
             interp_num (int): The number of points on each axis of the grid.
-            method ({'linear', 'nearest', 'cubic'}): The method of interpolation to use.
         """
         x = self.x_location.to_numpy()
         y = self.y_location.to_numpy()
         z = self.cup_current.to_numpy()
 
-        grid_x, grid_y = np.meshgrid(
+        self.grid_x, self.grid_y = np.meshgrid(
             np.linspace(x.min(), x.max(), interp_num),
             np.linspace(y.min(), y.max(), interp_num),
         )
 
-        grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
+        self.grid_z = griddata((x, y), z, (self.grid_x, self.grid_y), method='cubic')
 
-        return grid_x, grid_y, grid_z
-
-    def contour(
-        self,
-        x: NDArray[float64],
-        y: NDArray[float64],
-        z: NDArray[float64],
-        level: float,
+    def _contour(
+        self, level: float
     ) -> tuple[NDArray[float64], NDArray[float64]] | None:
         """
         Finds the contour of a 3D map at the specified level.
 
         Args:
-            x (NDArray[float64]): The 1D array of x-coordinate values.
-            y (NDArray[float64]): The 1D array of y-coordinate values.
-            z (NDArray[float64]): The 1D array of height values at each x-y coordinate.
+            level (float): The height/elevation at which the contour should be calculated.
 
         Returns:
             tuple[NDArray[float64], NDArray[float64]]: The 2D array of the contour x-y coordinates if the contour exists
             None: if the contours do not exists
         """
+
         # Extract and scale the contour
-        raw_contours = measure.find_contours(z, level)
+        raw_contours = measure.find_contours(self.grid_z, level)
 
         if not raw_contours:
             return None
@@ -91,8 +91,16 @@ class ScanData:
         contour = np.array(raw_contours[0])
 
         # Map from pixel indices (row, col) to data coordinates (y, x)
-        x_contour = np.interp(contour[:, 1], [0, z.shape[1] - 1], [x.min(), x.max()])
-        y_contour = np.interp(contour[:, 0], [0, z.shape[0] - 1], [y.min(), y.max()])
+        x_contour = np.interp(
+            contour[:, 1],
+            [0, self.grid_z.shape[1] - 1],
+            [self.grid_x.min(), self.grid_x.max()],
+        )
+        y_contour = np.interp(
+            contour[:, 0],
+            [0, self.grid_z.shape[0] - 1],
+            [self.grid_y.min(), self.grid_y.max()],
+        )
 
         return x_contour, y_contour
 
@@ -266,19 +274,18 @@ class ScanData:
         Returns:
             tuple: (Xc, Yc) - centroid coordinates.
         """
-        grid_x, grid_y, grid_z = self.create_grid()
         # Zero out the cup current measurements that are below the threshold so
         # that the centroid is calculated from strong beam current readings only.
         # This gets rid of the contribution from the noise to find the centroid.
         threshold: float = self.half_max
-        cup_current = np.where(abs(grid_z) < abs(threshold), 0, grid_z)
+        cup_current = np.where(abs(self.grid_z) < abs(threshold), 0, self.grid_z)
 
         # Add up all of the cup_current readings greater than half_max to get the total current
         total_current = float(np.sum(np.abs(cup_current)))  # Use absolute values
 
         # Compute a weighted average along the x and y directions to get the centroid coordinates.
-        Xc = float(np.sum(grid_x * np.abs(cup_current)) / total_current)
-        Yc = float(np.sum(grid_y * np.abs(cup_current)) / total_current)
+        Xc = float(np.sum(self.grid_x * np.abs(cup_current)) / total_current)
+        Yc = float(np.sum(self.grid_y * np.abs(cup_current)) / total_current)
         # print(f'Centroid = ({Xc:.1f}, {Yc:.1f})')
 
         return Xc, Yc
