@@ -4,6 +4,8 @@ from numpy import float64
 from numpy.typing import NDArray
 from pandas import DataFrame, Series
 from scipy.interpolate import griddata
+from scipy.spatial import ConvexHull
+from scipy.spatial.distance import pdist
 from skimage import (
     measure,
 )  # For find_contours <conda install -c conda-forge scikit-image>
@@ -68,6 +70,8 @@ class ScanData:
 
         self.grid_z = griddata((x, y), z, (self.grid_x, self.grid_y), method='cubic')
 
+    # --- Contour methods ---
+
     def _contour(
         self, level: float
     ) -> tuple[NDArray[float64], NDArray[float64]] | None:
@@ -103,6 +107,138 @@ class ScanData:
         )
 
         return x_contour, y_contour
+
+    def _contour_min_diameter(
+        self, x_contour: NDArray[float64], y_contour: NDArray[float64]
+    ) -> float:
+        """
+        Calculate minimum diameter of a contour using Convex Hull.
+
+        Args:
+            x_contour (NDArray[float64]): The x-coordinate points of the contour.
+            y_contour (NDArray[float64]): The y-coordinate points of the contour.
+
+        Returns:
+            float: The minimum calculated diameter of the contour. Returns zero
+            if it is impossible to calculate the convex hull.
+        """
+        # Check if we have enough points to even make a shape
+        if len(x_contour) < 3:
+            return 0.0
+
+        # Create the x-y pairs
+        points = np.column_stack([x_contour, y_contour])
+
+        # Create the "Rubber Band" around the points
+        # This ignores all internal points and gives us the outer boundary
+        hull = ConvexHull(points)
+
+        # Extract the actual X-Y coordinates of the hull vertices
+        # hull.vertices provides the indices; points[hull.vertices] gives coordinates
+        hull_points = points[hull.vertices]
+
+        # Prepare to find the Minimum Diameter (Rotating Calipers logic)
+        # We initialize with infinity so any real width will be smaller
+        min_diameter = float('inf')
+
+        # Iterate over every flat edge of the hull
+        for i in range(len(hull_points)):
+            # Define the edge using current point (p1) and next point (p2)
+            # The % n ensures the last point connects back to the first
+            p1 = hull_points[i]
+            p2 = hull_points[(i + 1) % len(hull_points)]
+
+            # Calculate the 'edge' vector and its magnitude
+            edge = p2 - p1  # (p2x-p1x, p2y-p1y)
+            edge_length = np.linalg.norm(edge)  # sqrt( edgex**2 + edgey**2 )
+
+            # Safety check for duplicate points
+            if edge_length == 0:
+                continue
+
+            # Create the "Ruler" (Unit Normal)
+            # We rotate the edge 90 degrees CCW and scale it to a length of 1
+            # This points perpendicular to the edge we are currently "resting" on
+            unit_normal = np.array([-edge[1], edge[0]]) / edge_length
+
+            # Project all points onto this ruler
+            # The dot product tells us where each vertex "lands" on our normal axis
+            projections = np.dot(hull_points, unit_normal)
+
+            # Calculate the span (width) for this specific orientation
+            # Max - Min gives the total thickness of the shape in this direction
+            width = np.max(projections) - np.min(projections)
+
+            # Update the "Minimum" if this orientation is narrower than previous ones
+            min_diameter = min(min_diameter, width)
+
+        min_diameter = float(min_diameter * 1e-3)
+
+        return round(min_diameter, 3)
+
+    def _contour_max_diameter(
+        self, x_contour: NDArray[float64], y_contour: NDArray[float64]
+    ) -> float:
+        """
+        Calculate max diameter of a contour using Convex Hull.
+
+        Args:
+            x_contour (NDArray[float64]): The x-coordinate points of the contour.
+            y_contour (NDArray[float64]): The y-coordinate points of the contour.
+
+        Returns:
+            float: The maximum calculated diameter of the contour. Returns zero
+            if it is impossible to calculate the convex hull.
+        """
+        # Check if we have enough points to even make a shape
+        if len(x_contour) < 3:
+            return 0.0
+
+        # Create the x-y pairs
+        points = np.column_stack([x_contour, y_contour])
+
+        # Create the "Rubber Band" around the points
+        # This ignores all internal points and gives us the outer boundary
+        hull = ConvexHull(points)
+
+        # Extract the actual X-Y coordinates of the hull vertices
+        # hull.vertices provides the indices; points[hull.vertices] gives coordinates
+        hull_points = points[hull.vertices]
+
+        # Calculate the Maximum Diameter (Feret Max)
+        # pdist finds the distance between every possible pair of hull points
+        # np.max picks the longest one
+        max_diameter = float(np.max(pdist(hull_points))) * 1e-3  # convert to mm
+
+        return round(max_diameter, 3)
+
+    def _contour_area(
+        self, x_contour: NDArray[float64], y_contour: NDArray[float64]
+    ) -> float:
+        """
+        Calculate the area of a enclosed by a contour.
+
+        Args:
+            x_contour (NDArray[float64]): The x-coordinate points of the contour.
+            y_contour (NDArray[float64]): The y-coordinate points of the contour.
+
+        Returns:
+            float: The enclosed area calculated diameter of the contour.
+            Returns zero if the contour is not closed.
+        """
+        # Check if contour is closed (first point (p1) equals last point (pn))
+        p1 = [x_contour[0], y_contour[0]]
+        pn = [x_contour[-1], y_contour[-1]]
+        if not np.allclose(p1, pn):
+            area = 0.0
+        else:
+            # Calculate Area (Shoelace Formula)
+            area = 0.5 * np.abs(
+                np.dot(x_contour, np.roll(y_contour, 1))
+                - np.dot(y_contour, np.roll(x_contour, 1))
+            )
+        area = float(area)
+        return round(area, 2)
 
     # --- Scan data properties ---
 
@@ -572,15 +708,13 @@ if __name__ == '__main__':
     qm_contour = sd.qm_contour
     resolution = sd.resolution
     polarity = sd.polarity
-    if sd.csv_version != 0:
-        print('This csv was output by the app.')
-    else:
-        print('This csv was output by labview.')
+    print(f'{sd.csv_version = }')
+    if hm_contour:
+        print('Half-max contour exists.')
+    if qm_contour:
+        print('Quarter-max contour exists.')
     # print(f'{sd._metadata = }')
     # print(f'{scan_data.data.head()}')
     # print(f'{resolution = }')
     # print(f'{polarity = }')
-    # print(f'{sd._peak_idx = }')
     # print(f'{sd.weighted_centroid = }')
-    # print(f'{hm_contour = }')
-    # print(f'{qm_contour = }')
