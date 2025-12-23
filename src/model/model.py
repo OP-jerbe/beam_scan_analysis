@@ -242,15 +242,15 @@ class ScanData:
         p1 = [x_contour[0], y_contour[0]]
         pn = [x_contour[-1], y_contour[-1]]
         if not np.allclose(p1, pn):
-            area = 0.0
+            return 0.0
         else:
             # Calculate Area (Shoelace Formula)
             area = 0.5 * np.abs(
                 np.dot(x_contour, np.roll(y_contour, 1))
                 - np.dot(y_contour, np.roll(x_contour, 1))
             )
-        area = float(area)
-        return round(area, 2)
+        area = float(area) * 1e-6
+        return round(area, 3)
 
     # --- Scan data properties ---
 
@@ -762,3 +762,7 @@ if __name__ == '__main__':
     # print(f'{resolution = }')
     # print(f'{polarity = }')
     # print(f'{sd.weighted_centroid = }')
+    print(f'{sd.hm_contour_area = }')
+    print(f'{sd.hm_contour_diams = }')
+    print(f'{sd.qm_contour_area = }')
+    print(f'{sd.qm_contour_diams = }')
