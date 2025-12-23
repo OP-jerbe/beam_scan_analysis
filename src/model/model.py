@@ -4,6 +4,9 @@ from numpy import float64
 from numpy.typing import NDArray
 from pandas import DataFrame, Series
 from scipy.interpolate import griddata
+from skimage import (
+    measure,
+)  # For find_contours <conda install -c conda-forge scikit-image>
 
 import helpers.helpers as h
 
@@ -59,6 +62,39 @@ class ScanData:
         grid_z = griddata((x, y), z, (grid_x, grid_y), method='cubic')
 
         return grid_x, grid_y, grid_z
+
+    def contour(
+        self,
+        x: NDArray[float64],
+        y: NDArray[float64],
+        z: NDArray[float64],
+        level: float,
+    ) -> tuple[NDArray[float64], NDArray[float64]] | None:
+        """
+        Finds the contour of a 3D map at the specified level.
+
+        Args:
+            x (NDArray[float64]): The 1D array of x-coordinate values.
+            y (NDArray[float64]): The 1D array of y-coordinate values.
+            z (NDArray[float64]): The 1D array of height values at each x-y coordinate.
+
+        Returns:
+            tuple[NDArray[float64], NDArray[float64]]: The 2D array of the contour x-y coordinates if the contour exists
+            None: if the contours do not exists
+        """
+        # Extract and scale the contour
+        raw_contours = measure.find_contours(z, level)
+
+        if not raw_contours:
+            return None
+
+        contour = np.array(raw_contours[0])
+
+        # Map from pixel indices (row, col) to data coordinates (y, x)
+        x_contour = np.interp(contour[:, 1], [0, z.shape[1] - 1], [x.min(), x.max()])
+        y_contour = np.interp(contour[:, 0], [0, z.shape[0] - 1], [y.min(), y.max()])
+
+        return x_contour, y_contour
 
     # --- Scan data properties ---
 
