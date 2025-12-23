@@ -1,11 +1,11 @@
 from PySide6.QtCore import QObject, Slot
 
-from ..model.model import Model
+from ..model.model import ScanData
 from ..view.main_window import MainWindow
 
 
 class Controller(QObject):
-    def __init__(self, model: Model, view: MainWindow) -> None:
+    def __init__(self, model: ScanData, view: MainWindow) -> None:
         super().__init__()
         self.model = model
         self.view = view
