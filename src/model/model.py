@@ -460,6 +460,22 @@ class ScanData:
         hm_contour = self._contour(self.quarter_max)
         return hm_contour
 
+    @property
+    def qm_contour_diams(self) -> tuple[float, float]:
+        contour = self.qm_contour
+        if not contour:
+            return 0.0, 0.0
+        min_diam = self._contour_min_diameter(contour[0], contour[1])
+        max_diam = self._contour_max_diameter(contour[0], contour[1])
+        return min_diam, max_diam
+
+    @property
+    def qm_contour_area(self) -> float:
+        contour = self.qm_contour
+        if not contour:
+            return 0.0
+        return self._contour_area(contour[0], contour[1])
+
     # --- csv loading methods ---
 
     def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
