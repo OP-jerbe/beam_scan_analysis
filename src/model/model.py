@@ -439,6 +439,15 @@ class ScanData:
         return hm_contour
 
     @property
+    def hm_contour_diams(self) -> tuple[float, float]:
+        contour = self.hm_contour
+        if not contour:
+            return 0.0, 0.0
+        min_diam = self._contour_min_diameter(contour[0], contour[1])
+        max_diam = self._contour_max_diameter(contour[0], contour[1])
+        return min_diam, max_diam
+
+    @property
     def qm_contour(self) -> tuple[NDArray[float64], NDArray[float64]] | None:
         """GETTER: Gets the x-y coordiates of the quarter-max contour."""
         hm_contour = self._contour(self.quarter_max)
