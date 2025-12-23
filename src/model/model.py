@@ -16,11 +16,11 @@ import helpers.helpers as h
 class ScanData:
     def __init__(self) -> None:
         self._metadata: dict = {}
-        self._data: DataFrame = DataFrame([], dtype=NDArray[float64])
+        self._data: DataFrame = DataFrame([])
         self.interp_num: int = 500
-        self.grid_x: NDArray[float64] = np.array([], dtype=NDArray[float64])
-        self.grid_y: NDArray[float64] = np.array([], dtype=NDArray[float64])
-        self.grid_z: NDArray[float64] = np.array([], dtype=NDArray[float64])
+        self.grid_x: NDArray[float64] = np.array([])
+        self.grid_y: NDArray[float64] = np.array([])
+        self.grid_z: NDArray[float64] = np.array([])
 
     def load_scan_data(self) -> None:
         """
