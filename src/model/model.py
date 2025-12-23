@@ -741,6 +741,18 @@ class ScanData:
         }
         return int(peak_index[self.polarity])
 
+    @property
+    def _steps_per_row(self) -> int:
+        first_num: float = self.y_location[0]
+        steps = 0
+        for i, num in enumerate(self.y_location):
+            if num == first_num:
+                continue
+            else:
+                steps = i
+                break
+        return steps
+
 
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
