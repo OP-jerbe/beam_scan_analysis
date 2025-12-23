@@ -81,6 +81,249 @@ class ScanData:
                 (x, y), z, (self.grid_x, self.grid_y), method='cubic'
             )
 
+    # --- csv loading methods ---
+
+    def _check_version(self, filepath: str) -> int:
+        # Read the first row
+        df: pd.DataFrame = pd.read_csv(filepath, header=None, usecols=[1], nrows=1)
+        csv_version: str = str(df.iloc[0, 0])
+        match csv_version:
+            case '3':
+                return 3
+            case '2':
+                return 2
+            case '1':
+                return 1
+            case _:
+                return 0
+
+    def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
+        # Load in the metadata from the csv file.
+        df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=13, usecols=[1])
+
+        csv_version: str = str(df.iloc[0, 0])
+        serial_number = str(df.iloc[1, 0])
+        scan_datetime = str(df.iloc[2, 0])
+        step_size = float(pd.to_numeric(df.iloc[3, 0]))
+        beam_voltage = float(str(df.iloc[4, 0]))
+        extractor_voltage = float(str(df.iloc[5, 0]))
+        solenoid_current = float(str(df.iloc[6, 0]))
+        test_stand = str(df.iloc[7, 0]).replace('nan', '')
+        beam_supply_current = float(pd.to_numeric(df.iloc[8, 0]))
+        pressure = float(pd.to_numeric(df.iloc[9, 0]))
+        fcup_distance = float(str(df.iloc[10, 0]))
+        fcup_diameter = float(str(df.iloc[11, 0]))
+        power = float(str(df.iloc[12, 0]))
+
+        if beam_voltage.is_integer():
+            beam_voltage = int(beam_voltage)
+        if extractor_voltage.is_integer():
+            extractor_voltage = int(extractor_voltage)
+        if power.is_integer():
+            power = int(power)
+
+        # Get the scan data (y, x, cup current, screen current)
+        data: pd.DataFrame = pd.read_csv(filepath, skiprows=13)
+
+        metadata: dict = {
+            'csv_version': csv_version,
+            'serial_number': serial_number,
+            'scan_datetime': scan_datetime,
+            'step_size': step_size,
+            'beam_voltage': beam_voltage,
+            'extractor_voltage': extractor_voltage,
+            'solenoid_current': solenoid_current,
+            'test_stand': test_stand,
+            'beam_supply_current': beam_supply_current,
+            'pressure': pressure,
+            'fcup_distance': fcup_distance,
+            'fcup_diameter': fcup_diameter,
+            'power': power,
+        }
+
+        return metadata, data
+
+    def _load_v2_csv(self, filepath: str) -> tuple[dict, DataFrame]:
+        # Load in the metadata from the csv file.
+        df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=12, usecols=[1])
+
+        csv_version: str = str(df.iloc[0, 0])
+        serial_number = str(df.iloc[1, 0])
+        scan_datetime = str(df.iloc[2, 0])
+        step_size = float(pd.to_numeric(df.iloc[3, 0]))
+        beam_voltage = float(str(df.iloc[4, 0]))
+        extractor_voltage = float(str(df.iloc[5, 0]))
+        solenoid_current = float(str(df.iloc[6, 0]))
+        test_stand = str(df.iloc[7, 0]).replace('nan', '')
+        beam_supply_current = float(pd.to_numeric(df.iloc[8, 0]))
+        pressure = float(pd.to_numeric(df.iloc[9, 0]))
+        fcup_distance = float(str(df.iloc[10, 0]))
+        fcup_diameter = float(str(df.iloc[11, 0]))
+        power = float('nan')
+
+        if beam_voltage.is_integer():
+            beam_voltage = int(beam_voltage)
+        if extractor_voltage.is_integer():
+            extractor_voltage = int(extractor_voltage)
+
+        # Get the scan data (y, x, cup current, screen current)
+        data: pd.DataFrame = pd.read_csv(filepath, skiprows=12)
+
+        metadata: dict = {
+            'csv_version': csv_version,
+            'serial_number': serial_number,
+            'scan_datetime': scan_datetime,
+            'step_size': step_size,
+            'beam_voltage': beam_voltage,
+            'extractor_voltage': extractor_voltage,
+            'solenoid_current': solenoid_current,
+            'test_stand': test_stand,
+            'beam_supply_current': beam_supply_current,
+            'pressure': pressure,
+            'fcup_distance': fcup_distance,
+            'fcup_diameter': fcup_diameter,
+            'power': power,
+        }
+
+        return metadata, data
+
+    def _load_v1_csv(self, filepath: str) -> tuple[dict, DataFrame]:
+        """
+        Check if csv is exported from application as version 1.
+        (No Beam Supply Current, Pressure, fcup dist/diam data)
+        """
+        # Load in the metadata from the csv file.
+        df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=8, usecols=[1])
+
+        csv_version: str = str(df.iloc[0, 0])
+        serial_number = str(df.iloc[1, 0])
+        scan_datetime = str(df.iloc[2, 0])
+        step_size = float(pd.to_numeric(df.iloc[3, 0]))
+        beam_voltage = float(str(df.iloc[4, 0]))
+        extractor_voltage = float(str(df.iloc[5, 0]))
+        solenoid_current = float(str(df.iloc[6, 0]))
+        test_stand = str(df.iloc[7, 0]).replace('nan', '')
+        beam_supply_current = float('nan')
+        pressure = float('nan')
+        fcup_distance = float('nan')
+        fcup_diameter = float('nan')
+        power = float('nan')
+
+        if beam_voltage.is_integer():
+            beam_voltage = int(beam_voltage)
+        if extractor_voltage.is_integer():
+            extractor_voltage = int(extractor_voltage)
+
+        # Get the scan data (y, x, cup current, screen current)
+        data: pd.DataFrame = pd.read_csv(filepath, skiprows=8)
+
+        metadata: dict = {
+            'csv_version': csv_version,
+            'serial_number': serial_number,
+            'scan_datetime': scan_datetime,
+            'step_size': step_size,
+            'beam_voltage': beam_voltage,
+            'extractor_voltage': extractor_voltage,
+            'solenoid_current': solenoid_current,
+            'test_stand': test_stand,
+            'beam_supply_current': beam_supply_current,
+            'pressure': pressure,
+            'fcup_distance': fcup_distance,
+            'fcup_diameter': fcup_diameter,
+            'power': power,
+        }
+
+        return metadata, data
+
+    def _load_v0_csv(self, filepath: str) -> tuple[dict, DataFrame]:
+        """Load in csv as exported from LabVIEW application."""
+        data: pd.DataFrame = pd.read_csv(
+            filepath, header=None, usecols=[0], nrows=7, skiprows=[3, 7]
+        )
+
+        csv_version: str = '0'
+        scan_datetime_data: str = str(data.iloc[0, 0])
+        if scan_datetime_data.split()[0] != '#DATE/TIME:':
+            raise Exception('CSV is not a beam scan csv.')
+        scan_datetime = scan_datetime_data.replace('#DATE/TIME: ', '').strip()
+        serial_data = str(data.iloc[1, 0])
+        serial_number = serial_data.replace('#Module Number: ', '').strip()
+        step_size_data = str(data.iloc[2, 0])
+        step_size = float(step_size_data.replace('#Step Size(mm): ', '').strip())  # mm
+
+        beam_voltage_data: str = str(data.iloc[3, 0])
+        beam_voltage: float = (
+            round(
+                int(beam_voltage_data.replace('#Beam Voltage: ', '').strip()),
+                -2,
+            )
+            * 1e-3
+        )  # kV
+        if beam_voltage.is_integer():
+            beam_voltage = int(beam_voltage)
+
+        extractor_voltage_data: str = str(data.iloc[4, 0])
+        extractor_voltage: float = (
+            round(
+                int(extractor_voltage_data.replace('#Extractor Voltage: ', '').strip()),
+                -2,
+            )
+            * 1e-3
+        )  # kV
+        if extractor_voltage.is_integer():
+            extractor_voltage = int(extractor_voltage)
+
+        beam_supply_current_data: str = str(data.iloc[5, 0])
+        beam_supply_current_data: str = beam_supply_current_data.replace(
+            '#Beam Supply Current: ', ''
+        ).strip()  # uA
+        beam_supply_current: float = round(float(beam_supply_current_data), 2)
+
+        pressure_data = str(data.iloc[6, 0])
+        pressure_data = pressure_data.replace('#Chamber Pressure:  ', '')  # mBar
+        pressure = float(pressure_data)
+
+        solenoid_current = float('nan')
+        test_stand = ''
+        fcup_distance = float('nan')
+        fcup_diameter = float('nan')
+        power = float('nan')
+
+        # Get the scan data (y, x, cup current, screen current)
+        data: pd.DataFrame = pd.read_csv(filepath, usecols=[0, 1, 2, 3], skiprows=9)
+
+        # Rename columns
+        data.rename(
+            columns={
+                ' Y Coordinate': 'X',
+                '#X Coordinate': 'Y',
+                ' Faraday Cup Current': 'cup_current',
+                ' Screen Current': 'screen_current',
+            },
+            inplace=True,
+        )
+
+        # Add total current column
+        data['total_current'] = data['cup_current'] + data['screen_current']
+
+        metadata: dict = {
+            'csv_version': csv_version,
+            'serial_number': serial_number,
+            'scan_datetime': scan_datetime,
+            'step_size': step_size,
+            'beam_voltage': beam_voltage,
+            'extractor_voltage': extractor_voltage,
+            'solenoid_current': solenoid_current,
+            'test_stand': test_stand,
+            'beam_supply_current': beam_supply_current,
+            'pressure': pressure,
+            'fcup_distance': fcup_distance,
+            'fcup_diameter': fcup_diameter,
+            'power': power,
+        }
+
+        return metadata, data
+
     # --- Contour methods ---
 
     def _contour(
@@ -498,249 +741,6 @@ class ScanData:
         if not contour:
             return 0.0
         return self._contour_area(contour[0], contour[1])
-
-    # --- csv loading methods ---
-
-    def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
-        # Load in the metadata from the csv file.
-        df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=13, usecols=[1])
-
-        csv_version: str = str(df.iloc[0, 0])
-        serial_number = str(df.iloc[1, 0])
-        scan_datetime = str(df.iloc[2, 0])
-        step_size = float(pd.to_numeric(df.iloc[3, 0]))
-        beam_voltage = float(str(df.iloc[4, 0]))
-        extractor_voltage = float(str(df.iloc[5, 0]))
-        solenoid_current = float(str(df.iloc[6, 0]))
-        test_stand = str(df.iloc[7, 0]).replace('nan', '')
-        beam_supply_current = float(pd.to_numeric(df.iloc[8, 0]))
-        pressure = float(pd.to_numeric(df.iloc[9, 0]))
-        fcup_distance = float(str(df.iloc[10, 0]))
-        fcup_diameter = float(str(df.iloc[11, 0]))
-        power = float(str(df.iloc[12, 0]))
-
-        if beam_voltage.is_integer():
-            beam_voltage = int(beam_voltage)
-        if extractor_voltage.is_integer():
-            extractor_voltage = int(extractor_voltage)
-        if power.is_integer():
-            power = int(power)
-
-        # Get the scan data (y, x, cup current, screen current)
-        data: pd.DataFrame = pd.read_csv(filepath, skiprows=13)
-
-        metadata: dict = {
-            'csv_version': csv_version,
-            'serial_number': serial_number,
-            'scan_datetime': scan_datetime,
-            'step_size': step_size,
-            'beam_voltage': beam_voltage,
-            'extractor_voltage': extractor_voltage,
-            'solenoid_current': solenoid_current,
-            'test_stand': test_stand,
-            'beam_supply_current': beam_supply_current,
-            'pressure': pressure,
-            'fcup_distance': fcup_distance,
-            'fcup_diameter': fcup_diameter,
-            'power': power,
-        }
-
-        return metadata, data
-
-    def _load_v2_csv(self, filepath: str) -> tuple[dict, DataFrame]:
-        # Load in the metadata from the csv file.
-        df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=12, usecols=[1])
-
-        csv_version: str = str(df.iloc[0, 0])
-        serial_number = str(df.iloc[1, 0])
-        scan_datetime = str(df.iloc[2, 0])
-        step_size = float(pd.to_numeric(df.iloc[3, 0]))
-        beam_voltage = float(str(df.iloc[4, 0]))
-        extractor_voltage = float(str(df.iloc[5, 0]))
-        solenoid_current = float(str(df.iloc[6, 0]))
-        test_stand = str(df.iloc[7, 0]).replace('nan', '')
-        beam_supply_current = float(pd.to_numeric(df.iloc[8, 0]))
-        pressure = float(pd.to_numeric(df.iloc[9, 0]))
-        fcup_distance = float(str(df.iloc[10, 0]))
-        fcup_diameter = float(str(df.iloc[11, 0]))
-        power = float('nan')
-
-        if beam_voltage.is_integer():
-            beam_voltage = int(beam_voltage)
-        if extractor_voltage.is_integer():
-            extractor_voltage = int(extractor_voltage)
-
-        # Get the scan data (y, x, cup current, screen current)
-        data: pd.DataFrame = pd.read_csv(filepath, skiprows=12)
-
-        metadata: dict = {
-            'csv_version': csv_version,
-            'serial_number': serial_number,
-            'scan_datetime': scan_datetime,
-            'step_size': step_size,
-            'beam_voltage': beam_voltage,
-            'extractor_voltage': extractor_voltage,
-            'solenoid_current': solenoid_current,
-            'test_stand': test_stand,
-            'beam_supply_current': beam_supply_current,
-            'pressure': pressure,
-            'fcup_distance': fcup_distance,
-            'fcup_diameter': fcup_diameter,
-            'power': power,
-        }
-
-        return metadata, data
-
-    def _load_v1_csv(self, filepath: str) -> tuple[dict, DataFrame]:
-        """
-        Check if csv is exported from application as version 1.
-        (No Beam Supply Current, Pressure, fcup dist/diam data)
-        """
-        # Load in the metadata from the csv file.
-        df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=8, usecols=[1])
-
-        csv_version: str = str(df.iloc[0, 0])
-        serial_number = str(df.iloc[1, 0])
-        scan_datetime = str(df.iloc[2, 0])
-        step_size = float(pd.to_numeric(df.iloc[3, 0]))
-        beam_voltage = float(str(df.iloc[4, 0]))
-        extractor_voltage = float(str(df.iloc[5, 0]))
-        solenoid_current = float(str(df.iloc[6, 0]))
-        test_stand = str(df.iloc[7, 0]).replace('nan', '')
-        beam_supply_current = float('nan')
-        pressure = float('nan')
-        fcup_distance = float('nan')
-        fcup_diameter = float('nan')
-        power = float('nan')
-
-        if beam_voltage.is_integer():
-            beam_voltage = int(beam_voltage)
-        if extractor_voltage.is_integer():
-            extractor_voltage = int(extractor_voltage)
-
-        # Get the scan data (y, x, cup current, screen current)
-        data: pd.DataFrame = pd.read_csv(filepath, skiprows=8)
-
-        metadata: dict = {
-            'csv_version': csv_version,
-            'serial_number': serial_number,
-            'scan_datetime': scan_datetime,
-            'step_size': step_size,
-            'beam_voltage': beam_voltage,
-            'extractor_voltage': extractor_voltage,
-            'solenoid_current': solenoid_current,
-            'test_stand': test_stand,
-            'beam_supply_current': beam_supply_current,
-            'pressure': pressure,
-            'fcup_distance': fcup_distance,
-            'fcup_diameter': fcup_diameter,
-            'power': power,
-        }
-
-        return metadata, data
-
-    def _load_v0_csv(self, filepath: str) -> tuple[dict, DataFrame]:
-        """Load in csv as exported from LabVIEW application."""
-        data: pd.DataFrame = pd.read_csv(
-            filepath, header=None, usecols=[0], nrows=7, skiprows=[3, 7]
-        )
-
-        csv_version: str = '0'
-        scan_datetime_data: str = str(data.iloc[0, 0])
-        if scan_datetime_data.split()[0] != '#DATE/TIME:':
-            raise Exception('CSV is not a beam scan csv.')
-        scan_datetime = scan_datetime_data.replace('#DATE/TIME: ', '').strip()
-        serial_data = str(data.iloc[1, 0])
-        serial_number = serial_data.replace('#Module Number: ', '').strip()
-        step_size_data = str(data.iloc[2, 0])
-        step_size = float(step_size_data.replace('#Step Size(mm): ', '').strip())  # mm
-
-        beam_voltage_data: str = str(data.iloc[3, 0])
-        beam_voltage: float = (
-            round(
-                int(beam_voltage_data.replace('#Beam Voltage: ', '').strip()),
-                -2,
-            )
-            * 1e-3
-        )  # kV
-        if beam_voltage.is_integer():
-            beam_voltage = int(beam_voltage)
-
-        extractor_voltage_data: str = str(data.iloc[4, 0])
-        extractor_voltage: float = (
-            round(
-                int(extractor_voltage_data.replace('#Extractor Voltage: ', '').strip()),
-                -2,
-            )
-            * 1e-3
-        )  # kV
-        if extractor_voltage.is_integer():
-            extractor_voltage = int(extractor_voltage)
-
-        beam_supply_current_data: str = str(data.iloc[5, 0])
-        beam_supply_current_data: str = beam_supply_current_data.replace(
-            '#Beam Supply Current: ', ''
-        ).strip()  # uA
-        beam_supply_current: float = round(float(beam_supply_current_data), 2)
-
-        pressure_data = str(data.iloc[6, 0])
-        pressure_data = pressure_data.replace('#Chamber Pressure:  ', '')  # mBar
-        pressure = float(pressure_data)
-
-        solenoid_current = float('nan')
-        test_stand = ''
-        fcup_distance = float('nan')
-        fcup_diameter = float('nan')
-        power = float('nan')
-
-        # Get the scan data (y, x, cup current, screen current)
-        data: pd.DataFrame = pd.read_csv(filepath, usecols=[0, 1, 2, 3], skiprows=9)
-
-        # Rename columns
-        data.rename(
-            columns={
-                ' Y Coordinate': 'X',
-                '#X Coordinate': 'Y',
-                ' Faraday Cup Current': 'cup_current',
-                ' Screen Current': 'screen_current',
-            },
-            inplace=True,
-        )
-
-        # Add total current column
-        data['total_current'] = data['cup_current'] + data['screen_current']
-
-        metadata: dict = {
-            'csv_version': csv_version,
-            'serial_number': serial_number,
-            'scan_datetime': scan_datetime,
-            'step_size': step_size,
-            'beam_voltage': beam_voltage,
-            'extractor_voltage': extractor_voltage,
-            'solenoid_current': solenoid_current,
-            'test_stand': test_stand,
-            'beam_supply_current': beam_supply_current,
-            'pressure': pressure,
-            'fcup_distance': fcup_distance,
-            'fcup_diameter': fcup_diameter,
-            'power': power,
-        }
-
-        return metadata, data
-
-    def _check_version(self, filepath: str) -> int:
-        # Read the first row
-        df: pd.DataFrame = pd.read_csv(filepath, header=None, usecols=[1], nrows=1)
-        csv_version: str = str(df.iloc[0, 0])
-        match csv_version:
-            case '3':
-                return 3
-            case '2':
-                return 2
-            case '1':
-                return 1
-            case _:
-                return 0
 
     # --- Helpers ---
 
