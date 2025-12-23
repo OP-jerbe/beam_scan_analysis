@@ -247,6 +247,12 @@ class ScanData:
 
         return Xc, Yc
 
+    @property
+    def peak_location(self) -> tuple[float, float]:
+        """GETTER: Get the (x,y) coordinate of the peak cup current."""
+        peak_idx = self._peak_idx
+        return self.x_location[peak_idx], self.y_location[peak_idx]
+
     # --- csv loading methods ---
 
     def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
@@ -490,7 +496,7 @@ class ScanData:
             case _:
                 return 0
 
-    # --- Analysis methods ---
+    # --- Helpers ---
 
     @property
     def _peak_idx(self) -> int:
