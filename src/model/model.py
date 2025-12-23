@@ -544,7 +544,7 @@ class ScanData:
     # --- Metadata properties ---
 
     @property
-    def csv_version(self) -> int:
+    def csv_version(self) -> str:
         """GETTER: Gets the csv version number."""
         return self._metadata['csv_version']
 
