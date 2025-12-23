@@ -52,23 +52,34 @@ class ScanData:
         # Generate the interpolated grid
         self.create_grid(self.interp_num)
 
-    def create_grid(self, interp_num) -> None:
+    def create_grid(self, interp_num: int | None) -> None:
         """
         Create the interpolated meshgrid from the scan data.
 
         Args:
-            interp_num (int): The number of points on each axis of the grid.
+            interp_num (int | None): The number of points on each axis of the grid.
+            If None then no interpolation occurs.
         """
         x = self.x_location.to_numpy()
         y = self.y_location.to_numpy()
         z = self.cup_current.to_numpy()
 
-        self.grid_x, self.grid_y = np.meshgrid(
-            np.linspace(x.min(), x.max(), interp_num),
-            np.linspace(y.min(), y.max(), interp_num),
-        )
-
-        self.grid_z = griddata((x, y), z, (self.grid_x, self.grid_y), method='cubic')
+        if not interp_num:
+            self.grid_x, self.grid_y = np.meshgrid(
+                np.linspace(x.min(), x.max(), self._steps_per_row),
+                np.linspace(y.min(), y.max(), self._steps_per_row),
+            )
+            self.grid_z = griddata(
+                (x, y), z, (self.grid_x, self.grid_y), method='linear'
+            )
+        else:
+            self.grid_x, self.grid_y = np.meshgrid(
+                np.linspace(x.min(), x.max(), interp_num),
+                np.linspace(y.min(), y.max(), interp_num),
+            )
+            self.grid_z = griddata(
+                (x, y), z, (self.grid_x, self.grid_y), method='cubic'
+            )
 
     # --- Contour methods ---
 
@@ -761,12 +772,15 @@ if __name__ == '__main__':
     sd = ScanData()
     sd.load_scan_data()
     print(f'{sd.csv_version = }')
+    print(f'{len(sd.grid_x) = }')
     # print(f'{sd._metadata = }')
     # print(f'{scan_data.data.head()}')
     # print(f'{sd.resolution = }')
-    # print(f'{sd. polarity = }')
+    # print(f'{sd.polarity = }')
     # print(f'{sd.weighted_centroid = }')
-    print(f'{sd.hm_contour_area = }')
-    print(f'{sd.hm_contour_diams = }')
-    print(f'{sd.qm_contour_area = }')
-    print(f'{sd.qm_contour_diams = }')
+    # print(f'{sd.hm_contour_area = }')
+    # print(f'{sd.hm_contour_diams = }')
+    # print(f'{sd.qm_contour_area = }')
+    # print(f'{sd.qm_contour_diams = }')
+    sd.create_grid(None)
+    print(f'{len(sd.grid_x) = }')
