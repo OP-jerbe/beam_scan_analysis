@@ -126,6 +126,12 @@ class ScanData:
         if len(x_contour) < 3:
             return 0.0
 
+        # Check if the contour is closed
+        p1 = [x_contour[0], y_contour[0]]
+        pn = [x_contour[-1], y_contour[-1]]
+        if not np.allclose(p1, pn):
+            return 0.0
+
         # Create the x-y pairs
         points = np.column_stack([x_contour, y_contour])
 
@@ -192,6 +198,12 @@ class ScanData:
         """
         # Check if we have enough points to even make a shape
         if len(x_contour) < 3:
+            return 0.0
+
+        # Check if the contour is closed
+        p1 = [x_contour[0], y_contour[0]]
+        pn = [x_contour[-1], y_contour[-1]]
+        if not np.allclose(p1, pn):
             return 0.0
 
         # Create the x-y pairs
