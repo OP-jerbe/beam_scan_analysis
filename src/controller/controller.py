@@ -10,7 +10,7 @@ class Controller(QObject):
         self.model = model
         self.view = view
 
-        self.view.select_csv_file_sig.connect(self.receive_select_csv_file_sig)
+        self.view.load_scan_data_sig.connect(self.receive_select_csv_file_sig)
         self.view.plot_beam_scan_sig.connect(self.receive_plot_beam_scan_sig)
 
     @Slot()
