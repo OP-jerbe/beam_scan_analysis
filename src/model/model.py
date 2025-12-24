@@ -38,11 +38,13 @@ class Model(QObject):
     def create_grid(self, *args, **kwargs) -> None:
         worker = Worker(self.bs.create_grid, *args, **kwargs)
         worker.signals.finished.connect(self.create_grid_finished)
+        worker.signals.error.connect(self.create_grid_failed)
         self.thread_pool.start(worker)
 
     @Slot()
-    def create_grid_finished(self) -> None:
-        self.create_grid_finished_sig.emit()
+    def create_grid_finished(self, completed: bool) -> None:
+        if completed:
+            self.create_grid_finished_sig.emit()
 
     @Slot()
     def create_grid_failed(self, error: str) -> None:
