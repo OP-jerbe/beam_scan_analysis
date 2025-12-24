@@ -26,8 +26,18 @@ from src.view.override_centroid_window import OverrideCentroidWindow
 
 
 class MainWindow(QMainWindow):
-    select_csv_file_sig = Signal()
+    load_scan_data_sig = Signal()
     plot_beam_scan_sig = Signal()
+    export_to_csv_sig = Signal()
+    override_centroid_sig = Signal()
+    disable_interp_sig = Signal()
+    save_3d_surface_html_sig = Signal()
+    save_heatmap_html_sig = Signal()
+    save_xy_cross_section_html_sig = Signal()
+    save_i_prime_html_sig = Signal()
+    save_all_html_sig = Signal()
+    save_all_png_sig = Signal()
+    open_quick_start_guide_sig = Signal()
 
     def __init__(self, version) -> None:
         super().__init__()
@@ -38,7 +48,7 @@ class MainWindow(QMainWindow):
 
         self.select_csv_button.clicked.connect(self.select_csv_handler)
         self.plot_button.clicked.connect(self.plot_beam_scan_handler)
-        self.export_csv_option.triggered.connect(self.export_to_csv)
+        self.export_csv_option.triggered.connect(self.export_to_csv_handler)
         self.override_centroid_option.triggered.connect(self.override_centroid_handler)
         self.disable_interp_option.triggered.connect(self.disable_interp_handler)
         self.exit_option.triggered.connect(QApplication.quit)
@@ -54,18 +64,46 @@ class MainWindow(QMainWindow):
 
     # --- Create the input handlers ---
 
-    def select_csv_handler(self): ...
-    def plot_beam_scan_handler(self): ...
-    def export_to_csv(self): ...
-    def override_centroid_handler(self): ...
-    def disable_interp_handler(self): ...
-    def save_3d_surface_html(self): ...
-    def save_heatmap_html(self): ...
-    def save_xy_cross_section_html(self): ...
-    def save_i_prime_html(self): ...
-    def save_all_html(self): ...
-    def save_all_png(self): ...
-    def open_quick_start_guide_handler(self): ...
+    def select_csv_handler(self) -> None:
+        self.load_scan_data_sig.emit()
+
+    def plot_beam_scan_handler(self) -> None:
+        self.plot_beam_scan_sig.emit()
+
+    def export_to_csv_handler(self) -> None:
+        self.export_to_csv_sig.emit()
+        # TODO:
+        # 1) Have the controller catch the signal
+        # 2) Have the controller call an export_to_csv function
+        #       The function should have the user choose a save location
+        #       then export the scan data as a v3 export csv.
+
+    def override_centroid_handler(self) -> None:
+        self.override_centroid_sig.emit()
+
+    def disable_interp_handler(self) -> None:
+        self.disable_interp_sig.emit()
+
+    def save_3d_surface_html(self) -> None:
+        self.save_3d_surface_html_sig.emit()
+
+    def save_heatmap_html(self) -> None:
+        self.save_heatmap_html_sig.emit()
+
+    def save_xy_cross_section_html(self) -> None:
+        self.save_xy_cross_section_html_sig.emit()
+
+    def save_i_prime_html(self) -> None:
+        self.save_i_prime_html_sig.emit()
+
+    def save_all_html(self) -> None:
+        self.save_all_html_sig.emit()
+
+    def save_all_png(self) -> None:
+        self.save_all_png_sig.emit()
+
+    def open_quick_start_guide_handler(self) -> None:
+        self.open_quick_start_guide_sig.emit()
 
     def create_gui(self) -> None:
         input_box_width = 130
