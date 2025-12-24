@@ -20,6 +20,7 @@ class Model(QObject):
 
     @Slot()
     def load_scan_data_finished(self) -> None:
+        # TODO: get all of the data and send it out with the finished signal
         self.scan_data_loaded_sig.emit()
 
     def create_grid(self, *args, **kwargs) -> None:
@@ -30,3 +31,52 @@ class Model(QObject):
     @Slot()
     def create_grid_finished(self) -> None:
         self.create_grid_finished_sig.emit()
+
+    def stats(self) -> dict[str, str]:
+        serial_number = self.bs.serial_number
+        datetime = self.bs.scan_datetime
+        test_stand = self.bs.test_stand
+        resolution = self.bs.resolution
+        step_size = self.bs.step_size
+        polarity = self.bs.polarity
+        power = self.bs.power
+        pressure = self.bs.pressure
+        beam_voltage = self.bs.beam_voltage
+        ext_voltage = self.bs.extractor_voltage
+        beam_supply_current = self.bs.beam_supply_current
+        centroid = self.bs.weighted_centroid
+        peak_location = self.bs.peak_location
+        peak_cup_current = self.bs.peak_cup_current
+        hm_contour_area = self.bs.hm_contour_area
+        hm_contour_diams = self.bs.hm_contour_diams
+        qm_contour_area = self.bs.qm_contour_area
+        qm_contour_diams = self.bs.qm_contour_diams
+        solenoid_current = self.bs.solenoid_current
+
+        stats: dict[str, str] = {
+            'serial_number': serial_number,
+            'datetime': datetime,
+            'test_stand': test_stand,
+            'resolution': resolution,
+            'step_size': str(step_size),
+            'polarity': polarity,
+            'power': str(power),
+            'pressure': str(pressure),
+            'beam_voltage': str(beam_voltage),
+            'ext_voltage': str(ext_voltage),
+            'beam_supply_current': str(beam_supply_current),
+            'centroid_x': str(centroid[0]),
+            'centroid_y': str(centroid[1]),
+            'peak_location_x': str(peak_location[0]),
+            'peak_location_y': str(peak_location[1]),
+            'peak_cup_current': str(peak_cup_current),
+            'hm_contour_area': str(hm_contour_area),
+            'hm_min_diam': str(hm_contour_diams[0]),
+            'hm_max_diam': str(hm_contour_diams[1]),
+            'qm_contour_area': str(qm_contour_area),
+            'qm_min_diam': str(qm_contour_diams[0]),
+            'qm_max_diam': str(qm_contour_diams[1]),
+            'solenoid_current': str(solenoid_current),
+        }
+
+        return stats
