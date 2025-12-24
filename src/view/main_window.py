@@ -195,6 +195,8 @@ class MainWindow(QMainWindow):
         self.stat_step_size.setFixedSize(stat_label_width, stat_label_height)
         self.stat_polarity = QLabel('Polarity: ')
         self.stat_polarity.setFixedSize(stat_label_width, stat_label_height)
+        self.stat_power = QLabel('Power (W): ')
+        self.stat_power.setFixedSize(stat_label_width, stat_label_height)
         self.stat_pressure = QLabel('Pressure (mBar): ')
         self.stat_pressure.setFixedSize(stat_label_width, stat_label_height)
         self.stat_beam_voltage = QLabel('Beam Voltage (kV): ')
@@ -272,6 +274,7 @@ class MainWindow(QMainWindow):
         v_sub2_main_layout.addWidget(self.stat_resolution)
         v_sub2_main_layout.addWidget(self.stat_step_size)
         v_sub2_main_layout.addWidget(self.stat_polarity)
+        v_sub2_main_layout.addWidget(self.stat_power)
         v_sub2_main_layout.addWidget(self.stat_pressure)
         v_sub2_main_layout.addWidget(self.stat_beam_voltage)
         v_sub2_main_layout.addWidget(self.stat_ext_voltage)
@@ -308,6 +311,7 @@ class MainWindow(QMainWindow):
             self.stat_resolution: 'Resolution: ',
             self.stat_step_size: 'Step Size (mm): ',
             self.stat_polarity: 'Polarity: ',
+            self.stat_power: 'Power (W): ',
             self.stat_pressure: 'Pressure (mBar): ',
             self.stat_beam_voltage: 'Beam Voltage (kV): ',
             self.stat_ext_voltage: 'Extractor Voltage (kV): ',
