@@ -3,12 +3,11 @@ from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 
 class WorkerSignals(QObject):
     # This survives even after the Worker is deleted
-    finished = Signal()
+    finished = Signal(bool)
     error = Signal(str)
-    # You could also add error = Signal(str) or result = Signal(object)
 
 
-class Worker(QRunnable, QObject):
+class Worker(QRunnable):
     finished_sig = Signal()
 
     def __init__(self, fn, *args, **kwargs) -> None:
@@ -20,9 +19,11 @@ class Worker(QRunnable, QObject):
 
     @Slot()
     def run(self) -> None:
+        complete = False
         try:
             self.fn(*self.args, **self.kwargs)
+            complete = True
         except Exception as e:
             self.signals.error.emit(str(e))
         finally:
-            self.signals.finished.emit()
+            self.signals.finished.emit(complete)

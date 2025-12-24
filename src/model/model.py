@@ -15,19 +15,25 @@ class Model(QObject):
         self.bs = beam_scan
         self.thread_pool = QThreadPool()
 
+    # --- Load Scan Data ---
+
     def load_scan_data(self) -> None:
         worker = Worker(self.bs.load_scan_data)
         worker.signals.finished.connect(self.load_scan_data_finished)
+        worker.signals.error.connect(self.load_scan_data_failed)
         self.thread_pool.start(worker)
 
     @Slot()
-    def load_scan_data_finished(self) -> None:
-        stats = self.stats()
-        self.scan_data_loaded_sig.emit(stats)
+    def load_scan_data_finished(self, completed: bool) -> None:
+        if completed:
+            stats = self.stats()
+            self.scan_data_loaded_sig.emit(stats)
 
     @Slot()
     def load_scan_data_failed(self, error: str) -> None:
         self.load_scan_data_failed_sig.emit(error)
+
+    # --- Create Grid ---
 
     def create_grid(self, *args, **kwargs) -> None:
         worker = Worker(self.bs.create_grid, *args, **kwargs)
@@ -41,6 +47,8 @@ class Model(QObject):
     @Slot()
     def create_grid_failed(self, error: str) -> None:
         self.create_grid_failed_sig.emit(error)
+
+    # --- Stats ---
 
     def stats(self) -> dict[str, str]:
         serial_number = self.bs.serial_number
