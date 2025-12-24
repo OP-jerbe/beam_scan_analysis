@@ -6,8 +6,9 @@ from .worker import Worker
 
 class Model(QObject):
     scan_data_loaded_sig = Signal(dict)
-    create_grid_finished_sig = Signal()
     load_scan_data_failed_sig = Signal(str)
+    create_grid_finished_sig = Signal()
+    create_grid_failed_sig = Signal(str)
 
     def __init__(self, beam_scan: BeamScan) -> None:
         super().__init__()
@@ -25,7 +26,7 @@ class Model(QObject):
         self.scan_data_loaded_sig.emit(stats)
 
     @Slot()
-    def load_scan_data_failed(self, error) -> None:
+    def load_scan_data_failed(self, error: str) -> None:
         self.load_scan_data_failed_sig.emit(error)
 
     def create_grid(self, *args, **kwargs) -> None:
@@ -36,6 +37,10 @@ class Model(QObject):
     @Slot()
     def create_grid_finished(self) -> None:
         self.create_grid_finished_sig.emit()
+
+    @Slot()
+    def create_grid_failed(self, error: str) -> None:
+        self.create_grid_failed_sig.emit(error)
 
     def stats(self) -> dict[str, str]:
         serial_number = self.bs.serial_number
