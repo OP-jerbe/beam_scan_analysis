@@ -1,6 +1,6 @@
 from PySide6.QtCore import QObject, Slot
 
-from ..model.model import ScanData
+from ..model.beam_scan import ScanData
 from ..view.main_window import MainWindow
 
 
