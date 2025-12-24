@@ -4,6 +4,7 @@ from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 class WorkerSignals(QObject):
     # This survives even after the Worker is deleted
     finished = Signal()
+    error = Signal(str)
     # You could also add error = Signal(str) or result = Signal(object)
 
 
@@ -21,5 +22,7 @@ class Worker(QRunnable, QObject):
     def run(self) -> None:
         try:
             self.fn(*self.args, **self.kwargs)
+        except Exception as e:
+            self.signals.error.emit(str(e))
         finally:
             self.signals.finished.emit()

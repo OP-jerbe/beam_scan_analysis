@@ -5,8 +5,9 @@ from .worker import Worker
 
 
 class Model(QObject):
-    scan_data_loaded_sig = Signal()
+    scan_data_loaded_sig = Signal(dict)
     create_grid_finished_sig = Signal()
+    load_scan_data_failed_sig = Signal(str)
 
     def __init__(self, beam_scan: BeamScan) -> None:
         super().__init__()
@@ -20,8 +21,12 @@ class Model(QObject):
 
     @Slot()
     def load_scan_data_finished(self) -> None:
-        # TODO: get all of the data and send it out with the finished signal
-        self.scan_data_loaded_sig.emit()
+        stats = self.stats()
+        self.scan_data_loaded_sig.emit(stats)
+
+    @Slot()
+    def load_scan_data_failed(self, error) -> None:
+        self.load_scan_data_failed_sig.emit(error)
 
     def create_grid(self, *args, **kwargs) -> None:
         worker = Worker(self.bs.create_grid, *args, **kwargs)
