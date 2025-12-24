@@ -13,7 +13,7 @@ from skimage import (
 import helpers.helpers as h
 
 
-class ScanData:
+class BeamScan:
     def __init__(self) -> None:
         self._metadata: dict = {}
         self._data: DataFrame = DataFrame([])
@@ -769,7 +769,7 @@ if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
     QApplication([])
-    sd = ScanData()
+    sd = BeamScan()
     sd.load_scan_data()
     print(f'{sd.csv_version = }')
     print(f'{len(sd.grid_x) = }')

@@ -1,11 +1,11 @@
 from PySide6.QtCore import QObject, Slot
 
-from ..model.beam_scan import ScanData
+from ..model.beam_scan import BeamScan
 from ..view.main_window import MainWindow
 
 
 class Controller(QObject):
-    def __init__(self, model: ScanData, view: MainWindow) -> None:
+    def __init__(self, model: BeamScan, view: MainWindow) -> None:
         super().__init__()
         self.model = model
         self.view = view
