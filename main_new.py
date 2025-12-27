@@ -3,6 +3,9 @@ from typing import NoReturn
 
 from PySide6.QtWidgets import QApplication
 
+from src.controller.controller import Controller
+from src.model.beam_scan import BeamScan
+from src.model.model import Model
 from src.view.main_window import MainWindow
 
 
@@ -14,8 +17,11 @@ def run_app() -> NoReturn:
     """
     version = '2.0.0'
     app = QApplication([])
-    window = MainWindow(version=version)
-    window.show()
+    beam_scan = BeamScan()
+    model = Model(beam_scan)
+    view = MainWindow(version, model)
+    _ = Controller(model, view)
+    view.show()
     sys.exit(app.exec())
 
 
