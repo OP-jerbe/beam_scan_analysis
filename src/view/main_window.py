@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from qt_material import apply_stylesheet
 
 import helpers.helpers as h
+from src.model.model import Model
 from src.view.override_centroid_window import OverrideCentroidWindow
 
 
@@ -39,7 +40,7 @@ class MainWindow(QMainWindow):
     save_all_png_sig = Signal()
     open_quick_start_guide_sig = Signal()
 
-    def __init__(self, version) -> None:
+    def __init__(self, version, model: Model) -> None:
         super().__init__()
         self.version = version
         self.installEventFilter(self)
@@ -208,6 +209,7 @@ class MainWindow(QMainWindow):
         # Create buttons to select csv file and analyze beam scan
         self.select_csv_button = QPushButton('Select CSV File')
         self.select_csv_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.select_csv_button.clicked.connect(self.select_csv_handler)
         self.plot_button = QPushButton('Plot Beam Scan')
         self.plot_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.plot_button.setDisabled(True)
@@ -529,8 +531,13 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == '__main__':
+    from src.model.beam_scan import BeamScan
+    from src.model.model import Model
+
     app = QApplication([])
     version = '3.0.0'
-    window = MainWindow(version)
+    beam_scan = BeamScan()
+    model = Model(beam_scan)
+    window = MainWindow(version, model)
     window.show()
     sys.exit(app.exec())
