@@ -1,11 +1,11 @@
 from PySide6.QtCore import QObject, Slot
 
-from ..model.beam_scan import BeamScan
+from ..model.model import Model
 from ..view.main_window import MainWindow
 
 
 class Controller(QObject):
-    def __init__(self, model: BeamScan, view: MainWindow) -> None:
+    def __init__(self, model: Model, view: MainWindow) -> None:
         super().__init__()
         self.model = model
         self.view = view
@@ -15,7 +15,11 @@ class Controller(QObject):
 
     @Slot()
     def receive_select_csv_file_sig(self) -> None:
-        print('Received select_csv_file_sig')
+        self.model.load_scan_data()
+
+    @Slot()
+    def receive_create_grid_sig(self) -> None:
+        self.model.create_grid()
 
     @Slot()
     def receive_plot_beam_scan_sig(self) -> None:
