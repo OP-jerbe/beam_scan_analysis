@@ -43,6 +43,7 @@ class MainWindow(QMainWindow):
     def __init__(self, version, model: Model) -> None:
         super().__init__()
         self.version = version
+        self.model = model
         self.installEventFilter(self)
         self.create_gui()
         self.override_centroid_window = OverrideCentroidWindow()
