@@ -1,15 +1,15 @@
+import traceback
+
 from PySide6.QtCore import QObject, QRunnable, Signal, Slot
 
 
 class WorkerSignals(QObject):
     # This survives even after the Worker is deleted
     finished = Signal(bool)
-    error = Signal(str)
+    error = Signal(str, str)
 
 
 class Worker(QRunnable):
-    finished_sig = Signal()
-
     def __init__(self, fn, *args, **kwargs) -> None:
         super().__init__()
         self.fn = fn
@@ -24,6 +24,8 @@ class Worker(QRunnable):
             self.fn(*self.args, **self.kwargs)
             complete = True
         except Exception as e:
-            self.signals.error.emit(str(e))
+            print('Worker error.')
+            self.signals.error.emit(str(e), traceback.print_exc)
         finally:
+            print('Run complete.')
             self.signals.finished.emit(complete)
