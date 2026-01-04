@@ -65,7 +65,7 @@ class MainWindow(QMainWindow):
         )
 
         self.model.load_scan_data_failed_sig.connect(self.csv_load_error_message)
-        self.model.scan_data_loaded_sig.connect(...)
+        self.model.scan_data_loaded_sig.connect(self.update_stats)
 
     # --- Create the input handlers ---
 
@@ -375,6 +375,9 @@ class MainWindow(QMainWindow):
         }
         for label, default_text in default_stat_labels.items():
             label.setText(default_text)
+
+    def update_stats(self, stats: dict) -> None:
+        print(stats)
 
     def update_stat_label(
         self,
