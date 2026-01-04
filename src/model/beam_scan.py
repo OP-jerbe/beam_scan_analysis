@@ -10,7 +10,7 @@ from skimage import (
     measure,
 )  # For find_contours <conda install -c conda-forge scikit-image>
 
-import helpers.helpers as h
+# import helpers.helpers as h
 
 
 class BeamScan:
@@ -22,20 +22,10 @@ class BeamScan:
         self.grid_y: NDArray[float64] = np.array([])
         self.grid_z: NDArray[float64] = np.array([])
 
-    def load_scan_data(self) -> None:
-        """
-        Load scan data from a CSV file and return a ScanData object.
-        Args:
-            interp_num (int): The interpolation number for creating the grid.
-        Notes:
-            The function reads specific metadata from the first few rows of the CSV file
-            and uses the rest of the data to populate the scan data. The beam voltage
-            is used to determine the scan polarity ('NEG' or 'POS'), and the step size
-            is used to determine the scan resolution (Ultra, High, or Med).
-        """
-
-        filepath = h.select_file()
+    def load_scan_data(self, filepath: str) -> None:
+        # filepath = h.select_file()
         if not filepath:
+            print('No file selected.')
             return
 
         csv_version = self._check_version(filepath)
@@ -768,9 +758,12 @@ class BeamScan:
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
+    import helpers.helpers as h
+
     QApplication([])
     sd = BeamScan()
-    sd.load_scan_data()
+    filepath = h.select_file()
+    sd.load_scan_data(filepath)
     print(f'{sd.csv_version = }')
     print(f'{len(sd.grid_x) = }')
     # print(f'{sd._metadata = }')
