@@ -27,7 +27,7 @@ from src.view.override_centroid_window import OverrideCentroidWindow
 
 
 class MainWindow(QMainWindow):
-    load_scan_data_sig = Signal()
+    load_scan_data_sig = Signal(str)
     plot_beam_scan_sig = Signal()
     export_to_csv_sig = Signal()
     override_centroid_sig = Signal()
@@ -64,10 +64,16 @@ class MainWindow(QMainWindow):
             self.open_quick_start_guide_handler
         )
 
+        self.model.load_scan_data_failed_sig.connect(self.csv_load_error_message)
+        self.model.scan_data_loaded_sig.connect(...)
+
     # --- Create the input handlers ---
 
     def select_csv_handler(self) -> None:
-        self.load_scan_data_sig.emit()
+        filepath = h.select_file()
+        if not filepath:
+            return
+        self.load_scan_data_sig.emit(filepath)
 
     def plot_beam_scan_handler(self) -> None:
         self.plot_beam_scan_sig.emit()
@@ -210,7 +216,6 @@ class MainWindow(QMainWindow):
         # Create buttons to select csv file and analyze beam scan
         self.select_csv_button = QPushButton('Select CSV File')
         self.select_csv_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.select_csv_button.clicked.connect(self.select_csv_handler)
         self.plot_button = QPushButton('Plot Beam Scan')
         self.plot_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.plot_button.setDisabled(True)
@@ -468,11 +473,10 @@ class MainWindow(QMainWindow):
 
         return filename
 
-    @staticmethod
-    def csv_load_error_message(parent, error, traceback) -> None:
+    def csv_load_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = f'Failed to load beam scan data.\n\nTry another csv file.\n\n{error}\n\n{traceback}'
-        QMessageBox.critical(parent, title, message)
+        QMessageBox.critical(self, title, message)
 
     @staticmethod
     def heatmap_error_message(parent, error, traceback) -> None:
