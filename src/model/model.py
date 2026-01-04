@@ -6,7 +6,7 @@ from .worker import Worker
 
 class Model(QObject):
     scan_data_loaded_sig = Signal(dict)
-    load_scan_data_failed_sig = Signal(str)
+    load_scan_data_failed_sig = Signal(str, str)
     create_grid_finished_sig = Signal()
     create_grid_failed_sig = Signal(str)
 
@@ -17,11 +17,12 @@ class Model(QObject):
 
     # --- Load Scan Data ---
 
-    def load_scan_data(self) -> None:
-        worker = Worker(self.bs.load_scan_data)
+    def load_scan_data(self, filepath: str) -> None:
+        worker = Worker(self.bs.load_scan_data, filepath=filepath)
         worker.signals.finished.connect(self.load_scan_data_finished)
         worker.signals.error.connect(self.load_scan_data_failed)
         self.thread_pool.start(worker)
+        print('load_scan_data worker started.')
 
     @Slot()
     def load_scan_data_finished(self, completed: bool) -> None:
@@ -30,8 +31,8 @@ class Model(QObject):
             self.scan_data_loaded_sig.emit(stats)
 
     @Slot()
-    def load_scan_data_failed(self, error: str) -> None:
-        self.load_scan_data_failed_sig.emit(error)
+    def load_scan_data_failed(self, error: str, traceback: str) -> None:
+        self.load_scan_data_failed_sig.emit(error, traceback)
 
     # --- Stats ---
 
