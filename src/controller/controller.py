@@ -14,8 +14,9 @@ class Controller(QObject):
         self.view.plot_beam_scan_sig.connect(self.receive_plot_beam_scan_sig)
 
     @Slot()
-    def receive_select_csv_file_sig(self) -> None:
-        self.model.load_scan_data()
+    def receive_select_csv_file_sig(self, filepath: str) -> None:
+        print('Received load_scan_data_sig')
+        self.model.load_scan_data(filepath)
 
     @Slot()
     def receive_create_grid_sig(self) -> None:
