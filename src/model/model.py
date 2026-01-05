@@ -56,6 +56,8 @@ class Model(QObject):
         qm_contour_area = self.bs.qm_contour_area
         qm_contour_diams = self.bs.qm_contour_diams
         solenoid_current = self.bs.solenoid_current
+        fcup_diam = self.bs.fcup_diameter
+        fcup_dist = self.bs.fcup_distance
 
         stats: dict[str, str] = {
             'serial_number': serial_number,
@@ -82,6 +84,8 @@ class Model(QObject):
             'qm_min_diam': str(qm_contour_diams[0]),
             'qm_max_diam': str(qm_contour_diams[1]),
             'solenoid_current': str(solenoid_current),
+            'fcup_diam': str(fcup_diam),
+            'fcup_dist': str(fcup_dist),
         }
 
         return stats

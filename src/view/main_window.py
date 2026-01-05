@@ -199,7 +199,7 @@ class MainWindow(QMainWindow):
         self.lower_bound_input.setFixedHeight(input_box_height)
         self.lower_bound_input.setValidator(validator)
         self.fcup_distance_label = QLabel('Dist. to Cup (mm)')
-        self.fcup_distance_input = QLineEdit('205')
+        self.fcup_distance_input = QLineEdit('205.0')
         self.fcup_distance_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.fcup_distance_input.setFixedHeight(input_box_height)
         self.fcup_distance_input.setValidator(validator)
@@ -359,6 +359,13 @@ class MainWindow(QMainWindow):
         self.solenoid_current_input.setText(stats['solenoid_current'])
         self.power_input.setText(stats['power'])
         self.test_stand_input.setText(stats['test_stand'])
+        if stats['fcup_diam']:
+            self.fcup_diameter_input.setText(stats['fcup_diam'])
+        if stats['fcup_dist']:
+            self.fcup_distance_input.setText(stats['fcup_dist'])
+
+        # Activate the Plot Beam Scan button
+        self.plot_button.setEnabled(True)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         """
