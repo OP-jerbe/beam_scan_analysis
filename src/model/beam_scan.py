@@ -680,7 +680,7 @@ class BeamScan:
         Yc = float(np.sum(self.grid_y * np.abs(cup_current)) / total_current)
         # print(f'Centroid = ({Xc:.1f}, {Yc:.1f})')
 
-        return Xc, Yc
+        return round(Xc, 1), round(Yc, 1)
 
     @property
     def peak_location(self) -> tuple[float, float]:
