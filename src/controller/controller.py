@@ -15,7 +15,6 @@ class Controller(QObject):
 
     @Slot()
     def receive_select_csv_file_sig(self, filepath: str) -> None:
-        print('Received load_scan_data_sig')
         self.model.load_scan_data(filepath)
 
     @Slot()

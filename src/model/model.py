@@ -22,7 +22,6 @@ class Model(QObject):
         worker.signals.finished.connect(self.load_scan_data_finished)
         worker.signals.error.connect(self.load_scan_data_failed)
         self.thread_pool.start(worker)
-        print('load_scan_data worker started.')
 
     @Slot()
     def load_scan_data_finished(self, completed: bool) -> None:
