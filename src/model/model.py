@@ -51,6 +51,7 @@ class Model(QObject):
         centroid = self.bs.weighted_centroid
         peak_location = self.bs.peak_location
         peak_cup_current = self.bs.peak_cup_current
+        peak_total_current = self.bs.peak_total_current
         hm_contour_area = self.bs.hm_contour_area
         hm_contour_diams = self.bs.hm_contour_diams
         qm_contour_area = self.bs.qm_contour_area
@@ -74,6 +75,7 @@ class Model(QObject):
             'peak_location_x': str(peak_location[0]),
             'peak_location_y': str(peak_location[1]),
             'peak_cup_current': str(peak_cup_current),
+            'peak_total_current': str(peak_total_current),
             'hm_contour_area': str(hm_contour_area),
             'hm_min_diam': str(hm_contour_diams[0]),
             'hm_max_diam': str(hm_contour_diams[1]),
