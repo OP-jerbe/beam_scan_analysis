@@ -1,8 +1,7 @@
 import sys
 from pathlib import Path
 
-import numpy as np
-from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt, Signal
+from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt, Signal, Slot
 from PySide6.QtGui import QAction, QIcon, QMouseEvent, QRegularExpressionValidator
 from PySide6.QtWidgets import (
     QApplication,
@@ -65,8 +64,9 @@ class MainWindow(QMainWindow):
             self.open_quick_start_guide_handler
         )
 
+        # Connect external Signals to Slots
         self.model.load_scan_data_failed_sig.connect(self.csv_load_error_message)
-        self.model.scan_data_loaded_sig.connect(self.update_stats)
+        self.model.scan_data_loaded_sig.connect(self.update_ui)
 
     # --- Create the input handlers ---
 
@@ -115,12 +115,7 @@ class MainWindow(QMainWindow):
         self.open_quick_start_guide_sig.emit()
 
     def create_gui(self) -> None:
-        input_box_width = 130
         input_box_height = 28
-        stat_label_width = 250
-        stat_label_height = 28
-        window_width = 550
-        window_height = 510
 
         # self.setFixedSize(window_width, window_height)
         root_dir: Path = h.get_root_dir()
@@ -177,41 +172,37 @@ class MainWindow(QMainWindow):
         self.help_menu.addAction(self.open_quick_start_guide)
 
         # Create data entry fields and labels
-        self.serial_number_label = QLabel('Serial Number')
         self.serial_number_input = QLineEdit()
-        self.serial_number_input.setFixedSize(input_box_width, input_box_height)
-        self.beam_voltage_label = QLabel('Beam Voltage (kV)')
+        self.serial_number_input.setFixedHeight(input_box_height)
         self.beam_voltage_input = QLineEdit()
-        self.beam_voltage_input.setFixedSize(input_box_width, input_box_height)
+        self.beam_voltage_input.setFixedHeight(input_box_height)
         self.beam_voltage_input.setValidator(validator)
-        self.ext_voltage_label = QLabel('Extractor Votage (kV)')
         self.ext_voltage_input = QLineEdit()
-        self.ext_voltage_input.setFixedSize(input_box_width, input_box_height)
+        self.ext_voltage_input.setFixedHeight(input_box_height)
         self.ext_voltage_input.setValidator(validator)
-        self.solenoid_current_label = QLabel('Solenoid Current (A)')
         self.solenoid_current_input = QLineEdit()
-        self.solenoid_current_input.setFixedSize(input_box_width, input_box_height)
+        self.solenoid_current_input.setFixedHeight(input_box_height)
         self.solenoid_current_input.setValidator(validator)
-        self.test_stand_label = QLabel('Test Stand')
+        self.power_input = QLineEdit()
+        self.power_input.setFixedHeight(input_box_height)
+        self.power_input.setValidator(validator)
         self.test_stand_input = QLineEdit()
-        self.test_stand_input.setFixedSize(input_box_width, input_box_height)
-        self.upper_bound_label = QLabel('Set Max Z (µA)')
+        self.test_stand_input.setFixedHeight(input_box_height)
         self.upper_bound_input = QLineEdit()
-        self.upper_bound_input.setFixedSize(input_box_width, input_box_height)
+        self.upper_bound_input.setFixedHeight(input_box_height)
         self.upper_bound_input.setValidator(validator)
-        self.lower_bound_label = QLabel('Set Min Z (µA)')
         self.lower_bound_input = QLineEdit()
-        self.lower_bound_input.setFixedSize(input_box_width, input_box_height)
+        self.lower_bound_input.setFixedHeight(input_box_height)
         self.lower_bound_input.setValidator(validator)
         self.fcup_distance_label = QLabel('Dist. to Cup (mm)')
         self.fcup_distance_input = QLineEdit('205')
         self.fcup_distance_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.fcup_distance_input.setFixedSize(input_box_width, input_box_height)
+        self.fcup_distance_input.setFixedHeight(input_box_height)
         self.fcup_distance_input.setValidator(validator)
         self.fcup_diameter_label = QLabel('Cup Diam. (mm)')
         self.fcup_diameter_input = QLineEdit('2.5')
         self.fcup_diameter_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.fcup_diameter_input.setFixedSize(input_box_width, input_box_height)
+        self.fcup_diameter_input.setFixedHeight(input_box_height)
         self.fcup_diameter_input.setValidator(validator)
 
         # Create buttons to select csv file and analyze beam scan
@@ -232,69 +223,37 @@ class MainWindow(QMainWindow):
         self.i_prime_cb.setChecked(True)
 
         # Create labels for the statistics display
-        self.stat_serial_number = QLabel('Serial Number: ')
-        # self.stat_serial_number.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_datetime = QLabel('Scan Timestamp: ')
-        self.stat_datetime.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_resolution = QLabel('Resolution: ')
-        self.stat_resolution.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_step_size = QLabel('Step Size (mm): ')
-        self.stat_step_size.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_polarity = QLabel('Polarity: ')
-        self.stat_polarity.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_power = QLabel('Power (W): ')
-        self.stat_power.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_pressure = QLabel('Pressure (mBar): ')
-        self.stat_pressure.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_beam_voltage = QLabel('Beam Voltage (kV): ')
-        self.stat_beam_voltage.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_ext_voltage = QLabel('Extractor Voltage (kV): ')
-        self.stat_ext_voltage.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_beam_supply_current = QLabel('Beam Supply Current (µA): ')
-        self.stat_beam_supply_current.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_centroid_location = QLabel('Centroid Location: ')
-        self.stat_centroid_location.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_peak_location = QLabel('Peak Location: ')
-        self.stat_peak_location.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_peak_cup_current = QLabel('Peak Beam Current (nA): ')
-        self.stat_peak_cup_current.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_peak_total_current = QLabel('Total Current at Peak (µA): ')
-        self.stat_peak_total_current.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_fwhm_area = QLabel('FWHM Area (mm²): ')
-        self.stat_fwhm_area.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_fwhm_max_diam = QLabel('FWHM Max Diam (mm): ')
-        self.stat_fwhm_max_diam.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_fwhm_min_diam = QLabel('FWHM Min Diam (mm): ')
-        self.stat_fwhm_min_diam.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_fwqm_area = QLabel('FWQM Area (mm²): ')
-        self.stat_fwqm_area.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_fwqm_max_diam = QLabel('FWQM Max Diam (mm): ')
-        self.stat_fwqm_max_diam.setFixedSize(stat_label_width, stat_label_height)
-        self.stat_fwqm_min_diam = QLabel('FWQM Min Diam (mm): ')
-        self.stat_fwqm_min_diam.setFixedSize(stat_label_width, stat_label_height)
+        self.stat_serial_number = QLabel()
+        self.stat_datetime = QLabel()
+        self.stat_resolution = QLabel()
+        self.stat_step_size = QLabel()
+        self.stat_polarity = QLabel()
+        self.stat_power = QLabel()
+        self.stat_pressure = QLabel()
+        self.stat_beam_voltage = QLabel()
+        self.stat_ext_voltage = QLabel()
+        self.stat_beam_supply_current = QLabel()
+        self.stat_centroid_location = QLabel()
+        self.stat_peak_location = QLabel()
+        self.stat_peak_cup_current = QLabel()
+        self.stat_peak_total_current = QLabel()
+        self.stat_fwhm_area = QLabel()
+        self.stat_fwhm_max_diam = QLabel()
+        self.stat_fwhm_min_diam = QLabel()
+        self.stat_fwqm_area = QLabel()
+        self.stat_fwqm_max_diam = QLabel()
+        self.stat_fwqm_min_diam = QLabel()
 
         # Arrange widgets in window
-        v_labels_layout = QVBoxLayout()
-        v_labels_layout.addWidget(self.serial_number_label)
-        v_labels_layout.addWidget(self.beam_voltage_label)
-        v_labels_layout.addWidget(self.ext_voltage_label)
-        v_labels_layout.addWidget(self.solenoid_current_label)
-        v_labels_layout.addWidget(self.test_stand_label)
-        v_labels_layout.addWidget(self.upper_bound_label)
-        v_labels_layout.addWidget(self.lower_bound_label)
-
-        v_inputs_layout = QVBoxLayout()
-        v_inputs_layout.addWidget(self.serial_number_input)
-        v_inputs_layout.addWidget(self.beam_voltage_input)
-        v_inputs_layout.addWidget(self.ext_voltage_input)
-        v_inputs_layout.addWidget(self.solenoid_current_input)
-        v_inputs_layout.addWidget(self.test_stand_input)
-        v_inputs_layout.addWidget(self.upper_bound_input)
-        v_inputs_layout.addWidget(self.lower_bound_input)
-
-        h_labels_and_inputs_layout = QHBoxLayout()
-        h_labels_and_inputs_layout.addLayout(v_labels_layout)
-        h_labels_and_inputs_layout.addLayout(v_inputs_layout)
+        editables_layout = QFormLayout()
+        editables_layout.addRow('Serial Number', self.serial_number_input)
+        editables_layout.addRow('Beam Voltage (kV)', self.beam_voltage_input)
+        editables_layout.addRow('Extractor Voltage (kV)', self.ext_voltage_input)
+        editables_layout.addRow('Solenoid Current (A)', self.solenoid_current_input)
+        editables_layout.addRow('RF Power (W)', self.power_input)
+        editables_layout.addRow('Test Stand', self.test_stand_input)
+        editables_layout.addRow('Set Max Z (µA)', self.upper_bound_input)
+        editables_layout.addRow('Set Min Z (µA)', self.lower_bound_input)
 
         g_checkboxes_layout = QGridLayout()
         g_checkboxes_layout.addWidget(self.surface_cb, 0, 0)
@@ -310,7 +269,7 @@ class MainWindow(QMainWindow):
 
         v_sub1_main_layout = QVBoxLayout()
         v_sub1_main_layout.addWidget(self.select_csv_button)
-        v_sub1_main_layout.addLayout(h_labels_and_inputs_layout)
+        v_sub1_main_layout.addLayout(editables_layout)
         v_sub1_main_layout.addWidget(self.plot_button)
         v_sub1_main_layout.addLayout(g_checkboxes_layout)
         v_sub1_main_layout.addLayout(g_i_prime_layout)
@@ -340,26 +299,6 @@ class MainWindow(QMainWindow):
         v_sub2_main_layout.addRow('FWQM Area (mm²): ', self.stat_fwqm_area)
         v_sub2_main_layout.addRow('FWQM Max Diam (mm): ', self.stat_fwqm_max_diam)
         v_sub2_main_layout.addRow('FWQM Min Diam (mm): ', self.stat_fwqm_min_diam)
-        # v_sub2_main_layout.addWidget(self.stat_serial_number)
-        # v_sub2_main_layout.addWidget(self.stat_datetime)
-        # v_sub2_main_layout.addWidget(self.stat_resolution)
-        # v_sub2_main_layout.addWidget(self.stat_step_size)
-        # v_sub2_main_layout.addWidget(self.stat_polarity)
-        # v_sub2_main_layout.addWidget(self.stat_power)
-        # v_sub2_main_layout.addWidget(self.stat_pressure)
-        # v_sub2_main_layout.addWidget(self.stat_beam_voltage)
-        # v_sub2_main_layout.addWidget(self.stat_ext_voltage)
-        # v_sub2_main_layout.addWidget(self.stat_beam_supply_current)
-        # v_sub2_main_layout.addWidget(self.stat_centroid_location)
-        # v_sub2_main_layout.addWidget(self.stat_peak_location)
-        # v_sub2_main_layout.addWidget(self.stat_peak_cup_current)
-        # v_sub2_main_layout.addWidget(self.stat_peak_total_current)
-        # v_sub2_main_layout.addWidget(self.stat_fwhm_area)
-        # v_sub2_main_layout.addWidget(self.stat_fwhm_max_diam)
-        # v_sub2_main_layout.addWidget(self.stat_fwhm_min_diam)
-        # v_sub2_main_layout.addWidget(self.stat_fwqm_area)
-        # v_sub2_main_layout.addWidget(self.stat_fwqm_max_diam)
-        # v_sub2_main_layout.addWidget(self.stat_fwqm_min_diam)
 
         # Create a vertical line
         vertical_line = QFrame()
@@ -375,73 +314,46 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(container)
 
-    def clear_stats(self) -> None:
-        default_stat_labels = {
-            self.stat_serial_number: 'Serial Number: ',
-            self.stat_datetime: 'Scan Timestamp: ',
-            self.stat_resolution: 'Resolution: ',
-            self.stat_step_size: 'Step Size (mm): ',
-            self.stat_polarity: 'Polarity: ',
-            self.stat_power: 'Power (W): ',
-            self.stat_pressure: 'Pressure (mBar): ',
-            self.stat_beam_voltage: 'Beam Voltage (kV): ',
-            self.stat_ext_voltage: 'Extractor Voltage (kV): ',
-            self.stat_beam_supply_current: 'Beam Supply Current (µA): ',
-            self.stat_centroid_location: 'Centroid Location: ',
-            self.stat_peak_location: 'Peak Location: ',
-            self.stat_peak_cup_current: 'Peak Beam Current (nA): ',
-            self.stat_peak_total_current: 'Total Current at Peak (µA): ',
-            self.stat_fwhm_area: 'FWHM Area (mm²): ',
-            self.stat_fwhm_max_diam: 'FWHM Max Diam (mm): ',
-            self.stat_fwhm_min_diam: 'FWHM Min Diam (mm): ',
-            self.stat_fwqm_area: 'FWQM Area (mm²): ',
-            self.stat_fwqm_max_diam: 'FWQM Max Diam (mm): ',
-            self.stat_fwqm_min_diam: 'FWQM Min Diam (mm): ',
-        }
-        for label, default_text in default_stat_labels.items():
-            label.setText(default_text)
+    @Slot()
+    def update_ui(self, stats: dict) -> None:
+        # Get rid of useless entries
+        for key, value in stats.items():
+            if value == 'nan' or value == '0.0':
+                stats[key] = ''
 
-    def update_stats(self, stats: dict) -> None:
-        print(stats)
-
-    def update_stat_label(
-        self,
-        label: QLabel,
-        stat_value: tuple[float, float] | float | np.float64 | str | int,
-        name: str,
-    ) -> None:
-        current_text = label.text()
-        new_text = '#####'
-        one_decimal_place_floats = (
-            'peak_cup_current',
-            'beam_voltage',
-            'extractor_voltage',
+        # Update stats
+        self.stat_beam_supply_current.setText(stats['beam_supply_current'])
+        self.stat_beam_voltage.setText(stats['beam_voltage'])
+        self.stat_centroid_location.setText(
+            f'({stats["centroid_x"]}, {stats["centroid_y"]})'
         )
-        three_decimal_place_floats = (
-            'step_size',
-            'peak_total_current',
-            'FWHM_area',
-            'FWHM_max_diam',
-            'FWHM_min_diam',
-            'FWQM_area',
-            'FWQM_max_diam',
-            'FWQM_min_diam',
+        self.stat_datetime.setText(stats['datetime'])
+        self.stat_ext_voltage.setText(stats['ext_voltage'])
+        self.stat_fwhm_area.setText(stats['hm_contour_area'])
+        self.stat_fwhm_max_diam.setText(stats['hm_max_diam'])
+        self.stat_fwhm_min_diam.setText(stats['hm_min_diam'])
+        self.stat_peak_cup_current.setText(stats['peak_cup_current'])
+        self.stat_peak_location.setText(
+            f'({stats["peak_location_x"]}, {stats["peak_location_y"]})'
         )
+        self.stat_peak_total_current.setText(stats['peak_total_current'])
+        self.stat_polarity.setText(stats['polarity'])
+        self.stat_power.setText(stats['power'])
+        self.stat_pressure.setText(stats['pressure'])
+        self.stat_fwqm_area.setText(stats['qm_contour_area'])
+        self.stat_fwqm_max_diam.setText(stats['qm_max_diam'])
+        self.stat_fwqm_min_diam.setText(stats['qm_min_diam'])
+        self.stat_resolution.setText(stats['resolution'])
+        self.stat_serial_number.setText(stats['serial_number'])
+        self.stat_step_size.setText(stats['step_size'])
 
-        if type(stat_value) is (str | int):
-            new_text = current_text + f'{stat_value}'
-        elif type(stat_value) is tuple:
-            new_text = current_text + f'({stat_value[0]:.0f}, {stat_value[1]:.0f})'
-        elif (
-            type(stat_value) is (float | np.float64)
-        ) and name in one_decimal_place_floats:
-            new_text = current_text + f'{stat_value:.1f}'
-        elif (
-            type(stat_value) is (float | np.float64)
-        ) and name in three_decimal_place_floats:
-            new_text = current_text + f'{stat_value:.3f}'
-
-        label.setText(new_text)
+        # Update editable fields
+        self.serial_number_input.setText(stats['serial_number'])
+        self.beam_voltage_input.setText(stats['beam_voltage'])
+        self.ext_voltage_input.setText(stats['ext_voltage'])
+        self.solenoid_current_input.setText(stats['solenoid_current'])
+        self.power_input.setText(stats['power'])
+        self.test_stand_input.setText(stats['test_stand'])
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         """
@@ -501,6 +413,7 @@ class MainWindow(QMainWindow):
 
         return filename
 
+    @Slot()
     def csv_load_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = f'Failed to load beam scan data.\n\nTry another csv file.\n\n{error}\n\n{traceback}'
