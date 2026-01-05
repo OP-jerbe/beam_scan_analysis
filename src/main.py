@@ -15,11 +15,10 @@ def run_app() -> NoReturn:
     executes the application event loop. `app.exec() == 0` when the event loop
     stops. `sys.exit(0)` terminates the application.
     """
-    version = '2.0.0'
     app = QApplication([])
     beam_scan = BeamScan()
     model = Model(beam_scan)
-    view = MainWindow(version, model)
+    view = MainWindow(model)
     _ = Controller(model, view)
     view.show()
     sys.exit(app.exec())

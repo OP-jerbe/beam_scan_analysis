@@ -1,4 +1,5 @@
 import sys
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt, Signal, Slot
@@ -21,7 +22,7 @@ from PySide6.QtWidgets import (
 )
 from qt_material import apply_stylesheet
 
-import helpers.helpers as h
+import src.helpers.helpers as h
 from src.model.model import Model
 from src.view.override_centroid_window import OverrideCentroidWindow
 
@@ -40,14 +41,14 @@ class MainWindow(QMainWindow):
     save_all_png_sig = Signal()
     open_quick_start_guide_sig = Signal()
 
-    def __init__(self, version, model: Model) -> None:
+    def __init__(self, model: Model) -> None:
         super().__init__()
-        self.version = version
         self.model = model
         self.installEventFilter(self)
         self.create_gui()
         self.override_centroid_window = OverrideCentroidWindow()
 
+        # Connect events to handlers.
         self.select_csv_button.clicked.connect(self.select_csv_handler)
         self.plot_button.clicked.connect(self.plot_beam_scan_handler)
         self.export_csv_option.triggered.connect(self.export_to_csv_handler)
@@ -68,7 +69,7 @@ class MainWindow(QMainWindow):
         self.model.load_scan_data_failed_sig.connect(self.csv_load_error_message)
         self.model.scan_data_loaded_sig.connect(self.update_ui)
 
-    # --- Create the input handlers ---
+    # --- Create the event handlers ---
 
     def select_csv_handler(self) -> None:
         filepath = h.select_file()
@@ -118,9 +119,11 @@ class MainWindow(QMainWindow):
         input_box_height = 28
 
         # self.setFixedSize(window_width, window_height)
+        ver = self.get_app_version()
         root_dir: Path = h.get_root_dir()
         icon_path: str = str(root_dir / 'assets' / 'icon.ico')
         self.setWindowIcon(QIcon(icon_path))
+        self.setWindowTitle(f'Beam Scan Analysis v{ver}')
         apply_stylesheet(self, theme='dark_lightgreen.xml', invert_secondary=True)
         self.setStyleSheet(
             self.styleSheet() + """QLineEdit, QTextEdit {color: lightgreen;}"""
@@ -400,6 +403,13 @@ class MainWindow(QMainWindow):
             event.ignore()
 
     @staticmethod
+    def get_app_version() -> str:
+        try:
+            return version('beam_scan_analysis')
+        except PackageNotFoundError:
+            return 'development-build'
+
+    @staticmethod
     def get_save_filename(parent, filename) -> str | None:
         filename, _ = QFileDialog.getSaveFileName(
             parent=parent,
@@ -481,9 +491,8 @@ if __name__ == '__main__':
     from src.model.model import Model
 
     app = QApplication([])
-    version = '3.0.0'
     beam_scan = BeamScan()
     model = Model(beam_scan)
-    window = MainWindow(version, model)
+    window = MainWindow(model)
     window.show()
     sys.exit(app.exec())
