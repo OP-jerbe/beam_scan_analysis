@@ -128,6 +128,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(
             self.styleSheet() + """QLineEdit, QTextEdit {color: lightgreen;}"""
         )
+        self.resize(600, 0)
 
         # Create the validator for numerical inputs
         number_regex = QRegularExpression(r'^-?\d*\.?\d*$')
@@ -227,6 +228,7 @@ class MainWindow(QMainWindow):
 
         # Create labels for the statistics display
         self.stat_serial_number = QLabel()
+        self.stat_serial_number.setFixedWidth(100)
         self.stat_datetime = QLabel()
         self.stat_resolution = QLabel()
         self.stat_step_size = QLabel()
