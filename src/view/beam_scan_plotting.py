@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
-from numpy import float64
 from numpy.typing import NDArray
 from plotly.graph_objects import Figure
 from plotly.subplots import make_subplots
@@ -12,7 +11,7 @@ from PySide6.QtWidgets import QFileDialog
 
 import src.view.heatmaps as heatmaps
 import src.view.surface_figures as surface_figures
-from src.model.beam_scan_analysis import ScanData
+from src.model.beam_scan import BeamScan
 
 PNG_WIDTH = 700
 PNG_HEIGHT = 500
@@ -56,58 +55,33 @@ class Plotter:
 
     def __init__(
         self,
-        scan_data: ScanData,
-        solenoid: str,
+        beam_scan: BeamScan,
         fcup_diam: float,
         fcup_dist: float,
-        centroid: tuple[float, float],
-        test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        self.scan_data: ScanData = scan_data
-        self.solenoid: str = solenoid
-        self.test_stand: str | None = test_stand
-        self.serial_number: str = scan_data.serial_num
-        self.polarity: str = scan_data.polarity
-        self.beam_voltage: int | float | None = scan_data.beam_voltage
-        self.extractor_voltage: int | float | None = scan_data.extractor_voltage
-        self.half_max: float = scan_data.half_max()
-        self.quarter_max: float = scan_data.quarter_max()
-        self.peak_location: tuple[float, float] = scan_data.peak_location()
-        self.peak_cup_current: float = scan_data.peak_cup_current()
-        self.peak_total_current: float = scan_data.peak_total_current()
-        self.fwhm_enclosed_area: float = scan_data.fwhm_area()
-        self.fwqm_enclosed_area: float = scan_data.fwqm_area()
-        self.centroid: tuple[float, float] = centroid
-
-        self.z_scale: list[int | float | None] = z_scale
-
-        self.grid_x: NDArray[float64] = self.scan_data.grid_x
-        self.grid_y: NDArray[float64] = self.scan_data.grid_y
-        self.grid_z: NDArray[float64] = self.scan_data.grid_z
-
-        self.i_prime: NDArray[np.float64] = self.scan_data.compute_angular_intensity(
-            fcup_dist, fcup_diam
-        )
+        self.bs = beam_scan
+        self.z_scale = z_scale
+        self.angular_intensity = self.bs.angular_intensity(fcup_diam, fcup_dist)
 
         self.y_slice_idx: int = int(
-            np.abs(self.grid_y[:, 0] - self.centroid[1]).argmin()
+            np.abs(self.bs.grid_y[:, 0] - self.bs.weighted_centroid[1]).argmin()
         )
         self.x_slice_idx: int = int(
-            np.abs(self.grid_x[0, :] - self.centroid[0]).argmin()
+            np.abs(self.bs.grid_x[0, :] - self.bs.weighted_centroid[0]).argmin()
         )
         self.x_slice = pd.DataFrame(
             {
-                'X Coordinate': self.grid_x[self.y_slice_idx, :],
-                'Faraday Cup Current': self.grid_z[self.y_slice_idx, :],
-                'Angular Intensity': self.i_prime[self.y_slice_idx, :],
+                'X Coordinate': self.bs.grid_x[self.y_slice_idx, :],
+                'Faraday Cup Current': self.bs.grid_z[self.y_slice_idx, :],
+                'Angular Intensity': self.angular_intensity[self.y_slice_idx, :],
             }
         )
         self.y_slice = pd.DataFrame(
             {
-                'Y Coordinate': self.grid_y[:, self.x_slice_idx],
-                'Faraday Cup Current': self.grid_z[:, self.x_slice_idx],
-                'Angular Intensity': self.i_prime[:, self.x_slice_idx],
+                'Y Coordinate': self.bs.grid_y[:, self.x_slice_idx],
+                'Faraday Cup Current': self.bs.grid_z[:, self.x_slice_idx],
+                'Angular Intensity': self.angular_intensity[:, self.x_slice_idx],
             }
         )
         self.centroid_slice_x = pd.DataFrame({})
@@ -115,10 +89,10 @@ class Plotter:
 
         # Set the plotting color based on polarity of beam scan
         colors: dict[str, str] = {'NEG': 'viridis_r', 'POS': 'viridis'}
-        self.color: str = colors[self.polarity]
+        self.color: str = colors[self.bs.polarity]
 
         # Sort the contour levels based on polarity of beam scan
-        self.levels: list = sorted([self.quarter_max, self.half_max])
+        self.levels: list = sorted([self.bs.quarter_max, self.bs.half_max])
 
         # Set the default 3D surface renderer to be the user's browser
         pio.renderers.default = 'browser'
@@ -202,25 +176,17 @@ class Plotter:
 class Surface(Plotter):
     def __init__(
         self,
-        scan_data: ScanData,
-        solenoid: str,
+        beam_scan: BeamScan,
         fcup_diam: float,
         fcup_dist: float,
-        centroid: tuple[float, float],
-        test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(
-            scan_data, solenoid, fcup_diam, fcup_dist, centroid, test_stand, z_scale
-        )
+        super().__init__(beam_scan, fcup_diam, fcup_dist, z_scale)
 
     def plot_surface(self, show=True) -> None | Figure:
         fig = surface_figures.surface(
             self,
-            self.grid_x,
-            self.grid_y,
-            self.grid_z,
-            self.centroid,
+            self.bs,
             self.x_slice,
             self.y_slice,
         )
@@ -233,33 +199,28 @@ class Surface(Plotter):
 class Heatmap(Plotter):
     def __init__(
         self,
-        scan_data: ScanData,
-        solenoid: str,
+        beam_scan: BeamScan,
         fcup_diam: float,
         fcup_dist: float,
-        centroid: tuple[float, float],
-        test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(
-            scan_data, solenoid, fcup_diam, fcup_dist, centroid, test_stand, z_scale
-        )
+        super().__init__(beam_scan, fcup_diam, fcup_dist, z_scale)
 
     def plot_heatmap(self, show=True) -> None | Figure:
         heatmap = heatmaps.heatmap(
-            self.grid_x, self.grid_y, self.grid_z, self.z_scale, self.color
+            self.bs.grid_x, self.bs.grid_y, self.bs.grid_z, self.z_scale, self.color
         )
         contour_size = (max(self.levels) - min(self.levels)) - 1e-9
 
         # Create contour
         if contour_size > 0:
             contour = go.Contour(
-                z=self.grid_z,
+                z=self.bs.grid_z,
                 x=np.linspace(
-                    self.grid_x.min(), self.grid_x.max(), self.grid_z.shape[1]
+                    self.bs.grid_x.min(), self.bs.grid_x.max(), self.bs.grid_z.shape[1]
                 ),
                 y=np.linspace(
-                    self.grid_y.min(), self.grid_y.max(), self.grid_z.shape[0]
+                    self.bs.grid_y.min(), self.bs.grid_y.max(), self.bs.grid_z.shape[0]
                 ),
                 contours=dict(
                     coloring='lines',
@@ -281,8 +242,8 @@ class Heatmap(Plotter):
         # Add peak location annotation
         fig.add_trace(
             go.Scatter(
-                x=[self.peak_location[0]],
-                y=[self.peak_location[1]],
+                x=[self.bs.peak_location[0]],
+                y=[self.bs.peak_location[1]],
                 mode='markers',
                 textposition='bottom center',
                 marker=dict(color='black', size=2.5, symbol='circle'),
@@ -294,7 +255,7 @@ class Heatmap(Plotter):
         fig.add_trace(
             go.Scatter(
                 x=self.x_slice['X Coordinate'],
-                y=[self.centroid[1]] * len(self.x_slice),
+                y=[self.bs.weighted_centroid[1]] * len(self.x_slice),
                 mode='lines',
                 line=dict(color='black', width=1),
                 name='X-Cross Section',
@@ -304,7 +265,7 @@ class Heatmap(Plotter):
         # Add Y-axis cross-section line
         fig.add_trace(
             go.Scatter(
-                x=[self.centroid[0]] * len(self.y_slice),
+                x=[self.bs.weighted_centroid[0]] * len(self.y_slice),
                 y=self.y_slice['Y Coordinate'],
                 mode='lines',
                 line=dict(color='black', width=1),
@@ -315,24 +276,24 @@ class Heatmap(Plotter):
         # Add additional annotations (customize positions and text as needed)
         fig.add_annotation(
             # x=0.275, y=1, xref="paper", yref="paper",
-            x=self.scan_data.x_location.max(),
+            x=self.bs.x_location.max(),
             y=1,
             yref='paper',
-            text=f'Cup current = {self.peak_cup_current * 1e9:.1f} nA <br>'
-            f'Total current = {self.peak_total_current * 1e6:.3f} µA <br>'
-            f'Settings = {self.beam_voltage}/{self.extractor_voltage} kV & {self.solenoid} A',
+            text=f'Cup current = {self.bs.peak_cup_current:.1f} nA <br>'
+            f'Total current = {self.bs.peak_total_current * 1e6:.3f} µA <br>'
+            f'Settings = {self.bs.beam_voltage}/{self.bs.extractor_voltage} kV & {self.bs.solenoid_current} A',
             showarrow=False,
             align='left',
             xanchor='left',
             yanchor='bottom',
         )
         fig.add_annotation(
-            x=self.scan_data.x_location.min(),
+            x=self.bs.x_location.min(),
             y=1,
             yref='paper',
-            text=f'FWHM Area = {self.fwhm_enclosed_area:.3f} mm²<br>'
-            f'FWQM Area = {self.fwqm_enclosed_area:.3f} mm²<br>'
-            f'peak = ({self.peak_location[0]:.0f},{self.peak_location[1]:.0f})',
+            text=f'FWHM Area = {self.bs.hm_contour_area:.3f} mm²<br>'
+            f'FWQM Area = {self.bs.qm_contour_area:.3f} mm²<br>'
+            f'peak = ({self.bs.peak_location[0]:.0f},{self.bs.peak_location[1]:.0f})',
             showarrow=False,
             align='right',
             xanchor='right',
@@ -342,20 +303,20 @@ class Heatmap(Plotter):
         # Set title and axis properties
         fig.update_layout(
             title=dict(
-                text=f'{self.serial_number} on TS{self.test_stand}',
+                text=f'{self.bs.serial_number} on TS{self.bs.test_stand}',
                 x=0.475,
                 xanchor='center',
             ),
             xaxis=dict(
                 title='X Location',
-                range=[self.grid_x.max(), self.grid_x.min()],
+                range=[self.bs.grid_x.max(), self.bs.grid_x.min()],
                 scaleanchor='y',
                 showgrid=True,
                 autorange=False,
             ),
             yaxis=dict(
                 title='Y Location',
-                range=[self.grid_x.max(), self.grid_x.min()],
+                range=[self.bs.grid_x.max(), self.bs.grid_x.min()],
                 scaleanchor='x',
                 showgrid=True,
                 autorange=False,
@@ -373,17 +334,12 @@ class Heatmap(Plotter):
 class XYCrossSections(Plotter):
     def __init__(
         self,
-        scan_data: ScanData,
-        solenoid: str,
+        beam_scan: BeamScan,
         fcup_diam: float,
         fcup_dist: float,
-        centroid: tuple[float, float],
-        test_stand: str | None = None,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(
-            scan_data, solenoid, fcup_diam, fcup_dist, centroid, test_stand, z_scale
-        )
+        super().__init__(beam_scan, fcup_diam, fcup_dist, z_scale)
 
     def plot_cross_sections(self, show=True) -> Figure | None:
         scaling_factor = 1e-6  # scale to microamps
@@ -422,7 +378,7 @@ class XYCrossSections(Plotter):
 
         fig.update_layout(
             showlegend=False,
-            title_text=f'{self.serial_number} Beam Current Cross Sections',
+            title_text=f'{self.bs.serial_number} Beam Current Cross Sections',
         )
 
         if any(value is not None for value in self.z_scale):
@@ -456,19 +412,13 @@ class XYCrossSections(Plotter):
 class IPrime(Plotter):
     def __init__(
         self,
-        scan_data: ScanData,
-        solenoid: str,
+        beam_scan: BeamScan,
         fcup_diam: float,
         fcup_dist: float,
-        centroid: tuple[float, float],
-        test_stand: str | None = None,
-        z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(
-            scan_data, solenoid, fcup_diam, fcup_dist, centroid, test_stand, z_scale
-        )
-        self.fcup_diameter = fcup_diam
-        self.fcup_distance = fcup_dist
+        super().__init__(beam_scan, fcup_diam, fcup_dist)
+        self.fcup_diam = fcup_diam
+        self.fcup_dist = fcup_dist
 
     def plot_i_prime(
         self,
@@ -479,16 +429,18 @@ class IPrime(Plotter):
         )
 
         dist_from_x_center: NDArray[np.float64] = (
-            np.asarray(self.x_slice['X Coordinate'] - self.centroid[0]) / 1000
+            np.asarray(self.x_slice['X Coordinate'] - self.bs.weighted_centroid[0])
+            / 1000
         )  # millimeters
         dist_from_y_center: NDArray[np.float64] = (
-            np.asarray(self.y_slice['Y Coordinate'] - self.centroid[1]) / 1000
+            np.asarray(self.y_slice['Y Coordinate'] - self.bs.weighted_centroid[1])
+            / 1000
         )  # millimeters
         x_angle: NDArray[np.float64] = (
-            np.arctan(dist_from_x_center / self.fcup_distance) * 1000.0
+            np.arctan(dist_from_x_center / self.fcup_dist) * 1000.0
         )  # milli-radians
         y_angle: NDArray[np.float64] = (
-            np.arctan(dist_from_y_center / self.fcup_distance) * 1000.0
+            np.arctan(dist_from_y_center / self.fcup_dist) * 1000.0
         )  # milli-radians
 
         fig.add_trace(
@@ -517,7 +469,7 @@ class IPrime(Plotter):
 
         fig.update_layout(
             showlegend=False,
-            title_text=f'{self.serial_number} Angular Intensity vs Divergence Angle',
+            title_text=f'{self.bs.serial_number} Angular Intensity vs Divergence Angle',
         )
 
         fig.update_xaxes(title_text='X Divergence Angle (mRad)', row=1, col=1)
@@ -534,57 +486,26 @@ class IPrime(Plotter):
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
 
-    from helpers.load_scan_data import ScanDataLoader
+    import src.helpers.helpers as h
+    from src.model.beam_scan import BeamScan
 
     QApplication([])
-    filepath: str = ScanDataLoader.select_csv()
-    scan_data: ScanData = ScanDataLoader.load_scan_data(filepath)
-    if scan_data.polarity == 'NEG':
+    bs: BeamScan = BeamScan()
+    filepath: str = h.select_file()
+    bs.load_scan_data(filepath)
+    if bs.polarity == 'NEG':
         z_scale: list[int | float | None] = [None, None]
-        solenoid: str = '2.5'
     else:
         z_scale: list[int | float | None] = [None, None]
-        solenoid: str = '0.3'
     fcup_diam = 2.5
     fcup_dist = 205
-    centroid = scan_data.compute_weighted_centroid()
-    surface = Surface(
-        scan_data,
-        solenoid,
-        fcup_diam,
-        fcup_dist,
-        centroid,
-        test_stand='4',
-        z_scale=z_scale,
-    )
+    surface = Surface(bs, fcup_diam, fcup_dist, z_scale)
     surface.plot_surface()
-    heatmap = Heatmap(
-        scan_data,
-        solenoid,
-        fcup_diam,
-        fcup_dist,
-        centroid,
-        test_stand='4',
-        z_scale=z_scale,
-    )
+    heatmap = Heatmap(bs, fcup_diam, fcup_dist, z_scale)
     heatmap.plot_heatmap()
-    xy_cross_sections = XYCrossSections(
-        scan_data,
-        solenoid,
-        fcup_diam,
-        fcup_dist,
-        centroid,
-        test_stand='4',
-        z_scale=z_scale,
-    )
+    xy_cross_sections = XYCrossSections(bs, fcup_diam, fcup_dist, z_scale)
     xy_cross_sections.plot_cross_sections()
-    i_prime = IPrime(
-        scan_data,
-        solenoid,
-        fcup_diam,
-        fcup_dist,
-        centroid,
-        test_stand='4',
-        z_scale=z_scale,
-    )
+    fcup_diam = 2.5
+    fcup_dist = 205
+    i_prime = IPrime(bs, fcup_diam, fcup_dist)
     i_prime.plot_i_prime()

@@ -1,13 +1,12 @@
 import plotly.graph_objects as go
 from pandas import DataFrame
 
+from src.model.beam_scan import BeamScan
+
 
 def surface(
     self,
-    grid_x,
-    grid_y,
-    grid_z,
-    centroid: tuple[float, float],
+    bs: BeamScan,
     x_slice: DataFrame,
     y_slice: DataFrame,
 ) -> go.Figure:
@@ -24,9 +23,9 @@ def surface(
             fig = go.Figure(
                 data=[
                     go.Surface(
-                        x=grid_x,
-                        y=grid_y,
-                        z=grid_z,
+                        x=bs.grid_x,
+                        y=bs.grid_y,
+                        z=bs.grid_z,
                         colorscale=self.color,
                         cmin=self.z_scale[0],
                         cmax=self.z_scale[1],  # scale to micro-amps
@@ -35,15 +34,15 @@ def surface(
                         contours=dict(
                             x={
                                 'show': True,
-                                'start': grid_x.min(),
-                                'end': grid_x.max(),
+                                'start': bs.grid_x.min(),
+                                'end': bs.grid_x.max(),
                                 'size': int(1000),
                                 'color': 'gray',
                             },
                             y={
                                 'show': True,
-                                'start': grid_y.min(),
-                                'end': grid_y.max(),
+                                'start': bs.grid_y.min(),
+                                'end': bs.grid_y.max(),
                                 'size': int(1000),
                                 'color': 'gray',
                             },
@@ -63,9 +62,9 @@ def surface(
             fig = go.Figure(
                 data=[
                     go.Surface(
-                        x=grid_x,
-                        y=grid_y,
-                        z=grid_z,
+                        x=bs.grid_x,
+                        y=bs.grid_y,
+                        z=bs.grid_z,
                         colorscale=self.color,
                         cmin=self.z_scale[0],
                         cmax=self.z_scale[1],  # scale to micro-amps
@@ -78,7 +77,7 @@ def surface(
         fig.add_trace(
             go.Scatter3d(
                 x=x_slice['X Coordinate'],
-                y=grid_y[0, :],
+                y=bs.grid_y[0, :],
                 z=x_slice['Faraday Cup Current'],
                 mode='lines',
                 line=dict(color='black', width=4),
@@ -88,7 +87,7 @@ def surface(
 
         fig.add_trace(
             go.Scatter3d(
-                x=grid_x[:, 0],
+                x=bs.grid_x[:, 0],
                 y=y_slice['Y Coordinate'],
                 z=y_slice['Faraday Cup Current'],
                 mode='lines',
@@ -100,7 +99,7 @@ def surface(
         fig.add_trace(
             go.Scatter3d(
                 x=x_slice['X Coordinate'],
-                y=[centroid[1]] * len(x_slice),
+                y=[bs.weighted_centroid[1]] * len(x_slice),
                 z=x_slice['Faraday Cup Current'],
                 mode='lines',
                 line=dict(color='black', width=2),
@@ -110,7 +109,7 @@ def surface(
 
         fig.add_trace(
             go.Scatter3d(
-                x=[centroid[0]] * len(y_slice),
+                x=[bs.weighted_centroid[0]] * len(y_slice),
                 y=y_slice['Y Coordinate'],
                 z=y_slice['Faraday Cup Current'],
                 mode='lines',
@@ -120,7 +119,7 @@ def surface(
         )  # adds a line on the 3D surface at the centroid to show the y profile
 
         fig.update_layout(
-            title=f'{self.serial_number}; PEAK: cup current = {self.peak_cup_current * 1e9:.0f} nA; total current = {self.peak_total_current * 1e6:.3f} \u03bcA',
+            title=f'{bs.serial_number}; PEAK: cup current = {bs.peak_cup_current:.0f} nA; total current = {bs.peak_total_current * 1e6:.3f} \u03bcA',
             scene=dict(zaxis=dict(range=[self.z_scale[0], self.z_scale[1]])),
             scene_camera=dict(
                 center=dict(x=0, y=0, z=-0.1), eye=dict(x=1.5, y=1.5, z=0.7)
@@ -133,24 +132,24 @@ def surface(
             fig = go.Figure(
                 data=[
                     go.Surface(
-                        x=grid_x,
-                        y=grid_y,
-                        z=grid_z,
+                        x=bs.grid_x,
+                        y=bs.grid_y,
+                        z=bs.grid_z,
                         colorscale=self.color,
                         lighting=dict(ambient=0.9),
                         opacity=0.8,
                         contours=dict(
                             x={
                                 'show': True,
-                                'start': grid_x.min(),
-                                'end': grid_x.max(),
+                                'start': bs.grid_x.min(),
+                                'end': bs.grid_x.max(),
                                 'size': int(1000),
                                 'color': 'gray',
                             },
                             y={
                                 'show': True,
-                                'start': grid_y.min(),
-                                'end': grid_y.max(),
+                                'start': bs.grid_y.min(),
+                                'end': bs.grid_y.max(),
                                 'size': int(1000),
                                 'color': 'gray',
                             },
@@ -170,9 +169,9 @@ def surface(
             fig = go.Figure(
                 data=[
                     go.Surface(
-                        x=grid_x,
-                        y=grid_y,
-                        z=grid_z,
+                        x=bs.grid_x,
+                        y=bs.grid_y,
+                        z=bs.grid_z,
                         colorscale=self.color,
                         lighting=dict(ambient=0.9),
                         opacity=0.8,
@@ -183,7 +182,7 @@ def surface(
         fig.add_trace(
             go.Scatter3d(
                 x=x_slice['X Coordinate'],
-                y=grid_y[0, :],
+                y=bs.grid_y[0, :],
                 z=x_slice['Faraday Cup Current'],
                 mode='lines',
                 line=dict(color='black', width=4),
@@ -193,7 +192,7 @@ def surface(
 
         fig.add_trace(
             go.Scatter3d(
-                x=grid_x[:, 0],
+                x=bs.grid_x[:, 0],
                 y=y_slice['Y Coordinate'],
                 z=y_slice['Faraday Cup Current'],
                 mode='lines',
@@ -205,7 +204,7 @@ def surface(
         fig.add_trace(
             go.Scatter3d(
                 x=x_slice['X Coordinate'],
-                y=[centroid[1]] * len(x_slice),
+                y=[bs.weighted_centroid[1]] * len(x_slice),
                 z=x_slice['Faraday Cup Current'],
                 mode='lines',
                 line=dict(color='black', width=2),
@@ -215,7 +214,7 @@ def surface(
 
         fig.add_trace(
             go.Scatter3d(
-                x=[centroid[0]] * len(y_slice),
+                x=[bs.weighted_centroid[0]] * len(y_slice),
                 y=y_slice['Y Coordinate'],
                 z=y_slice['Faraday Cup Current'],
                 mode='lines',
@@ -225,7 +224,7 @@ def surface(
         )  # adds a line on the 3D surface at the centroid to show the y profile
 
         fig.update_layout(
-            title=f'{self.serial_number}; PEAK: cup current = {self.peak_cup_current * 1e9:.0f} nA; total current = {self.peak_total_current * 1e6:.3f} \u03bcA',
+            title=f'{bs.serial_number}; PEAK: cup current = {bs.peak_cup_current:.0f} nA; total current = {bs.peak_total_current * 1e6:.3f} \u03bcA',
             scene_camera=dict(
                 center=dict(x=0, y=0, z=-0.1), eye=dict(x=1.5, y=1.5, z=0.7)
             ),

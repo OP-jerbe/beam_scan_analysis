@@ -639,8 +639,7 @@ class BeamScan:
     def quarter_max(self) -> float:
         return self.peak_cup_current * 0.25
 
-    @property
-    def angular_intensity(self) -> NDArray[float64]:
+    def angular_intensity(self, fcup_diam: float, fcup_dist: float) -> NDArray[float64]:
         """
         Computes the angular intensity of the collected cup current based on the given distance (in mm) to the cup
         and the aperture diameter (in mm).
@@ -652,8 +651,8 @@ class BeamScan:
             NDArray[np.float64]: Computed angular intensity values in milliamps per steradian.
         """
 
-        cup_current = self.cup_current * 1000  # milliamps
-        half_angle = np.tan(0.5 * self.fcup_diameter / self.fcup_distance)  # radians
+        cup_current = self.grid_z * 1e-6  # milliamps
+        half_angle = np.tan(0.5 * fcup_diam / fcup_dist)  # radians
         solid_angle = np.pi * half_angle**2  # steradians
         angular_intensity = cup_current / solid_angle  # mA/sr
         return angular_intensity

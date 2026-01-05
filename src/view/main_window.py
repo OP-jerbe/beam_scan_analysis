@@ -29,7 +29,10 @@ from src.view.override_centroid_window import OverrideCentroidWindow
 
 class MainWindow(QMainWindow):
     load_scan_data_sig = Signal(str)
-    plot_beam_scan_sig = Signal()
+    plot_3d_surface_sig = Signal(float, float, list)
+    plot_heatmap_sig = Signal(float, float, list)
+    plot_xy_cross_sections_sig = Signal(float, float, list)
+    plot_i_prime_sig = Signal(float, float)
     export_to_csv_sig = Signal()
     override_centroid_sig = Signal()
     disable_interp_sig = Signal()
@@ -78,7 +81,26 @@ class MainWindow(QMainWindow):
         self.load_scan_data_sig.emit(filepath)
 
     def plot_beam_scan_handler(self) -> None:
-        self.plot_beam_scan_sig.emit()
+        diam = float(self.fcup_diameter_input.text())
+        dist = float(self.fcup_distance_input.text())
+        lower_bound = None
+        upper_bound = None
+        if self.lower_bound_input.text():
+            lower_bound = float(self.lower_bound_input.text())
+        if self.upper_bound_input.text():
+            upper_bound = float(self.upper_bound_input.text())
+
+        if self.surface_cb.isChecked():
+            z_scale = [lower_bound, upper_bound]
+            self.plot_3d_surface_sig.emit(diam, dist, z_scale)
+        if self.heatmap_cb.isChecked():
+            z_scale = [lower_bound, upper_bound]
+            self.plot_heatmap_sig.emit(diam, dist, z_scale)
+        if self.xy_profile_cb.isChecked():
+            z_scale = [lower_bound, upper_bound]
+            self.plot_xy_cross_sections_sig.emit(diam, dist, z_scale)
+        if self.i_prime_cb.isChecked():
+            self.plot_i_prime_sig.emit(diam, dist)
 
     def export_to_csv_handler(self) -> None:
         self.export_to_csv_sig.emit()
