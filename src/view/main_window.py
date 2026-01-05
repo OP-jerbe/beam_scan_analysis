@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
     QFileDialog,
+    QFormLayout,
     QFrame,
     QGridLayout,
     QHBoxLayout,
@@ -121,7 +122,7 @@ class MainWindow(QMainWindow):
         window_width = 550
         window_height = 510
 
-        self.setFixedSize(window_width, window_height)
+        # self.setFixedSize(window_width, window_height)
         root_dir: Path = h.get_root_dir()
         icon_path: str = str(root_dir / 'assets' / 'icon.ico')
         self.setWindowIcon(QIcon(icon_path))
@@ -232,7 +233,7 @@ class MainWindow(QMainWindow):
 
         # Create labels for the statistics display
         self.stat_serial_number = QLabel('Serial Number: ')
-        self.stat_serial_number.setFixedSize(stat_label_width, stat_label_height)
+        # self.stat_serial_number.setFixedSize(stat_label_width, stat_label_height)
         self.stat_datetime = QLabel('Scan Timestamp: ')
         self.stat_datetime.setFixedSize(stat_label_width, stat_label_height)
         self.stat_resolution = QLabel('Resolution: ')
@@ -314,27 +315,51 @@ class MainWindow(QMainWindow):
         v_sub1_main_layout.addLayout(g_checkboxes_layout)
         v_sub1_main_layout.addLayout(g_i_prime_layout)
 
-        v_sub2_main_layout = QVBoxLayout()
-        v_sub2_main_layout.addWidget(self.stat_serial_number)
-        v_sub2_main_layout.addWidget(self.stat_datetime)
-        v_sub2_main_layout.addWidget(self.stat_resolution)
-        v_sub2_main_layout.addWidget(self.stat_step_size)
-        v_sub2_main_layout.addWidget(self.stat_polarity)
-        v_sub2_main_layout.addWidget(self.stat_power)
-        v_sub2_main_layout.addWidget(self.stat_pressure)
-        v_sub2_main_layout.addWidget(self.stat_beam_voltage)
-        v_sub2_main_layout.addWidget(self.stat_ext_voltage)
-        v_sub2_main_layout.addWidget(self.stat_beam_supply_current)
-        v_sub2_main_layout.addWidget(self.stat_centroid_location)
-        v_sub2_main_layout.addWidget(self.stat_peak_location)
-        v_sub2_main_layout.addWidget(self.stat_peak_cup_current)
-        v_sub2_main_layout.addWidget(self.stat_peak_total_current)
-        v_sub2_main_layout.addWidget(self.stat_fwhm_area)
-        v_sub2_main_layout.addWidget(self.stat_fwhm_max_diam)
-        v_sub2_main_layout.addWidget(self.stat_fwhm_min_diam)
-        v_sub2_main_layout.addWidget(self.stat_fwqm_area)
-        v_sub2_main_layout.addWidget(self.stat_fwqm_max_diam)
-        v_sub2_main_layout.addWidget(self.stat_fwqm_min_diam)
+        v_sub2_main_layout = QFormLayout()
+        v_sub2_main_layout.addRow('Serial Number: ', self.stat_serial_number)
+        v_sub2_main_layout.addRow('Scan Datetime: ', self.stat_datetime)
+        v_sub2_main_layout.addRow('Resolution: ', self.stat_resolution)
+        v_sub2_main_layout.addRow('Step Size (mm): ', self.stat_step_size)
+        v_sub2_main_layout.addRow('Polarity: ', self.stat_polarity)
+        v_sub2_main_layout.addRow('Power (W): ', self.stat_power)
+        v_sub2_main_layout.addRow('Pressure (mBar): ', self.stat_pressure)
+        v_sub2_main_layout.addRow('Beam Voltage (kV): ', self.stat_beam_voltage)
+        v_sub2_main_layout.addRow('Ext Voltage (kV): ', self.stat_ext_voltage)
+        v_sub2_main_layout.addRow(
+            'Beam Supply Current (µA): ', self.stat_beam_supply_current
+        )
+        v_sub2_main_layout.addRow('Centroid Location: ', self.stat_centroid_location)
+        v_sub2_main_layout.addRow('Peak Location: ', self.stat_peak_location)
+        v_sub2_main_layout.addRow('Peak Cup Current (nA): ', self.stat_peak_cup_current)
+        v_sub2_main_layout.addRow(
+            'Total Current at Peak (µA): ', self.stat_peak_total_current
+        )
+        v_sub2_main_layout.addRow('FWHM Area (mm²): ', self.stat_fwhm_area)
+        v_sub2_main_layout.addRow('FWHM Max Diam (mm): ', self.stat_fwhm_max_diam)
+        v_sub2_main_layout.addRow('FWHM Min Diam (mm): ', self.stat_fwhm_min_diam)
+        v_sub2_main_layout.addRow('FWQM Area (mm²): ', self.stat_fwqm_area)
+        v_sub2_main_layout.addRow('FWQM Max Diam (mm): ', self.stat_fwqm_max_diam)
+        v_sub2_main_layout.addRow('FWQM Min Diam (mm): ', self.stat_fwqm_min_diam)
+        # v_sub2_main_layout.addWidget(self.stat_serial_number)
+        # v_sub2_main_layout.addWidget(self.stat_datetime)
+        # v_sub2_main_layout.addWidget(self.stat_resolution)
+        # v_sub2_main_layout.addWidget(self.stat_step_size)
+        # v_sub2_main_layout.addWidget(self.stat_polarity)
+        # v_sub2_main_layout.addWidget(self.stat_power)
+        # v_sub2_main_layout.addWidget(self.stat_pressure)
+        # v_sub2_main_layout.addWidget(self.stat_beam_voltage)
+        # v_sub2_main_layout.addWidget(self.stat_ext_voltage)
+        # v_sub2_main_layout.addWidget(self.stat_beam_supply_current)
+        # v_sub2_main_layout.addWidget(self.stat_centroid_location)
+        # v_sub2_main_layout.addWidget(self.stat_peak_location)
+        # v_sub2_main_layout.addWidget(self.stat_peak_cup_current)
+        # v_sub2_main_layout.addWidget(self.stat_peak_total_current)
+        # v_sub2_main_layout.addWidget(self.stat_fwhm_area)
+        # v_sub2_main_layout.addWidget(self.stat_fwhm_max_diam)
+        # v_sub2_main_layout.addWidget(self.stat_fwhm_min_diam)
+        # v_sub2_main_layout.addWidget(self.stat_fwqm_area)
+        # v_sub2_main_layout.addWidget(self.stat_fwqm_max_diam)
+        # v_sub2_main_layout.addWidget(self.stat_fwqm_min_diam)
 
         # Create a vertical line
         vertical_line = QFrame()
