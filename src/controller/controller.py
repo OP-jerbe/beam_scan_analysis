@@ -21,6 +21,7 @@ class Controller(QObject):
         )
         self.view.plot_i_prime_sig.connect(self.receive_plot_i_prime_sig)
         self.view.export_to_csv_sig.connect(self.receive_export_to_csv_sig)
+        self.view.disable_interp_sig.connect(self.receive_disable_interp_sig)
 
     def _run_plot_worker(self, func, error_handler) -> None:
         worker = Worker(func)
@@ -63,3 +64,10 @@ class Controller(QObject):
         worker = Worker(self.model.export_to_csv, filename, inputs)
         worker.signals.error.connect(self.view.csv_export_error_message)
         self.thread_pool.start(worker)
+
+    @Slot()
+    def receive_disable_interp_sig(self, checked: bool) -> None:
+        if checked:
+            self.model.create_grid(None)
+        else:
+            self.model.create_grid(self.model.bs.interp_num)

@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
     plot_i_prime_sig = Signal(dict)
     export_to_csv_sig = Signal(str, dict)
     override_centroid_sig = Signal(tuple)
-    disable_interp_sig = Signal()
+    disable_interp_sig = Signal(bool)
     save_3d_surface_html_sig = Signal()
     save_heatmap_html_sig = Signal()
     save_xy_cross_section_html_sig = Signal()
@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
         self.model.load_scan_data_failed_sig.connect(self.csv_load_error_message)
         self.model.scan_data_loaded_sig.connect(self.update_ui)
         self.model.centroid_coords_sig.connect(self.receive_centroid_coords_sig)
+        self.model.create_grid_failed_sig.connect(self.create_grid_failed_error_message)
 
     # --- Create the event handlers ---
 
@@ -139,14 +140,9 @@ class MainWindow(QMainWindow):
             )
             self.override_centroid_window.show()
 
-    @Slot()
-    def receive_centroid_coords_sig(self, coords: list) -> None:
-        x = float(coords[0])
-        y = float(coords[1])
-        self.centroid_coords = [x, y]
-
     def disable_interp_handler(self) -> None:
-        self.disable_interp_sig.emit()
+        checked: bool = self.disable_interp_option.isChecked()
+        self.disable_interp_sig.emit(checked)
 
     def save_3d_surface_html(self) -> None:
         self.save_3d_surface_html_sig.emit()
@@ -466,6 +462,12 @@ class MainWindow(QMainWindow):
         # Activate the Plot Beam Scan button
         self.plot_button.setEnabled(True)
 
+    @Slot()
+    def receive_centroid_coords_sig(self, coords: list) -> None:
+        x = float(coords[0])
+        y = float(coords[1])
+        self.centroid_coords = [x, y]
+
     # --- Error Messages ---
 
     @Slot()
@@ -498,6 +500,12 @@ class MainWindow(QMainWindow):
     def i_prime_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = f'An error occurred.\n\nUnable to plot Angular Intensity cross sections.\n\n{error}\n\n{traceback}'
+        QMessageBox.critical(self, title, message)
+
+    @Slot()
+    def create_grid_failed_error_message(self, error, traceback) -> None:
+        title = 'Error'
+        message = f'An error occurred.\n\nUnable to create meshgrid.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(self, title, message)
 
     @staticmethod
