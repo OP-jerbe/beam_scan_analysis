@@ -35,8 +35,8 @@ class MainWindow(QMainWindow):
     export_to_csv_sig = Signal(str, dict)
     override_centroid_sig = Signal(tuple)
     disable_interp_sig = Signal(bool)
-    save_html_figure_sig = Signal(str, dict, list)
-    save_all_html_sig = Signal()
+    save_html_figure_sig = Signal(str, dict, list, str)
+    save_all_html_sig = Signal(str, dict, list, str)
     save_all_png_sig = Signal()
     open_quick_start_guide_sig = Signal()
 
@@ -170,10 +170,11 @@ class MainWindow(QMainWindow):
         self.save_html_figure_sig.emit(which, inputs, [])
 
     def save_all_html(self) -> None:
+        folder_path = h.select_folder()
         inputs, lower_bound, upper_bound = self._get_inputs()
         z_scale = [lower_bound, upper_bound]
         which = 'all'
-        self.save_all_html_sig.emit(which, inputs, z_scale)
+        self.save_html_figure_sig.emit(which, inputs, z_scale, folder_path)
 
     def save_all_png(self) -> None:
         self.save_all_png_sig.emit()

@@ -1,5 +1,7 @@
 from PySide6.QtCore import QObject, QThreadPool, Slot
 
+import src.helpers.helpers as h
+
 from ..model.model import Model
 from ..model.worker import Worker
 from ..view.beam_scan_plotting import Heatmap, IPrime, Surface, XYCrossSections
@@ -12,7 +14,7 @@ class Controller(QObject):
         self.model = model
         self.view = view
         self.thread_pool = QThreadPool()
-        self.figure: list[Heatmap | IPrime | Surface | XYCrossSections] = []
+        self.graphs: list[Heatmap | IPrime | Surface | XYCrossSections] = []
 
         self.view.load_scan_data_sig.connect(self.receive_select_csv_file_sig)
         self.view.plot_3d_surface_sig.connect(self.receive_plot_3d_surface_sig)
@@ -82,23 +84,23 @@ class Controller(QObject):
 
     @Slot()
     def receive_save_html_figure_sig(
-        self, which: str, inputs: dict, z_scale: list
+        self, which: str, inputs: dict, z_scale: list, folder_path: str
     ) -> None:
         match which:
             case 'surface':
-                self.figure = [Surface(self.model.bs, inputs, z_scale)]
+                self.graphs = [Surface(self.model.bs, inputs, z_scale)]
                 error_handler = self.view.surface_error_message
             case 'heatmap':
-                self.figure = [Heatmap(self.model.bs, inputs, z_scale)]
+                self.graphs = [Heatmap(self.model.bs, inputs, z_scale)]
                 error_handler = self.view.heatmap_error_message
             case 'xy_cross_section':
-                self.figure = [XYCrossSections(self.model.bs, inputs, z_scale)]
+                self.graphs = [XYCrossSections(self.model.bs, inputs, z_scale)]
                 error_handler = self.view.cross_sections_error_message
             case 'i_prime':
-                self.figure = [IPrime(self.model.bs, inputs)]
+                self.graphs = [IPrime(self.model.bs, inputs)]
                 error_handler = self.view.i_prime_error_message
             case 'all':
-                self.figure = [
+                self.graphs = [
                     Surface(self.model.bs, inputs, z_scale),
                     Heatmap(self.model.bs, inputs, z_scale),
                     XYCrossSections(self.model.bs, inputs, z_scale),
@@ -111,15 +113,25 @@ class Controller(QObject):
 
         if which != 'all':
             self._run_save_plot_worker(
-                self.figure[0].plot,
-                error_handler=error_handler,
+                self.graphs[0].plot,
                 show=False,
+                error_handler=error_handler,
             )
         else:
-            ...
-            # self._save_all_plots_worker()
+            titles_and_figs = {}
+            titles: list[str] = [
+                'surface.html',
+                'heatmap.html',
+                'xy_cross_section.html',
+                'ang_int_vs_div.html',
+            ]
+            for title, graph in zip(titles, self.graphs):
+                fig = graph.plot(show=False)
+                if fig:
+                    titles_and_figs[title] = fig
+            h.save_all_as_html(folder_path, titles_and_figs)
 
     @Slot()
     def receive_worker_rtn_sig(self, obj) -> None:
         """Runs when the `_run_save_plot_worker` method finishes successfully."""
-        self.figure[0].save_as_html(obj)
+        self.graphs[0].save_as_html(obj)

@@ -2,6 +2,7 @@ import sys
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
+from plotly.graph_objects import Figure
 from PySide6.QtWidgets import QFileDialog
 
 
@@ -23,7 +24,7 @@ def select_folder(default_dir: str | None = None) -> str:
     Open a file dialog to select a folder.
 
     Returns:
-        Path: The path to the selected folder. If the dialog is cancelled,
+        str: The path to the selected folder. If the dialog is cancelled,
              an empty string is returned.
     """
     if not default_dir:
@@ -58,6 +59,23 @@ def get_save_filename(default_filename: str | None = None) -> str:
         filter='CSV Files (*.csv);;All Files (*)',
     )
     return filename
+
+
+def save_all_as_html(
+    folder_path: str,
+    titles_and_figs: dict[str, Figure | None],
+    default_dir: str | None = None,
+) -> None:
+    if default_dir is None:
+        default_dir = ''
+
+    folder = Path(folder_path)
+
+    for title, fig in titles_and_figs.items():
+        file_name = f'{title}'
+        full_path = folder / file_name
+        if fig:
+            fig.write_html(str(full_path))
 
 
 def get_app_version() -> str:
