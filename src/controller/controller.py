@@ -60,8 +60,6 @@ class Controller(QObject):
 
     @Slot()
     def receive_export_to_csv_sig(self, filename: str, inputs: dict) -> None:
-        self.model.export_to_csv(filename, inputs)
-
-    @Slot()
-    def receive_centroid_coords_sig(self, coords: tuple) -> None:
-        print(coords)
+        worker = Worker(self.model.export_to_csv, filename, inputs)
+        worker.signals.error.connect(self.view.csv_export_error_message)
+        self.thread_pool.start(worker)
