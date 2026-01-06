@@ -249,7 +249,7 @@ class App(QObject):
                     self.test_stand,
                     self.z_scaled,
                 )
-                surface.plot_surface()
+                surface.plot()
             except Exception as e:
                 full_traceback = traceback.format_exc()
                 self.gui.surface_error_message(
@@ -266,7 +266,7 @@ class App(QObject):
                     self.test_stand,
                     self.z_scaled,
                 )
-                heatmap.plot_heatmap()
+                heatmap.plot()
             except Exception as e:
                 full_traceback = traceback.format_exc()
                 self.gui.heatmap_error_message(
@@ -283,7 +283,7 @@ class App(QObject):
                     self.test_stand,
                     self.z_scaled,
                 )
-                xy_cross_section.plot_cross_sections()
+                xy_cross_section.plot()
             except Exception as e:
                 full_traceback = traceback.format_exc()
                 self.gui.cross_sections_error_message(
@@ -300,7 +300,7 @@ class App(QObject):
                     self.test_stand,
                     self.z_scaled,
                 )
-                i_prime.plot_i_prime()
+                i_prime.plot()
             except Exception as e:
                 full_traceback = traceback.format_exc()
                 self.gui.i_prime_error_message(
@@ -410,7 +410,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            fig = surface.plot_surface(show=False)
+            fig = surface.plot(show=False)
             surface.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
             full_traceback = traceback.format_exc()
@@ -442,7 +442,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            fig = heatmap.plot_heatmap(show=False)
+            fig = heatmap.plot(show=False)
             heatmap.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
             full_traceback = traceback.format_exc()
@@ -475,7 +475,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            fig = cross_section.plot_cross_sections(show=False)
+            fig = cross_section.plot(show=False)
             cross_section.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
             full_traceback = traceback.format_exc()
@@ -508,7 +508,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            fig = i_prime.plot_i_prime(show=False)
+            fig = i_prime.plot(show=False)
             i_prime.save_as_html(fig, default_filename, parent=self.gui)
         except Exception as e:
             full_traceback = traceback.format_exc()
@@ -539,7 +539,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            surface_fig = surface.plot_surface(show=False)
+            surface_fig = surface.plot(show=False)
             heatmap = Heatmap(
                 self.scan_data,
                 solenoid,
@@ -549,7 +549,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            heatmap_fig = heatmap.plot_heatmap(show=False)
+            heatmap_fig = heatmap.plot(show=False)
             cross_section = XYCrossSections(
                 self.scan_data,
                 solenoid,
@@ -559,7 +559,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            cross_section_fig = cross_section.plot_cross_sections(show=False)
+            cross_section_fig = cross_section.plot(show=False)
             i_prime = IPrime(
                 self.scan_data,
                 solenoid,
@@ -569,7 +569,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            i_prime_fig = i_prime.plot_i_prime(show=False)
+            i_prime_fig = i_prime.plot(show=False)
 
             plots = {
                 '3D Surface.html': surface_fig,
@@ -615,7 +615,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            surface_fig = surface.plot_surface(show=False)
+            surface_fig = surface.plot(show=False)
             heatmap = Heatmap(
                 self.scan_data,
                 solenoid,
@@ -625,7 +625,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            heatmap_fig = heatmap.plot_heatmap(show=False)
+            heatmap_fig = heatmap.plot(show=False)
             cross_section = XYCrossSections(
                 self.scan_data,
                 solenoid,
@@ -635,7 +635,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            cross_section_fig = cross_section.plot_cross_sections(show=False)
+            cross_section_fig = cross_section.plot(show=False)
             i_prime = IPrime(
                 self.scan_data,
                 solenoid,
@@ -645,7 +645,7 @@ class App(QObject):
                 test_stand,
                 self.z_scaled,
             )
-            i_prime_fig = i_prime.plot_i_prime(show=False)
+            i_prime_fig = i_prime.plot(show=False)
 
             plots = {
                 '3D Surface.png': surface_fig,

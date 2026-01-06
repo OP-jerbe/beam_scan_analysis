@@ -183,7 +183,7 @@ class Surface(Plotter):
     ) -> None:
         super().__init__(beam_scan, fcup_diam, fcup_dist, z_scale)
 
-    def plot_surface(self, show=True) -> None | Figure:
+    def plot(self, show=True) -> None | Figure:
         fig = surface_figures.surface(
             self,
             self.bs,
@@ -206,7 +206,7 @@ class Heatmap(Plotter):
     ) -> None:
         super().__init__(beam_scan, fcup_diam, fcup_dist, z_scale)
 
-    def plot_heatmap(self, show=True) -> None | Figure:
+    def plot(self, show=True) -> None | Figure:
         heatmap = heatmaps.heatmap(
             self.bs.grid_x, self.bs.grid_y, self.bs.grid_z, self.z_scale, self.color
         )
@@ -341,7 +341,7 @@ class XYCrossSections(Plotter):
     ) -> None:
         super().__init__(beam_scan, fcup_diam, fcup_dist, z_scale)
 
-    def plot_cross_sections(self, show=True) -> Figure | None:
+    def plot(self, show=True) -> Figure | None:
         scaling_factor = 1e-6  # scale to microamps
         self.z_scale = [
             value * scaling_factor if value is not None else None
@@ -420,7 +420,7 @@ class IPrime(Plotter):
         self.fcup_diam = fcup_diam
         self.fcup_dist = fcup_dist
 
-    def plot_i_prime(
+    def plot(
         self,
         show=True,
     ) -> Figure | None:
@@ -500,12 +500,12 @@ if __name__ == '__main__':
     fcup_diam = 2.5
     fcup_dist = 205
     surface = Surface(bs, fcup_diam, fcup_dist, z_scale)
-    surface.plot_surface()
+    surface.plot()
     heatmap = Heatmap(bs, fcup_diam, fcup_dist, z_scale)
-    heatmap.plot_heatmap()
+    heatmap.plot()
     xy_cross_sections = XYCrossSections(bs, fcup_diam, fcup_dist, z_scale)
-    xy_cross_sections.plot_cross_sections()
+    xy_cross_sections.plot()
     fcup_diam = 2.5
     fcup_dist = 205
     i_prime = IPrime(bs, fcup_diam, fcup_dist)
-    i_prime.plot_i_prime()
+    i_prime.plot()
