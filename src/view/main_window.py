@@ -454,54 +454,44 @@ class MainWindow(QMainWindow):
 
         return filename
 
+    # --- Error Messages ---
+
     @Slot()
     def csv_load_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = f'Failed to load beam scan data.\n\nTry another csv file.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(self, title, message)
 
-    @staticmethod
-    def heatmap_error_message(parent, error, traceback) -> None:
+    @Slot()
+    def heatmap_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = (
             f'An error occurred.\n\nUnable to plot heatmap.\n\n{error}\n\n{traceback}'
         )
-        QMessageBox.critical(parent, title, message)
+        QMessageBox.critical(self, title, message)
 
-    @staticmethod
-    def surface_error_message(parent, error, traceback) -> None:
+    @Slot()
+    def surface_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = f'An error occurred.\n\nUnable to plot 3D surface.\n\n{error}\n\n{traceback}'
-        QMessageBox.critical(parent, title, message)
+        QMessageBox.critical(self, title, message)
 
-    @staticmethod
-    def cross_sections_error_message(parent, error, traceback) -> None:
+    @Slot()
+    def cross_sections_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = f'An error occurred.\n\nUnable to plot XY cross sections.\n\n{error}\n\n{traceback}'
-        QMessageBox.critical(parent, title, message)
+        QMessageBox.critical(self, title, message)
 
-    @staticmethod
-    def i_prime_error_message(parent, error, traceback) -> None:
+    @Slot()
+    def i_prime_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = f'An error occurred.\n\nUnable to plot Angular Intensity cross sections.\n\n{error}\n\n{traceback}'
-        QMessageBox.critical(parent, title, message)
+        QMessageBox.critical(self, title, message)
 
     @staticmethod
     def quick_start_guide_error_message(parent) -> None:
         title = 'Error'
         message = 'An error occurred.\n\nUnable to find quick start guide.'
-        QMessageBox.critical(parent, title, message)
-
-    @staticmethod
-    def area_calculation_error_message(parent) -> None:
-        title = 'Error'
-        message = 'An error occurred.\n\nFWHM and FWQM extend beyond scan range limits.\nUnable to calculate areas.'
-        QMessageBox.critical(parent, title, message)
-
-    @staticmethod
-    def fwqm_area_calculation_error_message(parent) -> None:
-        title = 'Error'
-        message = 'An error occurred.\n\nFWQM extends beyond scan range limits.\nUnable to calculate area.'
         QMessageBox.critical(parent, title, message)
 
     @staticmethod
