@@ -7,6 +7,7 @@ from src.model.beam_scan import BeamScan
 def surface(
     self,
     bs: BeamScan,
+    inputs: dict,
     x_slice: DataFrame,
     y_slice: DataFrame,
 ) -> go.Figure:
@@ -99,7 +100,7 @@ def surface(
         fig.add_trace(
             go.Scatter3d(
                 x=x_slice['X Coordinate'],
-                y=[bs.weighted_centroid[1]] * len(x_slice),
+                y=[inputs['centroid_y']] * len(x_slice),
                 z=x_slice['Faraday Cup Current'],
                 mode='lines',
                 line=dict(color='black', width=2),
@@ -109,7 +110,7 @@ def surface(
 
         fig.add_trace(
             go.Scatter3d(
-                x=[bs.weighted_centroid[0]] * len(y_slice),
+                x=[inputs['centroid_x']] * len(y_slice),
                 y=y_slice['Y Coordinate'],
                 z=y_slice['Faraday Cup Current'],
                 mode='lines',
@@ -204,7 +205,7 @@ def surface(
         fig.add_trace(
             go.Scatter3d(
                 x=x_slice['X Coordinate'],
-                y=[bs.weighted_centroid[1]] * len(x_slice),
+                y=[inputs['centroid_y']] * len(x_slice),
                 z=x_slice['Faraday Cup Current'],
                 mode='lines',
                 line=dict(color='black', width=2),
@@ -214,7 +215,7 @@ def surface(
 
         fig.add_trace(
             go.Scatter3d(
-                x=[bs.weighted_centroid[0]] * len(y_slice),
+                x=[inputs['centroid_x']] * len(y_slice),
                 y=y_slice['Y Coordinate'],
                 z=y_slice['Faraday Cup Current'],
                 mode='lines',

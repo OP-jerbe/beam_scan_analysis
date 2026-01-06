@@ -95,10 +95,10 @@ class App(QObject):
     def override_centroid_handler(self) -> None:
         if self.gui.override_centroid_option.isChecked():
             self.override_centroid_window = OverrideCentroidWindow()
-            self.override_centroid_window.centroid_set.connect(
+            self.override_centroid_window.centroid_coords_sig.connect(
                 self.receive_centroid_values
             )
-            self.override_centroid_window.window_closed_without_input.connect(
+            self.override_centroid_window.window_closed_without_input_sig.connect(
                 lambda: self.gui.override_centroid_option.setChecked(False)
             )
             self.override_centroid_window.show()

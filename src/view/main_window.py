@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
     plot_xy_cross_sections_sig = Signal(dict, list)
     plot_i_prime_sig = Signal(dict)
     export_to_csv_sig = Signal(str, dict)
-    override_centroid_sig = Signal()
+    override_centroid_sig = Signal(tuple)
     disable_interp_sig = Signal()
     save_3d_surface_html_sig = Signal()
     save_heatmap_html_sig = Signal()
@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
         self.model = model
         self.installEventFilter(self)
         self.create_gui()
-        self.override_centroid_window = OverrideCentroidWindow()
+        self.centroid_coords: list[float] = [float('nan'), float('nan')]
 
         # Connect events to handlers.
         self.select_csv_button.clicked.connect(self.select_csv_handler)
@@ -69,6 +69,7 @@ class MainWindow(QMainWindow):
         # Connect external Signals to Slots
         self.model.load_scan_data_failed_sig.connect(self.csv_load_error_message)
         self.model.scan_data_loaded_sig.connect(self.update_ui)
+        self.model.centroid_coords_sig.connect(self.receive_centroid_coords_sig)
 
     # --- Create the event handlers ---
 
@@ -88,6 +89,8 @@ class MainWindow(QMainWindow):
             'solenoid_current': self.solenoid_current_input.text().strip(),
             'fcup_diam': float(self.fcup_diameter_input.text().strip()),
             'fcup_dist': float(self.fcup_distance_input.text().strip()),
+            'centroid_x': self.centroid_coords[0],
+            'centroid_y': self.centroid_coords[1],
         }
         lower_bound = None
         upper_bound = None
@@ -126,7 +129,20 @@ class MainWindow(QMainWindow):
         self.export_to_csv_sig.emit(filename, inputs)
 
     def override_centroid_handler(self) -> None:
-        self.override_centroid_sig.emit()
+        # open the override window
+        if self.override_centroid_option.isChecked():
+            self.override_centroid_window = OverrideCentroidWindow(
+                self, self.centroid_coords
+            )
+            self.override_centroid_window.centroid_coords_sig.connect(
+                self.receive_centroid_coords_sig
+            )
+            self.override_centroid_window.show()
+
+    def receive_centroid_coords_sig(self, coords: list) -> None:
+        x = float(coords[0])
+        y = float(coords[1])
+        self.centroid_coords = [x, y]
 
     def disable_interp_handler(self) -> None:
         self.disable_interp_sig.emit()
@@ -398,6 +414,8 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    # --- Slots ---
 
     @Slot()
     def update_ui(self, stats: dict) -> None:

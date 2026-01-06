@@ -1,37 +1,26 @@
-import sys
-
 from PySide6.QtCore import QRegularExpression, Signal
-from PySide6.QtGui import QIcon, QRegularExpressionValidator, Qt
+from PySide6.QtGui import QRegularExpressionValidator, Qt
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMainWindow,
     QMessageBox,
     QPushButton,
     QVBoxLayout,
     QWidget,
 )
-from qt_material import apply_stylesheet
 
 
-class OverrideCentroidWindow(QWidget):
-    centroid_set = Signal(float, float)
-    window_closed_without_input = Signal()
+class OverrideCentroidWindow(QMainWindow):
+    centroid_coords_sig = Signal(list)
+    window_closed_without_input_sig = Signal()
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, parent, centroid_coords: list[float]) -> None:
+        super().__init__(parent)
         self.submitted = False
         self.setWindowTitle('Override Centroid')
         self.setFixedSize(300, 100)
-        if hasattr(sys, 'frozen'):  # Check if running from the bundled app
-            icon_path = sys._MEIPASS + 'assets/icon.ico'  # type: ignore
-        else:
-            icon_path = 'assets/icon.ico'  # Use the local icon file in dev mode
-        self.setWindowIcon(QIcon(icon_path))
-        apply_stylesheet(self, theme='dark_lightgreen.xml', invert_secondary=True)
-        self.setStyleSheet(
-            self.styleSheet() + """QLineEdit, QTextEdit {color: lightgreen;}"""
-        )
 
         # Create the validator for numerical inputs
         number_regex = QRegularExpression(r'^-?\d*\.?\d*$')
@@ -40,14 +29,14 @@ class OverrideCentroidWindow(QWidget):
         # Create the input field and label
         override_Xc_label = QLabel('X Coordinate')
         override_Xc_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.override_Xc_input = QLineEdit()
+        self.override_Xc_input = QLineEdit(f'{centroid_coords[0]}')
         self.override_Xc_input.setFixedHeight(28)
         self.override_Xc_input.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.override_Xc_input.setValidator(validator)
 
         override_Yc_label = QLabel('Y Coordinate')
         override_Yc_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.override_Yc_input = QLineEdit()
+        self.override_Yc_input = QLineEdit(f'{centroid_coords[1]}')
         self.override_Yc_input.setFixedHeight(28)
         self.override_Yc_input.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.override_Yc_input.setValidator(validator)
@@ -71,9 +60,11 @@ class OverrideCentroidWindow(QWidget):
         main_layout.addLayout(input_layout)
         main_layout.addWidget(self.override_button)
 
-        self.setLayout(main_layout)
+        container = QWidget()
+        container.setLayout(main_layout)
+        self.setCentralWidget(container)
 
-    def get_override_values(self) -> tuple[float, float] | None:
+    def get_override_values(self) -> list[float] | None:
         x_text = self.override_Xc_input.text()
         y_text = self.override_Yc_input.text()
 
@@ -82,13 +73,12 @@ class OverrideCentroidWindow(QWidget):
 
         x_val = float(x_text)
         y_val = float(y_text)
-        return x_val, y_val
+        return [x_val, y_val]
 
     def handle_submit(self) -> None:
         values = self.get_override_values()
         if values:
-            x, y = values
-            self.centroid_set.emit(x, y)
+            self.centroid_coords_sig.emit(values)
             self.submitted = True
             self.close()
         else:
@@ -100,5 +90,5 @@ class OverrideCentroidWindow(QWidget):
 
     def closeEvent(self, event) -> None:
         if not self.submitted:
-            self.window_closed_without_input.emit()
+            self.window_closed_without_input_sig.emit()
         super().closeEvent(event)

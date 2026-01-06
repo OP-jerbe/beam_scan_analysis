@@ -10,6 +10,7 @@ class Model(QObject):
     load_scan_data_failed_sig = Signal(str, str)
     create_grid_finished_sig = Signal()
     create_grid_failed_sig = Signal(str)
+    centroid_coords_sig = Signal(list)
 
     def __init__(self, beam_scan: BeamScan) -> None:
         super().__init__()
@@ -29,6 +30,8 @@ class Model(QObject):
         if completed:
             stats = self.stats()
             self.scan_data_loaded_sig.emit(stats)
+            centroid_coords = [stats['centroid_x'], stats['centroid_y']]
+            self.centroid_coords_sig.emit(centroid_coords)
 
     @Slot()
     def load_scan_data_failed(self, error: str, traceback: str) -> None:

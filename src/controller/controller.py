@@ -61,3 +61,7 @@ class Controller(QObject):
     @Slot()
     def receive_export_to_csv_sig(self, filename: str, inputs: dict) -> None:
         self.model.export_to_csv(filename, inputs)
+
+    @Slot()
+    def receive_centroid_coords_sig(self, coords: tuple) -> None:
+        print(coords)

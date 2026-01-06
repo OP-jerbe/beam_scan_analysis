@@ -67,10 +67,10 @@ class Plotter:
         )
 
         self.y_slice_idx: int = int(
-            np.abs(self.bs.grid_y[:, 0] - self.bs.weighted_centroid[1]).argmin()
+            np.abs(self.bs.grid_y[:, 0] - self.inputs['centroid_y']).argmin()
         )
         self.x_slice_idx: int = int(
-            np.abs(self.bs.grid_x[0, :] - self.bs.weighted_centroid[0]).argmin()
+            np.abs(self.bs.grid_x[0, :] - self.inputs['centroid_x']).argmin()
         )
         self.x_slice = pd.DataFrame(
             {
@@ -188,6 +188,7 @@ class Surface(Plotter):
         fig = surface_figures.surface(
             self,
             self.bs,
+            self.inputs,
             self.x_slice,
             self.y_slice,
         )
@@ -255,7 +256,7 @@ class Heatmap(Plotter):
         fig.add_trace(
             go.Scatter(
                 x=self.x_slice['X Coordinate'],
-                y=[self.bs.weighted_centroid[1]] * len(self.x_slice),
+                y=[self.inputs['centroid_y']] * len(self.x_slice),
                 mode='lines',
                 line=dict(color='black', width=1),
                 name='X-Cross Section',
@@ -265,7 +266,7 @@ class Heatmap(Plotter):
         # Add Y-axis cross-section line
         fig.add_trace(
             go.Scatter(
-                x=[self.bs.weighted_centroid[0]] * len(self.y_slice),
+                x=[self.inputs['centroid_x']] * len(self.y_slice),
                 y=self.y_slice['Y Coordinate'],
                 mode='lines',
                 line=dict(color='black', width=1),
