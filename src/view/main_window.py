@@ -82,19 +82,19 @@ class MainWindow(QMainWindow):
         inputs = {
             'serial_number': self.serial_number_input.text().strip(),
             'test_stand': self.test_stand_input.text().strip(),
-            'fcup_diam': float(self.fcup_diameter_input.text().strip()),
-            'fcup_dist': float(self.fcup_distance_input.text().strip()),
             'beam_voltage': self.beam_voltage_input.text().strip(),
             'ext_voltage': self.ext_voltage_input.text().strip(),
             'power': self.power_input.text().strip(),
             'solenoid_current': self.solenoid_current_input.text().strip(),
+            'fcup_diam': float(self.fcup_diameter_input.text().strip()),
+            'fcup_dist': float(self.fcup_distance_input.text().strip()),
         }
         lower_bound = None
         upper_bound = None
-        if self.lower_bound_input.text():
-            lower_bound = float(self.lower_bound_input.text())
-        if self.upper_bound_input.text():
-            upper_bound = float(self.upper_bound_input.text())
+        if self.lower_bound_input.text().strip():
+            lower_bound = float(self.lower_bound_input.text().strip())
+        if self.upper_bound_input.text().strip():
+            upper_bound = float(self.upper_bound_input.text().strip())
 
         if self.surface_cb.isChecked():
             z_scale = [lower_bound, upper_bound]
