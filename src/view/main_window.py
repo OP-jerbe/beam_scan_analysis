@@ -139,6 +139,7 @@ class MainWindow(QMainWindow):
             )
             self.override_centroid_window.show()
 
+    @Slot()
     def receive_centroid_coords_sig(self, coords: list) -> None:
         x = float(coords[0])
         y = float(coords[1])
