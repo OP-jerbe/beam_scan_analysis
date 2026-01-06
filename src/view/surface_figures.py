@@ -119,7 +119,7 @@ def surface(
         )  # adds a line on the 3D surface at the centroid to show the y profile
 
         fig.update_layout(
-            title=f'{bs.serial_number}; PEAK: cup current = {bs.peak_cup_current:.0f} nA; total current = {bs.peak_total_current * 1e6:.3f} \u03bcA',
+            title=f'{bs.serial_number}; PEAK: cup current = {bs.peak_cup_current:.1f} nA; total current = {bs.peak_total_current:.3f} \u03bcA',
             scene=dict(zaxis=dict(range=[self.z_scale[0], self.z_scale[1]])),
             scene_camera=dict(
                 center=dict(x=0, y=0, z=-0.1), eye=dict(x=1.5, y=1.5, z=0.7)
@@ -224,7 +224,7 @@ def surface(
         )  # adds a line on the 3D surface at the centroid to show the y profile
 
         fig.update_layout(
-            title=f'{bs.serial_number}; PEAK: cup current = {bs.peak_cup_current:.0f} nA; total current = {bs.peak_total_current * 1e6:.3f} \u03bcA',
+            title=f'{bs.serial_number}; PEAK: cup current = {bs.peak_cup_current:.1f} nA; total current = {bs.peak_total_current:.3f} \u03bcA',
             scene_camera=dict(
                 center=dict(x=0, y=0, z=-0.1), eye=dict(x=1.5, y=1.5, z=0.7)
             ),

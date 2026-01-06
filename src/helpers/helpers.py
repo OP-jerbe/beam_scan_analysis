@@ -1,4 +1,5 @@
 import sys
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from PySide6.QtWidgets import QFileDialog
@@ -44,6 +45,26 @@ def select_file(default_dir: str | None = None) -> str:
         parent=None, caption='Choose File', dir=default_dir
     )
     return file_path
+
+
+def get_save_filename(default_filename: str | None = None) -> str:
+    filename: str
+    if not default_filename:
+        default_filename = ''
+    filename, _ = QFileDialog.getSaveFileName(
+        parent=None,
+        dir=default_filename,
+        caption='Save CSV File',
+        filter='CSV Files (*.csv);;All Files (*)',
+    )
+    return filename
+
+
+def get_app_version() -> str:
+    try:
+        return version('beam_scan_analysis')
+    except PackageNotFoundError:
+        return 'development-build'
 
 
 if __name__ == '__main__':

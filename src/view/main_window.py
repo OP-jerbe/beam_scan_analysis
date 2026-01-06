@@ -1,5 +1,4 @@
 import sys
-from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt, Signal, Slot
@@ -7,7 +6,6 @@ from PySide6.QtGui import QAction, QIcon, QMouseEvent, QRegularExpressionValidat
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
-    QFileDialog,
     QFormLayout,
     QFrame,
     QGridLayout,
@@ -29,11 +27,11 @@ from src.view.override_centroid_window import OverrideCentroidWindow
 
 class MainWindow(QMainWindow):
     load_scan_data_sig = Signal(str)
-    plot_3d_surface_sig = Signal(float, float, list)
-    plot_heatmap_sig = Signal(float, float, list)
-    plot_xy_cross_sections_sig = Signal(float, float, list)
-    plot_i_prime_sig = Signal(float, float)
-    export_to_csv_sig = Signal()
+    plot_3d_surface_sig = Signal(dict, list)
+    plot_heatmap_sig = Signal(dict, list)
+    plot_xy_cross_sections_sig = Signal(dict, list)
+    plot_i_prime_sig = Signal(dict)
+    export_to_csv_sig = Signal(str, dict)
     override_centroid_sig = Signal()
     disable_interp_sig = Signal()
     save_3d_surface_html_sig = Signal()
@@ -81,8 +79,16 @@ class MainWindow(QMainWindow):
         self.load_scan_data_sig.emit(filepath)
 
     def plot_beam_scan_handler(self) -> None:
-        diam = float(self.fcup_diameter_input.text())
-        dist = float(self.fcup_distance_input.text())
+        inputs = {
+            'serial_number': self.serial_number_input.text().strip(),
+            'test_stand': self.test_stand_input.text().strip(),
+            'fcup_diam': float(self.fcup_diameter_input.text().strip()),
+            'fcup_dist': float(self.fcup_distance_input.text().strip()),
+            'beam_voltage': self.beam_voltage_input.text().strip(),
+            'ext_voltage': self.ext_voltage_input.text().strip(),
+            'power': self.power_input.text().strip(),
+            'solenoid_current': self.solenoid_current_input.text().strip(),
+        }
         lower_bound = None
         upper_bound = None
         if self.lower_bound_input.text():
@@ -92,23 +98,32 @@ class MainWindow(QMainWindow):
 
         if self.surface_cb.isChecked():
             z_scale = [lower_bound, upper_bound]
-            self.plot_3d_surface_sig.emit(diam, dist, z_scale)
+            self.plot_3d_surface_sig.emit(inputs, z_scale)
         if self.heatmap_cb.isChecked():
             z_scale = [lower_bound, upper_bound]
-            self.plot_heatmap_sig.emit(diam, dist, z_scale)
+            self.plot_heatmap_sig.emit(inputs, z_scale)
         if self.xy_profile_cb.isChecked():
             z_scale = [lower_bound, upper_bound]
-            self.plot_xy_cross_sections_sig.emit(diam, dist, z_scale)
+            self.plot_xy_cross_sections_sig.emit(inputs, z_scale)
         if self.i_prime_cb.isChecked():
-            self.plot_i_prime_sig.emit(diam, dist)
+            self.plot_i_prime_sig.emit(inputs)
 
     def export_to_csv_handler(self) -> None:
-        self.export_to_csv_sig.emit()
-        # TODO:
-        # 1) Have the controller catch the signal
-        # 2) Have the controller call an export_to_csv function
-        #       The function should have the user choose a save location
-        #       then export the scan data as a v3 export csv.
+        # default_filename = f'{scan_date} SN-{serial_number} @ {beam_voltage}_{ext_voltage} kV & {solenoid_current} A on TS{test_stand}.csv'
+        filename = h.get_save_filename()
+        if not filename:
+            return
+        inputs = {
+            'serial_number': self.serial_number_input.text().strip(),
+            'beam_voltage': self.beam_voltage_input.text().strip(),
+            'ext_voltage': self.ext_voltage_input.text().strip(),
+            'solenoid_current': self.solenoid_current_input.text().strip(),
+            'power': self.power_input.text().strip(),
+            'test_stand': self.test_stand_input.text().strip(),
+            'fcup_diam': self.fcup_diameter_input.text().strip(),
+            'fcup_dist': self.fcup_distance_input.text().strip(),
+        }
+        self.export_to_csv_sig.emit(filename, inputs)
 
     def override_centroid_handler(self) -> None:
         self.override_centroid_sig.emit()
@@ -140,8 +155,7 @@ class MainWindow(QMainWindow):
     def create_gui(self) -> None:
         input_box_height = 28
 
-        # self.setFixedSize(window_width, window_height)
-        ver = self.get_app_version()
+        ver = h.get_app_version()
         root_dir: Path = h.get_root_dir()
         icon_path: str = str(root_dir / 'assets' / 'icon.ico')
         self.setWindowIcon(QIcon(icon_path))
@@ -341,6 +355,50 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(container)
 
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        """
+        Event filter to capture mouse button press events and clear focus from the currently focused widget.
+
+        This method listens for mouse button press events and, when such an event occurs,
+        it checks which widget is currently focused. If a widget is focused, it clears
+        the focus from that widget.
+
+        Args:
+            watched (QObject): The object being watched for events.
+            event (QEvent): The event that is being processed, typically a mouse button press event.
+
+        Returns:
+            bool: Returns the result of the parent class's eventFilter method, which determines
+                whether the event was handled or not.
+
+        Notes:
+            This filter is useful when you want to ensure that no widget retains focus
+            after a mouse button press, which can help in resetting focus or preventing
+            unintended focus-related behaviors in the UI.
+        """
+        if (
+            isinstance(event, QMouseEvent)
+            and event.type() == QEvent.Type.MouseButtonPress
+        ):
+            focused_widget = QApplication.focusWidget()
+            if focused_widget is not None:
+                focused_widget.clearFocus()
+        return super().eventFilter(watched, event)
+
+    def closeEvent(self, event) -> None:
+        # Confirm the user wants to exit the application.
+        reply = QMessageBox.question(
+            self,
+            'Confirmation',
+            'Are you sure you want to close the window?',
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            event.accept()
+        else:
+            event.ignore()
+
     @Slot()
     def update_ui(self, stats: dict) -> None:
         # Get rid of useless entries
@@ -388,71 +446,6 @@ class MainWindow(QMainWindow):
 
         # Activate the Plot Beam Scan button
         self.plot_button.setEnabled(True)
-
-    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
-        """
-        Event filter to capture mouse button press events and clear focus from the currently focused widget.
-
-        This method listens for mouse button press events and, when such an event occurs,
-        it checks which widget is currently focused. If a widget is focused, it clears
-        the focus from that widget.
-
-        Args:
-            watched (QObject): The object being watched for events.
-            event (QEvent): The event that is being processed, typically a mouse button press event.
-
-        Returns:
-            bool: Returns the result of the parent class's eventFilter method, which determines
-                whether the event was handled or not.
-
-        Notes:
-            This filter is useful when you want to ensure that no widget retains focus
-            after a mouse button press, which can help in resetting focus or preventing
-            unintended focus-related behaviors in the UI.
-        """
-        if (
-            isinstance(event, QMouseEvent)
-            and event.type() == QEvent.Type.MouseButtonPress
-        ):
-            focused_widget = QApplication.focusWidget()
-            if focused_widget is not None:
-                focused_widget.clearFocus()
-        return super().eventFilter(watched, event)
-
-    def closeEvent(self, event) -> None:
-        # Confirm the user wants to exit the application.
-        reply = QMessageBox.question(
-            self,
-            'Confirmation',
-            'Are you sure you want to close the window?',
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        if reply == QMessageBox.StandardButton.Yes:
-            event.accept()
-        else:
-            event.ignore()
-
-    @staticmethod
-    def get_app_version() -> str:
-        try:
-            return version('beam_scan_analysis')
-        except PackageNotFoundError:
-            return 'development-build'
-
-    @staticmethod
-    def get_save_filename(parent, filename) -> str | None:
-        filename, _ = QFileDialog.getSaveFileName(
-            parent=parent,
-            caption='Save CSV File',
-            dir=filename,
-            filter='CSV Files (*.csv);;All Files (*)',
-        )
-
-        if not filename:
-            return None
-
-        return filename
 
     # --- Error Messages ---
 

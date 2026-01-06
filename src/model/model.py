@@ -1,3 +1,4 @@
+import pandas as pd
 from PySide6.QtCore import QObject, QThreadPool, Signal, Slot
 
 from .beam_scan import BeamScan
@@ -106,3 +107,48 @@ class Model(QObject):
     @Slot()
     def create_grid_failed(self, error: str) -> None:
         self.create_grid_failed_sig.emit(error)
+
+    # --- CSV Export ---
+
+    @Slot()
+    def export_to_csv(self, filename: str, inputs: dict) -> None:
+        scan_datetime: str = self.bs.scan_datetime
+        # date_obj = datetime.strptime(scan_datetime, '%m/%d/%Y %I:%M %p')
+        # scan_date = date_obj.strftime('%Y-%m-%d %H_%M')
+        step_size: float = self.bs.step_size
+        serial_number: str = inputs['serial_number']
+        beam_voltage: str = inputs['beam_voltage']
+        ext_voltage: str = inputs['ext_voltage']
+        solenoid_current: str = inputs['solenoid_current']
+        power: str = inputs['power']
+        test_stand: str = inputs['test_stand']
+        beam_supply_current: float = self.bs.beam_supply_current
+        pressure: float = self.bs.pressure
+        fcup_diam: str = inputs['fcup_diam']
+        fcup_dist: str = inputs['fcup_dist']
+        data = pd.DataFrame(
+            {
+                'X': self.bs.x_location,
+                'Y': self.bs.y_location,
+                'cup_current': self.bs.cup_current * 1e-9,  # convert from nA to A
+                'screen_current': self.bs.screen_current * 1e-6,  # convert from uA to A
+                'total_current': self.bs.total_current * 1e-6,  # convert from uA to A
+            }
+        )
+
+        with open(filename, 'w') as f:
+            f.write('CSV export version,3\n')
+            f.write(f'Serial Number,{serial_number}\n')
+            f.write(f'Scan Datetime,{scan_datetime}\n')
+            f.write(f'Step Size (mm),{step_size}\n')
+            f.write(f'Beam Voltage (kV),{beam_voltage}\n')
+            f.write(f'Extractor Voltage (kV),{ext_voltage}\n')
+            f.write(f'Solenoid Current (A),{solenoid_current}\n')
+            f.write(f'Test Stand,{test_stand}\n')
+            f.write(f'Beam Supply Current (uA),{beam_supply_current}\n')
+            f.write(f'Pressure (mBar),{pressure}\n')
+            f.write(f'F-Cup Distance (mm),{fcup_dist}\n')
+            f.write(f'F-Cup Diameter (mm),{fcup_diam}\n')
+            f.write(f'Power (W),{power}\n')
+
+        data.to_csv(filename, index=False, mode='a')  # append the data

@@ -71,6 +71,24 @@ class BeamScan:
                 (x, y), z, (self.grid_x, self.grid_y), method='cubic'
             )
 
+    def angular_intensity(self, fcup_diam: float, fcup_dist: float) -> NDArray[float64]:
+        """
+        Computes the angular intensity of the collected cup current based on the given distance (in mm) to the cup
+        and the aperture diameter (in mm).
+
+        The angular intensity is calculated as the cup current (converted to milliamps) divided by the solid angle
+        subtended by the aperture. The solid angle is approximated using the formula for a small circular aperture.
+
+        Returns:
+            NDArray[np.float64]: Computed angular intensity values in milliamps per steradian.
+        """
+
+        cup_current = self.grid_z * 1e-6  # milliamps
+        half_angle = np.tan(0.5 * fcup_diam / fcup_dist)  # radians
+        solid_angle = np.pi * half_angle**2  # steradians
+        angular_intensity = cup_current / solid_angle  # mA/sr
+        return angular_intensity
+
     # --- csv loading methods ---
 
     def _check_version(self, filepath: str) -> int:
@@ -529,7 +547,7 @@ class BeamScan:
     @property
     def total_current(self) -> Series:
         """GETTER: Gets the total current array in microamps."""
-        return self._data['total_current']
+        return self._data['total_current'] * 1e6
 
     # --- Metadata properties ---
 
@@ -625,11 +643,11 @@ class BeamScan:
 
     @property
     def peak_cup_current(self) -> float:
-        return self.cup_current[self._peak_idx]
+        return round(self.cup_current[self._peak_idx], 1)
 
     @property
     def peak_total_current(self) -> float:
-        return self.total_current[self._peak_idx]
+        return round(self.total_current[self._peak_idx], 3)
 
     @property
     def half_max(self) -> float:
@@ -638,24 +656,6 @@ class BeamScan:
     @property
     def quarter_max(self) -> float:
         return self.peak_cup_current * 0.25
-
-    def angular_intensity(self, fcup_diam: float, fcup_dist: float) -> NDArray[float64]:
-        """
-        Computes the angular intensity of the collected cup current based on the given distance (in mm) to the cup
-        and the aperture diameter (in mm).
-
-        The angular intensity is calculated as the cup current (converted to milliamps) divided by the solid angle
-        subtended by the aperture. The solid angle is approximated using the formula for a small circular aperture.
-
-        Returns:
-            NDArray[np.float64]: Computed angular intensity values in milliamps per steradian.
-        """
-
-        cup_current = self.grid_z * 1e-6  # milliamps
-        half_angle = np.tan(0.5 * fcup_diam / fcup_dist)  # radians
-        solid_angle = np.pi * half_angle**2  # steradians
-        angular_intensity = cup_current / solid_angle  # mA/sr
-        return angular_intensity
 
     @property
     def weighted_centroid(self) -> tuple[float, float]:

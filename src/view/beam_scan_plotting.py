@@ -56,13 +56,15 @@ class Plotter:
     def __init__(
         self,
         beam_scan: BeamScan,
-        fcup_diam: float,
-        fcup_dist: float,
+        inputs: dict,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
         self.bs = beam_scan
+        self.inputs = inputs
         self.z_scale = z_scale
-        self.angular_intensity = self.bs.angular_intensity(fcup_diam, fcup_dist)
+        self.angular_intensity = self.bs.angular_intensity(
+            inputs['fcup_diam'], inputs['fcup_dist']
+        )
 
         self.y_slice_idx: int = int(
             np.abs(self.bs.grid_y[:, 0] - self.bs.weighted_centroid[1]).argmin()
@@ -177,11 +179,10 @@ class Surface(Plotter):
     def __init__(
         self,
         beam_scan: BeamScan,
-        fcup_diam: float,
-        fcup_dist: float,
+        inputs: dict,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(beam_scan, fcup_diam, fcup_dist, z_scale)
+        super().__init__(beam_scan, inputs, z_scale)
 
     def plot(self, show=True) -> None | Figure:
         fig = surface_figures.surface(
@@ -200,11 +201,10 @@ class Heatmap(Plotter):
     def __init__(
         self,
         beam_scan: BeamScan,
-        fcup_diam: float,
-        fcup_dist: float,
+        inputs: dict,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(beam_scan, fcup_diam, fcup_dist, z_scale)
+        super().__init__(beam_scan, inputs, z_scale)
 
     def plot(self, show=True) -> None | Figure:
         heatmap = heatmaps.heatmap(
@@ -280,8 +280,8 @@ class Heatmap(Plotter):
             y=1,
             yref='paper',
             text=f'Cup current = {self.bs.peak_cup_current:.1f} nA <br>'
-            f'Total current = {self.bs.peak_total_current * 1e6:.3f} µA <br>'
-            f'Settings = {self.bs.beam_voltage}/{self.bs.extractor_voltage} kV & {self.bs.solenoid_current} A',
+            f'Total current = {self.bs.peak_total_current:.3f} µA <br>'
+            f'Settings = {self.inputs["beam_voltage"]}/{self.inputs["ext_voltage"]} kV & {self.inputs["solenoid_current"]} A',
             showarrow=False,
             align='left',
             xanchor='left',
@@ -303,7 +303,7 @@ class Heatmap(Plotter):
         # Set title and axis properties
         fig.update_layout(
             title=dict(
-                text=f'{self.bs.serial_number} on TS{self.bs.test_stand}',
+                text=f'{self.inputs["serial_number"]} on TS{self.inputs["test_stand"]}',
                 x=0.475,
                 xanchor='center',
             ),
@@ -335,11 +335,10 @@ class XYCrossSections(Plotter):
     def __init__(
         self,
         beam_scan: BeamScan,
-        fcup_diam: float,
-        fcup_dist: float,
+        inputs: dict,
         z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(beam_scan, fcup_diam, fcup_dist, z_scale)
+        super().__init__(beam_scan, inputs, z_scale)
 
     def plot(self, show=True) -> Figure | None:
         scaling_factor = 1e-6  # scale to microamps
@@ -378,7 +377,7 @@ class XYCrossSections(Plotter):
 
         fig.update_layout(
             showlegend=False,
-            title_text=f'{self.bs.serial_number} Beam Current Cross Sections',
+            title_text=f'{self.inputs["serial_number"]} Beam Current Cross Sections',
         )
 
         if any(value is not None for value in self.z_scale):
@@ -413,12 +412,11 @@ class IPrime(Plotter):
     def __init__(
         self,
         beam_scan: BeamScan,
-        fcup_diam: float,
-        fcup_dist: float,
+        inputs: dict,
     ) -> None:
-        super().__init__(beam_scan, fcup_diam, fcup_dist)
-        self.fcup_diam = fcup_diam
-        self.fcup_dist = fcup_dist
+        super().__init__(beam_scan, inputs)
+        self.fcup_diam = self.inputs['fcup_diam']
+        self.fcup_dist = self.inputs['fcup_dist']
 
     def plot(
         self,
@@ -497,15 +495,21 @@ if __name__ == '__main__':
         z_scale: list[int | float | None] = [None, None]
     else:
         z_scale: list[int | float | None] = [None, None]
-    fcup_diam = 2.5
-    fcup_dist = 205
-    surface = Surface(bs, fcup_diam, fcup_dist, z_scale)
+    inputs: dict = {
+        'serial_number': '111',
+        'test_stand': '4',
+        'fcup_diam': 2.5,
+        'fcup_dist': 205,
+        'beam_voltage': '-13',
+        'ext_voltage': '-9',
+        'power': '800',
+        'solenoid_current': '1.2',
+    }
+    surface = Surface(bs, inputs, z_scale)
     surface.plot()
-    heatmap = Heatmap(bs, fcup_diam, fcup_dist, z_scale)
+    heatmap = Heatmap(bs, inputs, z_scale)
     heatmap.plot()
-    xy_cross_sections = XYCrossSections(bs, fcup_diam, fcup_dist, z_scale)
+    xy_cross_sections = XYCrossSections(bs, inputs, z_scale)
     xy_cross_sections.plot()
-    fcup_diam = 2.5
-    fcup_dist = 205
-    i_prime = IPrime(bs, fcup_diam, fcup_dist)
+    i_prime = IPrime(bs, inputs)
     i_prime.plot()

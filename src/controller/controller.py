@@ -20,6 +20,7 @@ class Controller(QObject):
             self.receive_plot_xy_cross_sections_sig
         )
         self.view.plot_i_prime_sig.connect(self.receive_plot_i_prime_sig)
+        self.view.export_to_csv_sig.connect(self.receive_export_to_csv_sig)
 
     def _run_plot_worker(self, func, error_handler) -> None:
         worker = Worker(func)
@@ -35,28 +36,28 @@ class Controller(QObject):
         self.model.create_grid()
 
     @Slot()
-    def receive_plot_3d_surface_sig(
-        self, diam: float, dist: float, z_scale: list
-    ) -> None:
-        surface = Surface(self.model.bs, diam, dist, z_scale)
+    def receive_plot_3d_surface_sig(self, inputs: dict, z_scale: list) -> None:
+        surface = Surface(self.model.bs, inputs, z_scale)
         self._run_plot_worker(surface.plot, self.view.surface_error_message)
 
     @Slot()
-    def receive_plot_heatmap_sig(self, diam: float, dist: float, z_scale: list) -> None:
-        heatmap = Heatmap(self.model.bs, diam, dist, z_scale)
+    def receive_plot_heatmap_sig(self, inputs: dict, z_scale: list) -> None:
+        heatmap = Heatmap(self.model.bs, inputs, z_scale)
         self._run_plot_worker(heatmap.plot, self.view.heatmap_error_message)
 
     @Slot()
-    def receive_plot_xy_cross_sections_sig(
-        self, diam: float, dist: float, z_scale: list
-    ) -> None:
-        xy_cross_sections = XYCrossSections(self.model.bs, diam, dist, z_scale)
+    def receive_plot_xy_cross_sections_sig(self, inputs: dict, z_scale: list) -> None:
+        xy_cross_sections = XYCrossSections(self.model.bs, inputs, z_scale)
         self._run_plot_worker(
             xy_cross_sections.plot,
             self.view.cross_sections_error_message,
         )
 
     @Slot()
-    def receive_plot_i_prime_sig(self, diam: float, dist: float) -> None:
-        i_prime = IPrime(self.model.bs, diam, dist)
+    def receive_plot_i_prime_sig(self, inputs: dict) -> None:
+        i_prime = IPrime(self.model.bs, inputs)
         self._run_plot_worker(i_prime.plot, self.view.i_prime_error_message)
+
+    @Slot()
+    def receive_export_to_csv_sig(self, filename: str, inputs: dict) -> None:
+        self.model.export_to_csv(filename, inputs)
