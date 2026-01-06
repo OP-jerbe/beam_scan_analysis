@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from typing import Optional
 
 from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt, Signal, Slot
 from PySide6.QtGui import QAction, QIcon, QMouseEvent, QRegularExpressionValidator
@@ -34,10 +35,7 @@ class MainWindow(QMainWindow):
     export_to_csv_sig = Signal(str, dict)
     override_centroid_sig = Signal(tuple)
     disable_interp_sig = Signal(bool)
-    save_3d_surface_html_sig = Signal()
-    save_heatmap_html_sig = Signal()
-    save_xy_cross_section_html_sig = Signal()
-    save_i_prime_html_sig = Signal()
+    save_html_figure_sig = Signal(str, dict, list)
     save_all_html_sig = Signal()
     save_all_png_sig = Signal()
     open_quick_start_guide_sig = Signal()
@@ -74,13 +72,7 @@ class MainWindow(QMainWindow):
 
     # --- Create the event handlers ---
 
-    def select_csv_handler(self) -> None:
-        filepath = h.select_file()
-        if not filepath:
-            return
-        self.load_scan_data_sig.emit(filepath)
-
-    def plot_beam_scan_handler(self) -> None:
+    def _get_inputs(self) -> tuple[dict, Optional[float], Optional[float]]:
         inputs = {
             'serial_number': self.serial_number_input.text().strip(),
             'test_stand': self.test_stand_input.text().strip(),
@@ -99,6 +91,16 @@ class MainWindow(QMainWindow):
             lower_bound = float(self.lower_bound_input.text().strip())
         if self.upper_bound_input.text().strip():
             upper_bound = float(self.upper_bound_input.text().strip())
+        return inputs, lower_bound, upper_bound
+
+    def select_csv_handler(self) -> None:
+        filepath = h.select_file()
+        if not filepath:
+            return
+        self.load_scan_data_sig.emit(filepath)
+
+    def plot_beam_scan_handler(self) -> None:
+        inputs, lower_bound, upper_bound = self._get_inputs()
 
         if self.surface_cb.isChecked():
             z_scale = [lower_bound, upper_bound]
@@ -145,19 +147,33 @@ class MainWindow(QMainWindow):
         self.disable_interp_sig.emit(checked)
 
     def save_3d_surface_html(self) -> None:
-        self.save_3d_surface_html_sig.emit()
+        inputs, lower_bound, upper_bound = self._get_inputs()
+        z_scale = [lower_bound, upper_bound]
+        which = 'surface'
+        self.save_html_figure_sig.emit(which, inputs, z_scale)
 
     def save_heatmap_html(self) -> None:
-        self.save_heatmap_html_sig.emit()
+        inputs, lower_bound, upper_bound = self._get_inputs()
+        z_scale = [lower_bound, upper_bound]
+        which = 'heatmap'
+        self.save_html_figure_sig.emit(which, inputs, z_scale)
 
     def save_xy_cross_section_html(self) -> None:
-        self.save_xy_cross_section_html_sig.emit()
+        inputs, lower_bound, upper_bound = self._get_inputs()
+        z_scale = [lower_bound, upper_bound]
+        which = 'xy_cross_section'
+        self.save_html_figure_sig.emit(which, inputs, z_scale)
 
     def save_i_prime_html(self) -> None:
-        self.save_i_prime_html_sig.emit()
+        inputs, _, _ = self._get_inputs()
+        which = 'i_prime'
+        self.save_html_figure_sig.emit(which, inputs, [])
 
     def save_all_html(self) -> None:
-        self.save_all_html_sig.emit()
+        inputs, lower_bound, upper_bound = self._get_inputs()
+        z_scale = [lower_bound, upper_bound]
+        which = 'all'
+        self.save_all_html_sig.emit(which, inputs, z_scale)
 
     def save_all_png(self) -> None:
         self.save_all_png_sig.emit()
@@ -468,12 +484,18 @@ class MainWindow(QMainWindow):
         y = float(coords[1])
         self.centroid_coords = [x, y]
 
-    # --- Error Messages ---
+    # --- Popup Messages ---
 
     @Slot()
     def csv_load_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = f'Failed to load beam scan data.\n\nTry another csv file.\n\n{error}\n\n{traceback}'
+        QMessageBox.critical(self, title, message)
+
+    @Slot()
+    def save_html_error_message(self, error, traceback) -> None:
+        title = 'Error'
+        message = f'An error occurred.\n\nUnable to save html files.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(self, title, message)
 
     @Slot()
@@ -514,11 +536,17 @@ class MainWindow(QMainWindow):
         message = 'An error occurred.\n\nUnable to find quick start guide.'
         QMessageBox.critical(parent, title, message)
 
-    @staticmethod
-    def csv_export_error_message(parent) -> None:
+    @Slot()
+    def csv_export_error_message(self, error, traceback) -> None:
         title = 'Error'
-        message = 'An error occurred.\n\nCould not export CSV. Try selecting another beam scan csv file.'
-        QMessageBox.critical(parent, title, message)
+        message = f'An error occurred.\n\nCould not export CSV. Try selecting another beam scan csv file.\n\n{error}\n\n{traceback}'
+        QMessageBox.critical(self, title, message)
+
+    @Slot()
+    def surface_plot_saved_message(self) -> None:
+        title = '3D Surface Plot Saved'
+        message = 'The 3D Surface plot was saved as an interactive HTML file here: path/to/file/goes/here'
+        QMessageBox.information(self, title, message)
 
     @staticmethod
     def empty_fcup_inputs_error_message(parent, error, traceback) -> None:

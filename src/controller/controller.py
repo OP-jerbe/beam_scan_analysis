@@ -12,6 +12,7 @@ class Controller(QObject):
         self.model = model
         self.view = view
         self.thread_pool = QThreadPool()
+        self.figure: list[Heatmap | IPrime | Surface | XYCrossSections] = []
 
         self.view.load_scan_data_sig.connect(self.receive_select_csv_file_sig)
         self.view.plot_3d_surface_sig.connect(self.receive_plot_3d_surface_sig)
@@ -22,10 +23,17 @@ class Controller(QObject):
         self.view.plot_i_prime_sig.connect(self.receive_plot_i_prime_sig)
         self.view.export_to_csv_sig.connect(self.receive_export_to_csv_sig)
         self.view.disable_interp_sig.connect(self.receive_disable_interp_sig)
+        self.view.save_html_figure_sig.connect(self.receive_save_html_figure_sig)
 
     def _run_plot_worker(self, func, error_handler) -> None:
         worker = Worker(func)
         worker.signals.error.connect(error_handler)
+        self.thread_pool.start(worker)
+
+    def _run_save_plot_worker(self, func, error_handler, *args, **kwargs) -> None:
+        worker = Worker(func, rtn=True, *args, **kwargs)
+        worker.signals.error.connect(error_handler)
+        worker.signals.rtn.connect(self.receive_worker_rtn_sig)
         self.thread_pool.start(worker)
 
     @Slot()
@@ -61,13 +69,57 @@ class Controller(QObject):
 
     @Slot()
     def receive_export_to_csv_sig(self, filename: str, inputs: dict) -> None:
-        worker = Worker(self.model.export_to_csv, filename, inputs)
+        worker = Worker(self.model.export_to_csv, filename=filename, inputs=inputs)
         worker.signals.error.connect(self.view.csv_export_error_message)
         self.thread_pool.start(worker)
 
     @Slot()
     def receive_disable_interp_sig(self, checked: bool) -> None:
         if checked:
-            self.model.create_grid(None)
+            self.model.create_grid(interp_num=None)
         else:
-            self.model.create_grid(self.model.bs.interp_num)
+            self.model.create_grid(interp_num=self.model.bs.interp_num)
+
+    @Slot()
+    def receive_save_html_figure_sig(
+        self, which: str, inputs: dict, z_scale: list
+    ) -> None:
+        match which:
+            case 'surface':
+                self.figure = [Surface(self.model.bs, inputs, z_scale)]
+                error_handler = self.view.surface_error_message
+            case 'heatmap':
+                self.figure = [Heatmap(self.model.bs, inputs, z_scale)]
+                error_handler = self.view.heatmap_error_message
+            case 'xy_cross_section':
+                self.figure = [XYCrossSections(self.model.bs, inputs, z_scale)]
+                error_handler = self.view.cross_sections_error_message
+            case 'i_prime':
+                self.figure = [IPrime(self.model.bs, inputs)]
+                error_handler = self.view.i_prime_error_message
+            case 'all':
+                self.figure = [
+                    Surface(self.model.bs, inputs, z_scale),
+                    Heatmap(self.model.bs, inputs, z_scale),
+                    XYCrossSections(self.model.bs, inputs, z_scale),
+                    IPrime(self.model.bs, inputs),
+                ]
+                error_handler = self.view.save_html_error_message
+            case _:
+                error_handler = self.view.save_html_error_message
+                return
+
+        if which != 'all':
+            self._run_save_plot_worker(
+                self.figure[0].plot,
+                error_handler=error_handler,
+                show=False,
+            )
+        else:
+            ...
+            # self._save_all_plots_worker()
+
+    @Slot()
+    def receive_worker_rtn_sig(self, obj) -> None:
+        """Runs when the `_run_save_plot_worker` method finishes successfully."""
+        self.figure[0].save_as_html(obj)
