@@ -143,6 +143,9 @@ class MainWindow(QMainWindow):
             self.override_centroid_window.centroid_coords_sig.connect(
                 self.receive_centroid_coords_sig
             )
+            self.override_centroid_window.window_closed_without_input_sig.connect(
+                self.receive_window_closed_without_input_sig
+            )
             self.override_centroid_window.show()
         else:
             self.centroid_coords = self.model.bs.weighted_centroid
@@ -566,6 +569,10 @@ class MainWindow(QMainWindow):
         x = float(coords[0])
         y = float(coords[1])
         self.centroid_coords = [x, y]
+
+    @Slot()
+    def receive_window_closed_without_input_sig(self) -> None:
+        self.override_centroid_option.setChecked(False)
 
     # --- Popup Messages ---
 
