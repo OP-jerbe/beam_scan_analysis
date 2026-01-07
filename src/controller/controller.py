@@ -12,6 +12,8 @@ from ..view.main_window import MainWindow
 class Controller(QObject):
     save_single_html_file_sig = Signal(object)
     save_all_html_files_sig = Signal(object)
+    save_single_png_file_sig = Signal(object)
+    save_all_png_files_sig = Signal(object)
 
     def __init__(self, model: Model, view: MainWindow) -> None:
         super().__init__()
@@ -21,6 +23,7 @@ class Controller(QObject):
         self.graphs: list[Heatmap | IPrime | Surface | XYCrossSections] = []
         self.folder_path: str = ''
         self.filename: str = ''
+        self.save_file_type: str = ''
 
         self.view.load_scan_data_sig.connect(self.receive_select_csv_file_sig)
         self.view.plot_3d_surface_sig.connect(self.receive_plot_3d_surface_sig)
@@ -32,18 +35,22 @@ class Controller(QObject):
         self.view.export_to_csv_sig.connect(self.receive_export_to_csv_sig)
         self.view.disable_interp_sig.connect(self.receive_disable_interp_sig)
         self.view.save_html_figure_sig.connect(self.receive_save_html_figure_sig)
+        self.view.save_png_figure_sig.connect(self.receive_save_png_figure_sig)
         self.view.folder_path_sig.connect(self.receive_folder_path_sig)
         self.view.filename_sig.connect(self.receive_filename_sig)
+        self.view.file_type_sig.connect(self.receive_file_type_sig)
 
         self.save_single_html_file_sig.connect(self.receive_save_single_html_file_sig)
         self.save_all_html_files_sig.connect(self.receive_save_all_html_files_sig)
+        self.save_single_png_file_sig.connect(self.receive_save_single_png_file_sig)
+        self.save_all_png_files_sig.connect(self.receive_save_all_png_files_sig)
 
-    def _run_plot_worker(self, func, error_handler) -> None:
+    def _run_plotting_worker(self, func, error_handler) -> None:
         worker = Worker(func)
         worker.signals.error.connect(error_handler)
         self.thread_pool.start(worker)
 
-    def _run_save_html_plot_worker(self, func, error_handler, *args, **kwargs) -> None:
+    def _run_figure_rtn_worker(self, func, error_handler, *args, **kwargs) -> None:
         worker = Worker(func, rtn=True, *args, **kwargs)
         worker.signals.error.connect(error_handler)
         worker.signals.rtn.connect(self.receive_worker_rtn_sig)
@@ -69,6 +76,10 @@ class Controller(QObject):
         self.filename = filename
 
     @Slot()
+    def receive_file_type_sig(self, file_type: str) -> None:
+        self.save_file_type = file_type
+
+    @Slot()
     def receive_select_csv_file_sig(self, filepath: str) -> None:
         self.model.load_scan_data(filepath)
 
@@ -79,17 +90,17 @@ class Controller(QObject):
     @Slot()
     def receive_plot_3d_surface_sig(self, inputs: dict, z_scale: list) -> None:
         surface = Surface(self.model.bs, inputs, z_scale)
-        self._run_plot_worker(surface.plot, self.view.surface_error_message)
+        self._run_plotting_worker(surface.plot, self.view.surface_error_message)
 
     @Slot()
     def receive_plot_heatmap_sig(self, inputs: dict, z_scale: list) -> None:
         heatmap = Heatmap(self.model.bs, inputs, z_scale)
-        self._run_plot_worker(heatmap.plot, self.view.heatmap_error_message)
+        self._run_plotting_worker(heatmap.plot, self.view.heatmap_error_message)
 
     @Slot()
     def receive_plot_xy_cross_sections_sig(self, inputs: dict, z_scale: list) -> None:
         xy_cross_sections = XYCrossSections(self.model.bs, inputs, z_scale)
-        self._run_plot_worker(
+        self._run_plotting_worker(
             xy_cross_sections.plot,
             self.view.cross_sections_error_message,
         )
@@ -97,7 +108,7 @@ class Controller(QObject):
     @Slot()
     def receive_plot_i_prime_sig(self, inputs: dict) -> None:
         i_prime = IPrime(self.model.bs, inputs)
-        self._run_plot_worker(i_prime.plot, self.view.i_prime_error_message)
+        self._run_plotting_worker(i_prime.plot, self.view.i_prime_error_message)
 
     @Slot()
     def receive_export_to_csv_sig(self, filename: str, inputs: dict) -> None:
@@ -111,6 +122,36 @@ class Controller(QObject):
             self.model.create_grid(interp_num=None)
         else:
             self.model.create_grid(interp_num=self.model.bs.interp_num)
+
+    @Slot()
+    def receive_save_png_figure_sig(
+        self, which: str, inputs: dict, z_scale: list
+    ) -> None:
+        match which:
+            case 'surface':
+                ...
+            case 'heatmap':
+                ...
+            case 'xy_cross_section':
+                ...
+            case 'i_prime':
+                ...
+            case 'all':
+                self.graphs = [
+                    Heatmap(self.model.bs, inputs, z_scale),
+                    IPrime(self.model.bs, inputs),
+                    Surface(self.model.bs, inputs, z_scale),
+                    XYCrossSections(self.model.bs, inputs, z_scale),
+                ]
+            case _:
+                ...
+        error_handler = self.view.save_png_error_message
+        if which != 'all':
+            ...
+        else:
+            self._run_figure_rtn_worker(
+                self._get_all_figures, graphs=self.graphs, error_handler=error_handler
+            )
 
     @Slot()
     def receive_save_html_figure_sig(
@@ -139,27 +180,33 @@ class Controller(QObject):
                 error_handler = self.view.save_html_error_message
             case _:
                 error_handler = self.view.save_html_error_message
-                return
 
         if which != 'all':
             graph = self.graphs[0]
-            self._run_save_html_plot_worker(
+            self._run_figure_rtn_worker(
                 graph.plot,
                 show=False,
                 error_handler=error_handler,
             )
         else:
-            self._run_save_html_plot_worker(
+            self._run_figure_rtn_worker(
                 self._get_all_figures, graphs=self.graphs, error_handler=error_handler
             )
 
     @Slot()
     def receive_worker_rtn_sig(self, obj) -> None:
-        """Runs when the `_run_save_plot_worker` method finishes successfully."""
-        if len(self.graphs) == 1:
-            self.save_single_html_file_sig.emit(obj)
-        else:
-            self.save_all_html_files_sig.emit(obj)
+        """Runs when the `_run_figure_rtn_worker` method finishes successfully."""
+        match self.save_file_type:
+            case 'html':
+                if len(self.graphs) == 1:
+                    self.save_single_html_file_sig.emit(obj)
+                else:
+                    self.save_all_html_files_sig.emit(obj)
+            case 'png':
+                if len(self.graphs) == 1:
+                    self.save_single_png_file_sig.emit(obj)
+                else:
+                    self.save_all_png_files_sig.emit(obj)
 
     @Slot()
     def receive_save_single_html_file_sig(self, fig) -> None:
@@ -177,6 +224,26 @@ class Controller(QObject):
         ]
         worker = Worker(
             h.save_all_as_html, folder_path=self.folder_path, titles=titles, figs=figs
+        )
+        worker.signals.error.connect(self.view.save_html_error_message)
+        self.thread_pool.start(worker)
+
+    @Slot()
+    def receive_save_single_png_file_sig(self, fig) -> None:
+        worker = Worker(h.save_as_png, filepath=self.filename, fig=fig)
+        worker.signals.error.connect(self.view.save_html_error_message)
+        self.thread_pool.start(worker)
+
+    @Slot()
+    def receive_save_all_png_files_sig(self, figs) -> None:
+        titles: list[str] = [
+            'heatmap.png',
+            'ang_int_vs_div.png',
+            'surface.png',
+            'xy_cross_section.png',
+        ]
+        worker = Worker(
+            h.save_all_as_png, folder_path=self.folder_path, titles=titles, figs=figs
         )
         worker.signals.error.connect(self.view.save_html_error_message)
         self.thread_pool.start(worker)

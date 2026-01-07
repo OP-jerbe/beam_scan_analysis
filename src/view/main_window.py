@@ -36,10 +36,11 @@ class MainWindow(QMainWindow):
     override_centroid_sig = Signal(tuple)
     disable_interp_sig = Signal(bool)
     save_html_figure_sig = Signal(str, dict, list)
-    save_all_png_sig = Signal()
+    save_png_figure_sig = Signal(str, dict, list)
     open_quick_start_guide_sig = Signal()
     folder_path_sig = Signal(str)
     filename_sig = Signal(str)
+    file_type_sig = Signal(str)
 
     def __init__(self, model: Model) -> None:
         super().__init__()
@@ -191,13 +192,22 @@ class MainWindow(QMainWindow):
         if not folder_path:
             return
         self.folder_path_sig.emit(folder_path)
+        self.file_type_sig.emit('html')
         inputs, lower_bound, upper_bound = self._get_inputs()
         z_scale = [lower_bound, upper_bound]
         which = 'all'
         self.save_html_figure_sig.emit(which, inputs, z_scale)
 
     def save_all_png(self) -> None:
-        self.save_all_png_sig.emit()
+        folder_path = h.select_folder()
+        if not folder_path:
+            return
+        self.folder_path_sig.emit(folder_path)
+        self.file_type_sig.emit('png')
+        inputs, lower_bound, upper_bound = self._get_inputs()
+        z_scale = [lower_bound, upper_bound]
+        which = 'all'
+        self.save_png_figure_sig.emit(which, inputs, z_scale)
 
     def open_quick_start_guide_handler(self) -> None:
         self.open_quick_start_guide_sig.emit()
@@ -517,6 +527,14 @@ class MainWindow(QMainWindow):
     def save_html_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = f'An error occurred.\n\nUnable to save html files.\n\n{error}\n\n{traceback}'
+        QMessageBox.critical(self, title, message)
+
+    @Slot()
+    def save_png_error_message(self, error, traceback) -> None:
+        title = 'Error'
+        message = (
+            f'An error occurred.\n\nUnable to save png files.\n\n{error}\n\n{traceback}'
+        )
         QMessageBox.critical(self, title, message)
 
     @Slot()

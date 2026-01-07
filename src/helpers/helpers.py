@@ -90,10 +90,34 @@ def save_all_as_html(
     folder = Path(folder_path)
 
     for title, fig in zip(titles, figs):
-        file_name = f'{title}'
+        file_name = title
         full_path = folder / file_name
         if fig:
             fig.write_html(str(full_path))
+
+
+def save_as_png(
+    filepath: str,
+    fig: Figure | None,
+    size: tuple[int, int] = (750, 500),
+) -> None:
+    if fig:
+        fig.write_image(filepath, width=size[0], height=size[1])
+
+
+def save_all_as_png(
+    folder_path: str,
+    titles: list[str],
+    figs: list[Figure | None],
+    size: tuple[int, int] = (700, 500),
+) -> None:
+    folder = Path(folder_path)
+    for title, fig in zip(titles, figs):
+        if fig is None:
+            continue
+        file_name = title
+        full_path = folder / file_name
+        fig.write_image(str(full_path), width=size[0], height=size[1])
 
 
 def get_app_version() -> str:
