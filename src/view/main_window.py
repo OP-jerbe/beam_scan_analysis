@@ -1,4 +1,5 @@
 import sys
+import webbrowser
 from pathlib import Path
 from typing import Optional
 
@@ -210,7 +211,12 @@ class MainWindow(QMainWindow):
         self.save_png_figure_sig.emit(which, inputs, z_scale)
 
     def open_quick_start_guide_handler(self) -> None:
-        self.open_quick_start_guide_sig.emit()
+        root_dir = h.get_root_dir()
+        filepath = root_dir / 'assets' / 'quick_start_guide.html'
+        if not filepath.is_file():
+            self.quick_start_guide_error_message(self)
+            return
+        webbrowser.open_new_tab(filepath.resolve().as_uri())
 
     def create_gui(self) -> None:
         input_box_height = 28
