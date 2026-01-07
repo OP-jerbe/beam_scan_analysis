@@ -48,7 +48,7 @@ def select_file(default_dir: str | None = None) -> str:
     return file_path
 
 
-def get_save_filename(default_filename: str | None = None) -> str:
+def get_csv_save_filename(default_filename: str | None = None) -> str:
     filename: str
     if not default_filename:
         default_filename = ''
@@ -59,6 +59,27 @@ def get_save_filename(default_filename: str | None = None) -> str:
         filter='CSV Files (*.csv);;All Files (*)',
     )
     return filename
+
+
+def get_html_save_filename(default_filename: str | None = None) -> str:
+    filename: str
+    if not default_filename:
+        default_filename = ''
+    filename, _ = QFileDialog.getSaveFileName(
+        parent=None,
+        dir=default_filename,
+        caption='Save figure',
+        filter='HTML Files (*.html);;All Files (*)',
+    )
+    return filename
+
+
+def save_as_html(
+    filepath: str,
+    fig: Figure | None,
+) -> None:
+    if fig:
+        fig.write_html(filepath)
 
 
 def save_all_as_html(

@@ -35,10 +35,11 @@ class MainWindow(QMainWindow):
     export_to_csv_sig = Signal(str, dict)
     override_centroid_sig = Signal(tuple)
     disable_interp_sig = Signal(bool)
-    save_html_figure_sig = Signal(str, dict, list, str)
-    save_all_html_sig = Signal(str, dict, list, str)
+    save_html_figure_sig = Signal(str, dict, list)
     save_all_png_sig = Signal()
     open_quick_start_guide_sig = Signal()
+    folder_path_sig = Signal(str)
+    filename_sig = Signal(str)
 
     def __init__(self, model: Model) -> None:
         super().__init__()
@@ -116,7 +117,7 @@ class MainWindow(QMainWindow):
 
     def export_to_csv_handler(self) -> None:
         # default_filename = f'{scan_date} SN-{serial_number} @ {beam_voltage}_{ext_voltage} kV & {solenoid_current} A on TS{test_stand}.csv'
-        filename = h.get_save_filename()
+        filename = h.get_csv_save_filename()
         if not filename:
             return
         inputs = {
@@ -147,34 +148,53 @@ class MainWindow(QMainWindow):
         self.disable_interp_sig.emit(checked)
 
     def save_3d_surface_html(self) -> None:
+        filename = h.get_html_save_filename()
+        if not filename:
+            return
+        self.filename_sig.emit(filename)
         inputs, lower_bound, upper_bound = self._get_inputs()
         z_scale = [lower_bound, upper_bound]
         which = 'surface'
         self.save_html_figure_sig.emit(which, inputs, z_scale)
 
     def save_heatmap_html(self) -> None:
+        filename = h.get_html_save_filename()
+        if not filename:
+            return
+        self.filename_sig.emit(filename)
         inputs, lower_bound, upper_bound = self._get_inputs()
         z_scale = [lower_bound, upper_bound]
         which = 'heatmap'
         self.save_html_figure_sig.emit(which, inputs, z_scale)
 
     def save_xy_cross_section_html(self) -> None:
+        filename = h.get_html_save_filename()
+        if not filename:
+            return
+        self.filename_sig.emit(filename)
         inputs, lower_bound, upper_bound = self._get_inputs()
         z_scale = [lower_bound, upper_bound]
         which = 'xy_cross_section'
         self.save_html_figure_sig.emit(which, inputs, z_scale)
 
     def save_i_prime_html(self) -> None:
+        filename = h.get_html_save_filename()
+        if not filename:
+            return
+        self.filename_sig.emit(filename)
         inputs, _, _ = self._get_inputs()
         which = 'i_prime'
         self.save_html_figure_sig.emit(which, inputs, [])
 
     def save_all_html(self) -> None:
         folder_path = h.select_folder()
+        if not folder_path:
+            return
+        self.folder_path_sig.emit(folder_path)
         inputs, lower_bound, upper_bound = self._get_inputs()
         z_scale = [lower_bound, upper_bound]
         which = 'all'
-        self.save_html_figure_sig.emit(which, inputs, z_scale, folder_path)
+        self.save_html_figure_sig.emit(which, inputs, z_scale)
 
     def save_all_png(self) -> None:
         self.save_all_png_sig.emit()
