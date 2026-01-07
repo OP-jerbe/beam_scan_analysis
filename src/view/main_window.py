@@ -253,17 +253,26 @@ class MainWindow(QMainWindow):
 
         # Create the QAction objects for the menus
         self.export_csv_option = QAction('Export Scan Data', self)
+        self.export_csv_option.setEnabled(False)
         self.exit_option = QAction('Exit', self)
         self.override_centroid_option = QAction('Override Centroid', self)
         self.override_centroid_option.setCheckable(True)
+        self.override_centroid_option.setEnabled(False)
         self.disable_interp_option = QAction('Disable Interpolation', self)
         self.disable_interp_option.setCheckable(True)
+        self.disable_interp_option.setEnabled(False)
         self.save_3D_surface_option = QAction('Save 3D Surface', self)
+        self.save_3D_surface_option.setEnabled(False)
         self.save_heatmap_option = QAction('Save Heatmap', self)
+        self.save_heatmap_option.setEnabled(False)
         self.save_xy_profiles_option = QAction('Save XY-Profiles', self)
+        self.save_xy_profiles_option.setEnabled(False)
         self.save_i_prime_option = QAction("Save I' vs Divergence Angle", self)
+        self.save_i_prime_option.setEnabled(False)
         self.save_all_html_option = QAction('Save all as HTML', self)
+        self.save_all_html_option.setEnabled(False)
         self.save_all_png_option = QAction('Save all as png', self)
+        self.save_all_png_option.setEnabled(False)
         self.open_quick_start_guide = QAction('Quick Start Guide', self)
 
         # Add the action objects to the menu bar items
@@ -515,7 +524,42 @@ class MainWindow(QMainWindow):
             self.fcup_distance_input.setText(stats['fcup_dist'])
 
         # Activate the Plot Beam Scan button
-        self.plot_button.setEnabled(True)
+        if not self.plot_button.isEnabled():
+            self.plot_button.setEnabled(True)
+
+        # Activate the export to csv option
+        if not self.export_csv_option.isEnabled():
+            self.export_csv_option.setEnabled(True)
+
+        # Activate the override centroid option
+        if not self.override_centroid_option.isEnabled():
+            self.override_centroid_option.setEnabled(True)
+
+        # Uncheck override centroid option when new scan data is loaded
+        if self.override_centroid_option.isChecked():
+            self.override_centroid_option.setChecked(False)
+
+        # Activate the disable interpolation option
+        if not self.disable_interp_option.isEnabled():
+            self.disable_interp_option.setEnabled(True)
+
+        # Uncheck disable interpolation option when new data is loaded
+        if self.disable_interp_option.isChecked():
+            self.disable_interp_option.setChecked(False)
+
+        # Activate the save options
+        if not self.save_3D_surface_option.isEnabled():
+            self.save_3D_surface_option.setEnabled(True)
+        if not self.save_heatmap_option.isEnabled():
+            self.save_heatmap_option.setEnabled(True)
+        if not self.save_xy_profiles_option.isEnabled():
+            self.save_xy_profiles_option.setEnabled(True)
+        if not self.save_i_prime_option.isEnabled():
+            self.save_i_prime_option.setEnabled(True)
+        if not self.save_all_html_option.isEnabled():
+            self.save_all_html_option.setEnabled(True)
+        if not self.save_all_png_option.isEnabled():
+            self.save_all_png_option.setEnabled(True)
 
     @Slot()
     def receive_centroid_coords_sig(self, coords: list) -> None:
