@@ -26,7 +26,8 @@ class Worker(QRunnable):
             obj = self.fn(*self.args, **self.kwargs)
             complete = True
         except Exception as e:
-            self.signals.error.emit(str(e), traceback.print_exc)
+            tb = traceback.format_exc()
+            self.signals.error.emit(str(e), tb)
         finally:
             self.signals.finished.emit(complete)
             if self.rtn and complete:
