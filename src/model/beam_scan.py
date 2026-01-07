@@ -89,7 +89,6 @@ class BeamScan:
     # --- csv loading methods ---
 
     def _check_version(self, filepath: str) -> int:
-        # Read the first row, second column
         df: pd.DataFrame = pd.read_csv(filepath, header=None, usecols=[0], nrows=1)
         first_line: str = str(df.iloc[0, 0])
         if first_line != 'CSV export version':
