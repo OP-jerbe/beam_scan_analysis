@@ -581,12 +581,6 @@ class MainWindow(QMainWindow):
         message = f'An error occurred.\n\nCould not export CSV. Try selecting another beam scan csv file.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(self, title, message)
 
-    @Slot()
-    def surface_plot_saved_message(self) -> None:
-        title = '3D Surface Plot Saved'
-        message = 'The 3D Surface plot was saved as an interactive HTML file here: path/to/file/goes/here'
-        QMessageBox.information(self, title, message)
-
     @staticmethod
     def empty_fcup_inputs_error_message(parent, error, traceback) -> None:
         title = 'Error'
