@@ -10,8 +10,6 @@ from skimage import (
     measure,
 )  # For find_contours <conda install -c conda-forge scikit-image>
 
-# import helpers.helpers as h
-
 
 class BeamScan:
     def __init__(self) -> None:
@@ -23,7 +21,6 @@ class BeamScan:
         self.grid_z: NDArray[float64] = np.array([])
 
     def load_scan_data(self, filepath: str) -> None:
-        # filepath = h.select_file()
         if not filepath:
             print('No file selected.')
             return
@@ -92,9 +89,14 @@ class BeamScan:
     # --- csv loading methods ---
 
     def _check_version(self, filepath: str) -> int:
-        # Read the first row
-        df: pd.DataFrame = pd.read_csv(filepath, header=None, usecols=[1], nrows=1)
-        csv_version: str = str(df.iloc[0, 0])
+        # Read the first row, second column
+        df: pd.DataFrame = pd.read_csv(filepath, header=None, usecols=[0], nrows=1)
+        first_line: str = str(df.iloc[0, 0])
+        if first_line != 'CSV export version':
+            csv_version = '0'
+        else:
+            df: pd.DataFrame = pd.read_csv(filepath, header=None, usecols=[1], nrows=1)
+            csv_version: str = str(df.iloc[0, 0])
         match csv_version:
             case '3':
                 return 3
@@ -102,8 +104,10 @@ class BeamScan:
                 return 2
             case '1':
                 return 1
-            case _:
+            case '0':
                 return 0
+            case _:
+                raise pd.errors.ParserError('Could not determine csv version.')
 
     def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
         # Load in the metadata from the csv file.
