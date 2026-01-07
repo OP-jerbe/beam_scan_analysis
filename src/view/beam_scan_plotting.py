@@ -347,12 +347,10 @@ class IPrime(Plotter):
         )
 
         dist_from_x_center: NDArray[np.float64] = (
-            np.asarray(self.x_slice['X Coordinate'] - self.bs.weighted_centroid[0])
-            / 1000
+            np.asarray(self.x_slice['X Coordinate'] - self.inputs['centroid_x']) / 1000
         )  # millimeters
         dist_from_y_center: NDArray[np.float64] = (
-            np.asarray(self.y_slice['Y Coordinate'] - self.bs.weighted_centroid[1])
-            / 1000
+            np.asarray(self.y_slice['Y Coordinate'] - self.inputs['centroid_y']) / 1000
         )  # millimeters
         x_angle: NDArray[np.float64] = (
             np.arctan(dist_from_x_center / self.fcup_dist) * 1000.0

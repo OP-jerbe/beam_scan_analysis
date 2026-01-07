@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "beam_scan_analysis"
-version = "2.0.1"
+version = "2.0.2"
 description = "A GUI for analyzing beam scans"
 authors = [{ name = "Joshua Erbe", email = "j.erbe@oregon-physics.com" }]
 dependencies = ["PySide6", "pandas", "numpy", "scipy", "scikit-image"]
