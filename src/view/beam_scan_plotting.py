@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -7,14 +5,10 @@ import plotly.io as pio
 from numpy.typing import NDArray
 from plotly.graph_objects import Figure
 from plotly.subplots import make_subplots
-from PySide6.QtWidgets import QFileDialog
 
 import src.view.heatmaps as heatmaps
 import src.view.surface_figures as surface_figures
 from src.model.beam_scan import BeamScan
-
-PNG_WIDTH = 700
-PNG_HEIGHT = 500
 
 
 class Plotter:
