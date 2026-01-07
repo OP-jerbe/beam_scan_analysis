@@ -144,6 +144,8 @@ class MainWindow(QMainWindow):
                 self.receive_centroid_coords_sig
             )
             self.override_centroid_window.show()
+        else:
+            self.centroid_coords = self.model.bs.weighted_centroid
 
     def disable_interp_handler(self) -> None:
         checked: bool = self.disable_interp_option.isChecked()

@@ -658,12 +658,12 @@ class BeamScan:
         return self.peak_cup_current * 0.25
 
     @property
-    def weighted_centroid(self) -> tuple[float, float]:
+    def weighted_centroid(self) -> list[float]:
         """
         Compute the weighted centroid of the beam profile, handling negative currents.
 
         Returns:
-            tuple: (Xc, Yc) - centroid coordinates.
+            list: [Xc, Yc] - centroid coordinates.
         """
         # Zero out the cup current measurements that are below the threshold so
         # that the centroid is calculated from strong beam current readings only.
@@ -679,7 +679,7 @@ class BeamScan:
         Yc = float(np.sum(self.grid_y * np.abs(cup_current)) / total_current)
         # print(f'Centroid = ({Xc:.1f}, {Yc:.1f})')
 
-        return round(Xc, 1), round(Yc, 1)
+        return [round(Xc, 1), round(Yc, 1)]
 
     @property
     def peak_location(self) -> tuple[float, float]:
