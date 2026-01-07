@@ -33,7 +33,7 @@ class Controller(QObject):
         worker.signals.error.connect(error_handler)
         self.thread_pool.start(worker)
 
-    def _run_save_plot_worker(self, func, error_handler, *args, **kwargs) -> None:
+    def _run_save_html_plot_worker(self, func, error_handler, *args, **kwargs) -> None:
         worker = Worker(func, rtn=True, *args, **kwargs)
         worker.signals.error.connect(error_handler)
         worker.signals.rtn.connect(self.receive_worker_rtn_sig)
@@ -102,10 +102,10 @@ class Controller(QObject):
                 error_handler = self.view.i_prime_error_message
             case 'all':
                 self.graphs = [
-                    Surface(self.model.bs, inputs, z_scale),
                     Heatmap(self.model.bs, inputs, z_scale),
-                    XYCrossSections(self.model.bs, inputs, z_scale),
                     IPrime(self.model.bs, inputs),
+                    Surface(self.model.bs, inputs, z_scale),
+                    XYCrossSections(self.model.bs, inputs, z_scale),
                 ]
                 error_handler = self.view.save_html_error_message
             case _:
@@ -113,24 +113,31 @@ class Controller(QObject):
                 return
 
         if which != 'all':
-            self._run_save_plot_worker(
+            self._run_save_html_plot_worker(
                 self.graphs[0].plot,
                 show=False,
                 error_handler=error_handler,
             )
         else:
-            figs: list[Figure | None] = []
             titles: list[str] = [
-                'surface.html',
                 'heatmap.html',
-                'xy_cross_section.html',
                 'ang_int_vs_div.html',
+                'surface.html',
+                'xy_cross_section.html',
             ]
-            for graph in self.graphs:
-                fig = graph.plot(show=False)
-                if fig:
-                    figs.append(fig)
+            figs = self._get_all_figures(self.graphs)
             h.save_all_as_html(folder_path, titles, figs)
+
+    @staticmethod
+    def _get_all_figures(
+        graphs: list[Heatmap | IPrime | Surface | XYCrossSections],
+    ) -> list[Figure | None]:
+        figs: list[Figure | None] = []
+        for graph in graphs:
+            fig = graph.plot(show=False)
+            if fig:
+                figs.append(fig)
+        return figs
 
     @Slot()
     def receive_worker_rtn_sig(self, obj) -> None:
