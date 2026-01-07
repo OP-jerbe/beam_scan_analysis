@@ -10,7 +10,7 @@ def heatmap(
     z_scale: list[int | float | None],
     color: str,
 ) -> go.Heatmap:
-    scaling_factor = 1e-6  # scale to micro-amps
+    scaling_factor = 1e3  # scale to micro-amps
     z_scale = [value and value * scaling_factor for value in z_scale]
 
     if any(value is not None for value in z_scale):

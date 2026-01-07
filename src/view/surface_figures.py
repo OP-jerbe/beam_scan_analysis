@@ -11,7 +11,7 @@ def surface(
     x_slice: DataFrame,
     y_slice: DataFrame,
 ) -> go.Figure:
-    scaling_factor = 1e-6  # scale to micro-amps
+    scaling_factor = 1e3  # scale to micro-amps
     self.z_scale = [
         value * scaling_factor if value is not None else None for value in self.z_scale
     ]

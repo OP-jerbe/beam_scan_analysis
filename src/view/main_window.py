@@ -575,17 +575,17 @@ class MainWindow(QMainWindow):
         message = f'An error occurred.\n\nUnable to create meshgrid.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(self, title, message)
 
-    @staticmethod
-    def quick_start_guide_error_message(parent) -> None:
-        title = 'Error'
-        message = 'An error occurred.\n\nUnable to find quick start guide.'
-        QMessageBox.critical(parent, title, message)
-
     @Slot()
     def csv_export_error_message(self, error, traceback) -> None:
         title = 'Error'
         message = f'An error occurred.\n\nCould not export CSV. Try selecting another beam scan csv file.\n\n{error}\n\n{traceback}'
         QMessageBox.critical(self, title, message)
+
+    @staticmethod
+    def quick_start_guide_error_message(parent) -> None:
+        title = 'Error'
+        message = 'An error occurred.\n\nUnable to find quick start guide.'
+        QMessageBox.critical(parent, title, message)
 
     @staticmethod
     def empty_fcup_inputs_error_message(parent, error, traceback) -> None:

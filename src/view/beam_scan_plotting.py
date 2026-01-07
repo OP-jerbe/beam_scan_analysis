@@ -99,81 +99,6 @@ class Plotter:
         # Set the default 3D surface renderer to be the user's browser
         pio.renderers.default = 'browser'
 
-    @staticmethod
-    def save_as_html(
-        fig: Figure | None, default_filename: str | None = None, parent=None
-    ) -> None:
-        if not default_filename:
-            default_filename = ''
-
-        file_path, _ = QFileDialog.getSaveFileName(
-            parent=parent,
-            caption='Save figure',
-            dir=default_filename,
-            filter='HTML Files (*.html);;All Files (*)',
-        )
-
-        if fig and file_path:
-            fig.write_html(file_path)
-        else:
-            pass
-
-    @staticmethod
-    def save_all_as_html(
-        titles_and_figs: dict[str, Figure | None],
-        filename: str,
-        default_dir: str | None = None,
-        parent=None,
-    ) -> None:
-        if default_dir is None:
-            default_dir = ''
-
-        folder_path = QFileDialog.getExistingDirectory(
-            parent=parent,
-            caption='Select folder to save figures',
-            dir=default_dir,
-            options=QFileDialog.Option.ShowDirsOnly,
-        )
-
-        if not folder_path:
-            return
-
-        folder = Path(folder_path)
-        for title, fig in titles_and_figs.items():
-            if fig is None:
-                continue
-            file_name = f'{filename} {title}'
-            full_path = folder / file_name
-            fig.write_html(str(full_path))
-
-    @staticmethod
-    def save_all_as_png(
-        titles_and_figs: dict[str, Figure | None],
-        filename: str,
-        default_dir: str | None = None,
-        parent=None,
-    ) -> None:
-        if default_dir is None:
-            default_dir = ''
-
-        folder_path = QFileDialog.getExistingDirectory(
-            parent=parent,
-            caption='Select folder to save figures',
-            dir=default_dir,
-            options=QFileDialog.Option.ShowDirsOnly,
-        )
-
-        if not folder_path:
-            return
-
-        folder = Path(folder_path)
-        for title, fig in titles_and_figs.items():
-            if fig is None:
-                continue
-            file_name = f'{filename} {title}'
-            full_path = folder / file_name
-            fig.write_image(str(full_path), width=PNG_WIDTH, height=PNG_HEIGHT)
-
 
 class Surface(Plotter):
     def __init__(
@@ -203,7 +128,7 @@ class Heatmap(Plotter):
         self,
         beam_scan: BeamScan,
         inputs: dict,
-        z_scale: list[int | float | None] = [None, None],
+        z_scale: list[float | None] = [None, None],
     ) -> None:
         super().__init__(beam_scan, inputs, z_scale)
 
@@ -342,7 +267,7 @@ class XYCrossSections(Plotter):
         super().__init__(beam_scan, inputs, z_scale)
 
     def plot(self, show=True) -> Figure | None:
-        scaling_factor = 1e-6  # scale to microamps
+        scaling_factor = 1e3  # scale to microamps
         self.z_scale = [
             value * scaling_factor if value is not None else None
             for value in self.z_scale
