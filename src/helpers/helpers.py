@@ -63,11 +63,12 @@ def get_save_filename(default_filename: str | None = None) -> str:
 
 def save_all_as_html(
     folder_path: str,
-    titles_and_figs: dict[str, Figure | None],
+    titles: list[str],
+    figs: list[Figure | None],
 ) -> None:
     folder = Path(folder_path)
 
-    for title, fig in titles_and_figs.items():
+    for title, fig in zip(titles, figs):
         file_name = f'{title}'
         full_path = folder / file_name
         if fig:

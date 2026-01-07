@@ -1,3 +1,4 @@
+from plotly.graph_objects import Figure
 from PySide6.QtCore import QObject, QThreadPool, Slot
 
 import src.helpers.helpers as h
@@ -118,18 +119,18 @@ class Controller(QObject):
                 error_handler=error_handler,
             )
         else:
-            titles_and_figs = {}
+            figs: list[Figure | None] = []
             titles: list[str] = [
                 'surface.html',
                 'heatmap.html',
                 'xy_cross_section.html',
                 'ang_int_vs_div.html',
             ]
-            for title, graph in zip(titles, self.graphs):
+            for graph in self.graphs:
                 fig = graph.plot(show=False)
                 if fig:
-                    titles_and_figs[title] = fig
-            h.save_all_as_html(folder_path, titles_and_figs)
+                    figs.append(fig)
+            h.save_all_as_html(folder_path, titles, figs)
 
     @Slot()
     def receive_worker_rtn_sig(self, obj) -> None:
