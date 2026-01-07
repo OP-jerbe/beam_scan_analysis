@@ -80,18 +80,18 @@ class Controller(QObject):
         self.thread_pool.start(worker)
 
     @Slot()
-    def receive_plot_3d_surface_sig(self, inputs: dict, z_scale: list) -> None:
-        surface = Surface(self.model.bs, inputs, z_scale)
+    def receive_plot_3d_surface_sig(self, inputs: dict) -> None:
+        surface = Surface(self.model.bs, inputs)
         self._run_plotting_worker(surface.plot, self.view.surface_error_message)
 
     @Slot()
-    def receive_plot_heatmap_sig(self, inputs: dict, z_scale: list) -> None:
-        heatmap = Heatmap(self.model.bs, inputs, z_scale)
+    def receive_plot_heatmap_sig(self, inputs: dict) -> None:
+        heatmap = Heatmap(self.model.bs, inputs)
         self._run_plotting_worker(heatmap.plot, self.view.heatmap_error_message)
 
     @Slot()
-    def receive_plot_xy_cross_sections_sig(self, inputs: dict, z_scale: list) -> None:
-        xy_cross_sections = XYCrossSections(self.model.bs, inputs, z_scale)
+    def receive_plot_xy_cross_sections_sig(self, inputs: dict) -> None:
+        xy_cross_sections = XYCrossSections(self.model.bs, inputs)
         self._run_plotting_worker(
             xy_cross_sections.plot,
             self.view.cross_sections_error_message,
@@ -147,6 +147,8 @@ class Controller(QObject):
                     self.save_single_png_file_sig.emit(obj)
                 else:
                     self.save_all_png_files_sig.emit(obj)
+            case _:
+                raise ValueError('Must give filetype: "html" or "png"')
 
     # --- Save as HTML ---
 
@@ -171,28 +173,26 @@ class Controller(QObject):
         self.thread_pool.start(worker)
 
     @Slot()
-    def receive_save_html_figure_sig(
-        self, which: str, inputs: dict, z_scale: list
-    ) -> None:
+    def receive_save_html_figure_sig(self, which: str, inputs: dict) -> None:
         match which:
             case 'surface':
-                self.graphs = [Surface(self.model.bs, inputs, z_scale)]
+                self.graphs = [Surface(self.model.bs, inputs)]
                 error_handler = self.view.surface_error_message
             case 'heatmap':
-                self.graphs = [Heatmap(self.model.bs, inputs, z_scale)]
+                self.graphs = [Heatmap(self.model.bs, inputs)]
                 error_handler = self.view.heatmap_error_message
             case 'xy_cross_section':
-                self.graphs = [XYCrossSections(self.model.bs, inputs, z_scale)]
+                self.graphs = [XYCrossSections(self.model.bs, inputs)]
                 error_handler = self.view.cross_sections_error_message
             case 'i_prime':
                 self.graphs = [IPrime(self.model.bs, inputs)]
                 error_handler = self.view.i_prime_error_message
             case 'all':
                 self.graphs = [
-                    Heatmap(self.model.bs, inputs, z_scale),
+                    Heatmap(self.model.bs, inputs),
                     IPrime(self.model.bs, inputs),
-                    Surface(self.model.bs, inputs, z_scale),
-                    XYCrossSections(self.model.bs, inputs, z_scale),
+                    Surface(self.model.bs, inputs),
+                    XYCrossSections(self.model.bs, inputs),
                 ]
                 error_handler = self.view.save_html_error_message
             case _:
@@ -213,9 +213,7 @@ class Controller(QObject):
     # --- Save as PNG ---
 
     @Slot()
-    def receive_save_png_figure_sig(
-        self, which: str, inputs: dict, z_scale: list
-    ) -> None:
+    def receive_save_png_figure_sig(self, which: str, inputs: dict) -> None:
         match which:
             case 'surface':
                 ...
@@ -227,10 +225,10 @@ class Controller(QObject):
                 ...
             case 'all':
                 self.graphs = [
-                    Heatmap(self.model.bs, inputs, z_scale),
+                    Heatmap(self.model.bs, inputs),
                     IPrime(self.model.bs, inputs),
-                    Surface(self.model.bs, inputs, z_scale),
-                    XYCrossSections(self.model.bs, inputs, z_scale),
+                    Surface(self.model.bs, inputs),
+                    XYCrossSections(self.model.bs, inputs),
                 ]
             case _:
                 ...

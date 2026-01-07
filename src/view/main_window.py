@@ -1,7 +1,6 @@
 import sys
 import webbrowser
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt, Signal, Slot
 from PySide6.QtGui import QAction, QIcon, QMouseEvent, QRegularExpressionValidator
@@ -29,15 +28,15 @@ from src.view.override_centroid_window import OverrideCentroidWindow
 
 class MainWindow(QMainWindow):
     load_scan_data_sig = Signal(str)
-    plot_3d_surface_sig = Signal(dict, list)
-    plot_heatmap_sig = Signal(dict, list)
-    plot_xy_cross_sections_sig = Signal(dict, list)
+    plot_3d_surface_sig = Signal(dict)
+    plot_heatmap_sig = Signal(dict)
+    plot_xy_cross_sections_sig = Signal(dict)
     plot_i_prime_sig = Signal(dict)
     export_to_csv_sig = Signal(str, dict)
     override_centroid_sig = Signal(tuple)
     disable_interp_sig = Signal(bool)
-    save_html_figure_sig = Signal(str, dict, list)
-    save_png_figure_sig = Signal(str, dict, list)
+    save_html_figure_sig = Signal(str, dict)
+    save_png_figure_sig = Signal(str, dict)
     open_quick_start_guide_sig = Signal()
     folder_path_sig = Signal(str)
     filename_sig = Signal(str)
@@ -75,7 +74,13 @@ class MainWindow(QMainWindow):
 
     # --- Create the event handlers ---
 
-    def _get_inputs(self) -> tuple[dict, Optional[float], Optional[float]]:
+    def _get_inputs(self) -> dict:
+        lower_bound = None
+        upper_bound = None
+        if self.lower_bound_input.text().strip():
+            lower_bound = float(self.lower_bound_input.text().strip())
+        if self.upper_bound_input.text().strip():
+            upper_bound = float(self.upper_bound_input.text().strip())
         inputs = {
             'serial_number': self.serial_number_input.text().strip(),
             'test_stand': self.test_stand_input.text().strip(),
@@ -83,18 +88,14 @@ class MainWindow(QMainWindow):
             'ext_voltage': self.ext_voltage_input.text().strip(),
             'power': self.power_input.text().strip(),
             'solenoid_current': self.solenoid_current_input.text().strip(),
+            'z_scale_low': lower_bound,
+            'z_scale_high': upper_bound,
             'fcup_diam': float(self.fcup_diameter_input.text().strip()),
             'fcup_dist': float(self.fcup_distance_input.text().strip()),
             'centroid_x': self.centroid_coords[0],
             'centroid_y': self.centroid_coords[1],
         }
-        lower_bound = None
-        upper_bound = None
-        if self.lower_bound_input.text().strip():
-            lower_bound = float(self.lower_bound_input.text().strip())
-        if self.upper_bound_input.text().strip():
-            upper_bound = float(self.upper_bound_input.text().strip())
-        return inputs, lower_bound, upper_bound
+        return inputs
 
     def select_csv_handler(self) -> None:
         filepath = h.select_file()
@@ -103,17 +104,14 @@ class MainWindow(QMainWindow):
         self.load_scan_data_sig.emit(filepath)
 
     def plot_beam_scan_handler(self) -> None:
-        inputs, lower_bound, upper_bound = self._get_inputs()
+        inputs = self._get_inputs()
 
         if self.surface_cb.isChecked():
-            z_scale = [lower_bound, upper_bound]
-            self.plot_3d_surface_sig.emit(inputs, z_scale)
+            self.plot_3d_surface_sig.emit(inputs)
         if self.heatmap_cb.isChecked():
-            z_scale = [lower_bound, upper_bound]
-            self.plot_heatmap_sig.emit(inputs, z_scale)
+            self.plot_heatmap_sig.emit(inputs)
         if self.xy_profile_cb.isChecked():
-            z_scale = [lower_bound, upper_bound]
-            self.plot_xy_cross_sections_sig.emit(inputs, z_scale)
+            self.plot_xy_cross_sections_sig.emit(inputs)
         if self.i_prime_cb.isChecked():
             self.plot_i_prime_sig.emit(inputs)
 
@@ -155,43 +153,45 @@ class MainWindow(QMainWindow):
         self.disable_interp_sig.emit(checked)
 
     def save_3d_surface_html(self) -> None:
-        filename = h.get_html_save_filename()
-        if not filename:
+        filepath = h.get_html_save_filename()
+        if not filepath:
             return
-        self.filename_sig.emit(filename)
-        inputs, lower_bound, upper_bound = self._get_inputs()
-        z_scale = [lower_bound, upper_bound]
+        self.filename_sig.emit(filepath)
+        self.file_type_sig.emit('html')
+        inputs = self._get_inputs()
         which = 'surface'
-        self.save_html_figure_sig.emit(which, inputs, z_scale)
+        self.save_html_figure_sig.emit(which, inputs)
 
     def save_heatmap_html(self) -> None:
         filename = h.get_html_save_filename()
         if not filename:
             return
         self.filename_sig.emit(filename)
-        inputs, lower_bound, upper_bound = self._get_inputs()
-        z_scale = [lower_bound, upper_bound]
+        self.file_type_sig.emit('html')
+        inputs = self._get_inputs()
         which = 'heatmap'
-        self.save_html_figure_sig.emit(which, inputs, z_scale)
+        self.save_html_figure_sig.emit(which, inputs)
 
     def save_xy_cross_section_html(self) -> None:
         filename = h.get_html_save_filename()
         if not filename:
             return
         self.filename_sig.emit(filename)
-        inputs, lower_bound, upper_bound = self._get_inputs()
-        z_scale = [lower_bound, upper_bound]
+        self.file_type_sig.emit('html')
+        inputs = self._get_inputs()
         which = 'xy_cross_section'
-        self.save_html_figure_sig.emit(which, inputs, z_scale)
+        self.save_html_figure_sig.emit(which, inputs)
 
     def save_i_prime_html(self) -> None:
         filename = h.get_html_save_filename()
         if not filename:
             return
         self.filename_sig.emit(filename)
-        inputs, _, _ = self._get_inputs()
+
+        self.file_type_sig.emit('html')
+        inputs = self._get_inputs()
         which = 'i_prime'
-        self.save_html_figure_sig.emit(which, inputs, [])
+        self.save_html_figure_sig.emit(which, inputs)
 
     def save_all_html(self) -> None:
         folder_path = h.select_folder()
@@ -199,10 +199,9 @@ class MainWindow(QMainWindow):
             return
         self.folder_path_sig.emit(folder_path)
         self.file_type_sig.emit('html')
-        inputs, lower_bound, upper_bound = self._get_inputs()
-        z_scale = [lower_bound, upper_bound]
+        inputs = self._get_inputs()
         which = 'all'
-        self.save_html_figure_sig.emit(which, inputs, z_scale)
+        self.save_html_figure_sig.emit(which, inputs)
 
     def save_all_png(self) -> None:
         folder_path = h.select_folder()
@@ -210,10 +209,9 @@ class MainWindow(QMainWindow):
             return
         self.folder_path_sig.emit(folder_path)
         self.file_type_sig.emit('png')
-        inputs, lower_bound, upper_bound = self._get_inputs()
-        z_scale = [lower_bound, upper_bound]
+        inputs = self._get_inputs()
         which = 'all'
-        self.save_png_figure_sig.emit(which, inputs, z_scale)
+        self.save_png_figure_sig.emit(which, inputs)
 
     def open_quick_start_guide_handler(self) -> None:
         root_dir = h.get_root_dir()

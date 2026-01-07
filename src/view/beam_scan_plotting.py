@@ -51,11 +51,10 @@ class Plotter:
         self,
         beam_scan: BeamScan,
         inputs: dict,
-        z_scale: list[int | float | None] = [None, None],
     ) -> None:
         self.bs = beam_scan
         self.inputs = inputs
-        self.z_scale = z_scale
+        self.z_scale = [self.inputs['z_scale_low'], self.inputs['z_scale_high']]
         self.angular_intensity = self.bs.angular_intensity(
             inputs['fcup_diam'], inputs['fcup_dist']
         )
@@ -99,9 +98,8 @@ class Surface(Plotter):
         self,
         beam_scan: BeamScan,
         inputs: dict,
-        z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(beam_scan, inputs, z_scale)
+        super().__init__(beam_scan, inputs)
 
     def plot(self, show=True) -> None | Figure:
         fig = surface_figures.surface(
@@ -122,9 +120,8 @@ class Heatmap(Plotter):
         self,
         beam_scan: BeamScan,
         inputs: dict,
-        z_scale: list[float | None] = [None, None],
     ) -> None:
-        super().__init__(beam_scan, inputs, z_scale)
+        super().__init__(beam_scan, inputs)
 
     def plot(self, show=True) -> None | Figure:
         heatmap = heatmaps.heatmap(
@@ -256,9 +253,8 @@ class XYCrossSections(Plotter):
         self,
         beam_scan: BeamScan,
         inputs: dict,
-        z_scale: list[int | float | None] = [None, None],
     ) -> None:
-        super().__init__(beam_scan, inputs, z_scale)
+        super().__init__(beam_scan, inputs)
 
     def plot(self, show=True) -> Figure | None:
         scaling_factor = 1e3  # scale to microamps
@@ -410,9 +406,9 @@ if __name__ == '__main__':
     filepath: str = h.select_file()
     bs.load_scan_data(filepath)
     if bs.polarity == 'NEG':
-        z_scale: list[int | float | None] = [None, None]
+        z_scale: list[float | None] = [None, None]
     else:
-        z_scale: list[int | float | None] = [None, None]
+        z_scale: list[float | None] = [None, None]
     inputs: dict = {
         'serial_number': '111',
         'test_stand': '4',
@@ -422,12 +418,16 @@ if __name__ == '__main__':
         'ext_voltage': '-9',
         'power': '800',
         'solenoid_current': '1.2',
+        'z_scale_low': z_scale[0],
+        'z_scale_high': z_scale[1],
+        'centroid_y': bs.weighted_centroid[1],
+        'centroid_x': bs.weighted_centroid[0],
     }
-    surface = Surface(bs, inputs, z_scale)
+    surface = Surface(bs, inputs)
     surface.plot()
-    heatmap = Heatmap(bs, inputs, z_scale)
+    heatmap = Heatmap(bs, inputs)
     heatmap.plot()
-    xy_cross_sections = XYCrossSections(bs, inputs, z_scale)
+    xy_cross_sections = XYCrossSections(bs, inputs)
     xy_cross_sections.plot()
     i_prime = IPrime(bs, inputs)
     i_prime.plot()
