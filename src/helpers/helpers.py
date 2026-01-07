@@ -64,11 +64,7 @@ def get_save_filename(default_filename: str | None = None) -> str:
 def save_all_as_html(
     folder_path: str,
     titles_and_figs: dict[str, Figure | None],
-    default_dir: str | None = None,
 ) -> None:
-    if default_dir is None:
-        default_dir = ''
-
     folder = Path(folder_path)
 
     for title, fig in titles_and_figs.items():
