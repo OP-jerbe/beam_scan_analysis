@@ -2,6 +2,7 @@ import sys
 import webbrowser
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt, Signal, Slot
 from PySide6.QtGui import QAction, QIcon, QMouseEvent, QRegularExpressionValidator
@@ -42,13 +43,14 @@ class MainWindow(QMainWindow):
     folder_path_sig = Signal(str)
     filename_sig = Signal(str)
     file_type_sig = Signal(str)
+    titles_sig = Signal(list)
 
     def __init__(self, model: Model) -> None:
         super().__init__()
         self.model = model
         self.installEventFilter(self)
         self.create_gui()
-        self.centroid_coords: list[float] = [float('nan'), float('nan')]
+        self.centroid_coords: list[float] = []
 
         # Connect events to handlers.
         self.select_csv_button.clicked.connect(self.select_csv_handler)
@@ -99,8 +101,8 @@ class MainWindow(QMainWindow):
         return inputs
 
     def select_csv_handler(self) -> None:
-        default_dir = r'C:\\Teststand Data'
-        filepath = h.select_file(default_dir)
+        dir = str(self.default_dir)
+        filepath = h.select_file(dir)
         if not filepath:
             return
         self.load_scan_data_sig.emit(filepath)
@@ -118,9 +120,9 @@ class MainWindow(QMainWindow):
             self.plot_i_prime_sig.emit(inputs)
 
     def export_to_csv_handler(self) -> None:
-        default_dir = Path(r'C:\\Teststand Data')
+        dir: Path = self.default_dir
         filename_info = Path(self._get_filename_info() + '.csv')
-        default_name = str(default_dir / filename_info)
+        default_name = str(dir / filename_info)
         filename = h.get_csv_save_filename(default_name)
         if not filename:
             return
@@ -156,21 +158,29 @@ class MainWindow(QMainWindow):
         checked: bool = self.disable_interp_option.isChecked()
         self.disable_interp_sig.emit(checked)
 
+    @property
+    def default_dir(self) -> Path:
+        dir = Path(r'C:\\Teststand Data')
+        return dir
+
     def _get_filename_info(self) -> str:
         scan_datetime: str = self.model.bs.scan_datetime
         date_obj = datetime.strptime(scan_datetime, '%m/%d/%Y %I:%M %p')
         scan_datetime = date_obj.strftime('%Y-%m-%d %H_%M')
-        serial_number = self.serial_number_input.text().strip()
-        beam_voltage = self.beam_voltage_input.text().strip()
-        ext_voltage = self.ext_voltage_input.text().strip()
-        solenoid_current = self.solenoid_current_input.text().strip()
-        power = self.power_input.text().strip()
-        test_stand = self.test_stand_input.text().strip()
-        return f'{scan_datetime} SN-{serial_number} on TS{test_stand} @ {power} W, {beam_voltage},{ext_voltage} kV, {solenoid_current} A'
+        serial_number: str = self.serial_number_input.text().strip()
+        beam_voltage: str = self.beam_voltage_input.text().strip()
+        ext_voltage: str = self.ext_voltage_input.text().strip()
+        solenoid_current: str = self.solenoid_current_input.text().strip()
+        power: str = self.power_input.text().strip()
+        test_stand: str = self.test_stand_input.text().strip()
+        filename = f'{scan_datetime} SN-{serial_number} on TS{test_stand} @ {power} W, {beam_voltage},{ext_voltage} kV, {solenoid_current} A'
+        return filename
 
     def save_3d_surface_html(self) -> None:
-        default_dir = r'C:\\Teststand Data'
-        filepath = h.get_html_save_filename(default_dir)
+        dir: Path = self.default_dir
+        filename = Path(self._get_filename_info() + ' 3D_surface.html')
+        default_name = str(dir / filename)
+        filepath: str = h.get_html_save_filename(default_name)
         if not filepath:
             return
         self.filename_sig.emit(filepath)
@@ -180,56 +190,78 @@ class MainWindow(QMainWindow):
         self.save_html_figure_sig.emit(which, inputs)
 
     def save_heatmap_html(self) -> None:
-        default_dir = r'C:\\Teststand Data'
-        filename = h.get_html_save_filename(default_dir)
-        if not filename:
+        dir: Path = self.default_dir
+        filename = Path(self._get_filename_info() + ' heatmap.html')
+        default_name = str(dir / filename)
+        filepath: str = h.get_html_save_filename(default_name)
+        if not filepath:
             return
-        self.filename_sig.emit(filename)
+        self.filename_sig.emit(filepath)
         self.file_type_sig.emit('html')
         inputs = self._get_inputs()
         which = 'heatmap'
         self.save_html_figure_sig.emit(which, inputs)
 
     def save_xy_cross_section_html(self) -> None:
-        default_dir = r'C:\\Teststand Data'
-        filename = h.get_html_save_filename(default_dir)
-        if not filename:
+        dir: Path = self.default_dir
+        filename = Path(self._get_filename_info() + ' xy_cross_sections.html')
+        default_name = str(dir / filename)
+        filepath: str = h.get_html_save_filename(default_name)
+        if not filepath:
             return
-        self.filename_sig.emit(filename)
+        self.filename_sig.emit(filepath)
         self.file_type_sig.emit('html')
         inputs = self._get_inputs()
         which = 'xy_cross_section'
         self.save_html_figure_sig.emit(which, inputs)
 
     def save_i_prime_html(self) -> None:
-        default_dir = r'C:\\Teststand Data'
-        filename = h.get_html_save_filename(default_dir)
-        if not filename:
+        dir: Path = self.default_dir
+        filename = Path(self._get_filename_info() + ' ang_int_vs_div_ang.html')
+        default_name = str(dir / filename)
+        filepath: str = h.get_html_save_filename(default_name)
+        if not filepath:
             return
-        self.filename_sig.emit(filename)
+        self.filename_sig.emit(filepath)
         self.file_type_sig.emit('html')
         inputs = self._get_inputs()
         which = 'i_prime'
         self.save_html_figure_sig.emit(which, inputs)
 
+    def _make_titles(self, filetype: Literal['html', 'png']) -> list[str]:
+        prefix: str = self._get_filename_info()
+        titles: list[str] = [
+            prefix + ' heatmap.' + filetype,
+            prefix + ' ang_int_vs_div_ang.' + filetype,
+            prefix + ' suface.' + filetype,
+            prefix + ' xy_cross_section.' + filetype,
+        ]
+        return titles
+
     def save_all_html(self) -> None:
-        default_dir = r'C:\\Teststand Data'
-        folder_path = h.select_folder(default_dir)
+        dir = str(self.default_dir)
+        folder_path: str = h.select_folder(dir)
         if not folder_path:
             return
         self.folder_path_sig.emit(folder_path)
-        self.file_type_sig.emit('html')
+        filetype = 'html'
+        titles: list[str] = self._make_titles(filetype)
+        self.file_type_sig.emit(filetype)
+        self.titles_sig.emit(titles)
         inputs = self._get_inputs()
         which = 'all'
         self.save_html_figure_sig.emit(which, inputs)
 
     def save_all_png(self) -> None:
-        default_dir = r'C:\\Teststand Data'
-        folder_path = h.select_folder(default_dir)
+        dir = str(self.default_dir)
+        folder_path: str = h.select_folder(dir)
         if not folder_path:
             return
         self.folder_path_sig.emit(folder_path)
-        self.file_type_sig.emit('png')
+        filetype = 'png'
+        titles: list[str] = self._make_titles(filetype)
+        self.file_type_sig.emit(filetype)
+        self.titles_sig.emit(titles)
         inputs = self._get_inputs()
         which = 'all'
         self.save_png_figure_sig.emit(which, inputs)

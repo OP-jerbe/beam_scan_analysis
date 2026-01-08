@@ -24,6 +24,7 @@ class Controller(QObject):
         self.folder_path: str = ''
         self.filepath: str = ''
         self.save_file_type: str = ''
+        self.titles: list[str] = []
 
         # --- Internal Controller Signal Connections ---
 
@@ -48,6 +49,7 @@ class Controller(QObject):
         self.view.folder_path_sig.connect(self.receive_folder_path_sig)
         self.view.filename_sig.connect(self.receive_filepath_sig)
         self.view.file_type_sig.connect(self.receive_file_type_sig)
+        self.view.titles_sig.connect(self.receive_titles_sig)
 
     # --- Load Scan Data ---
 
@@ -134,19 +136,23 @@ class Controller(QObject):
         self.save_file_type = file_type
 
     @Slot()
+    def receive_titles_sig(self, titles: list[str]) -> None:
+        self.titles = titles
+
+    @Slot()
     def receive_worker_rtn_sig(self, obj) -> None:
         """Runs when the `_run_figure_rtn_worker` method finishes successfully."""
         match self.save_file_type:
             case 'html':
                 if len(self.graphs) == 1:
-                    self.save_single_html_file_sig.emit(obj)
+                    self.save_single_html_file_sig.emit(obj)  # list of one figure
                 else:
-                    self.save_all_html_files_sig.emit(obj)
+                    self.save_all_html_files_sig.emit(obj)  # list of all figures
             case 'png':
                 if len(self.graphs) == 1:
-                    self.save_single_png_file_sig.emit(obj)
+                    self.save_single_png_file_sig.emit(obj)  # list of one figure
                 else:
-                    self.save_all_png_files_sig.emit(obj)
+                    self.save_all_png_files_sig.emit(obj)  # list of all figures
             case _:
                 raise ValueError('Must give filetype: "html" or "png"')
 
@@ -160,14 +166,11 @@ class Controller(QObject):
 
     @Slot()
     def receive_save_all_html_files_sig(self, figs) -> None:
-        titles: list[str] = [
-            'heatmap.html',
-            'ang_int_vs_div.html',
-            'surface.html',
-            'xy_cross_section.html',
-        ]
         worker = Worker(
-            h.save_all_as_html, folder_path=self.folder_path, titles=titles, figs=figs
+            h.save_all_as_html,
+            folder_path=self.folder_path,
+            titles=self.titles,
+            figs=figs,
         )
         worker.signals.error.connect(self.view.save_html_error_message)
         self.thread_pool.start(worker)
@@ -248,14 +251,11 @@ class Controller(QObject):
 
     @Slot()
     def receive_save_all_png_files_sig(self, figs) -> None:
-        titles: list[str] = [
-            'heatmap.png',
-            'ang_int_vs_div.png',
-            'surface.png',
-            'xy_cross_section.png',
-        ]
         worker = Worker(
-            h.save_all_as_png, folder_path=self.folder_path, titles=titles, figs=figs
+            h.save_all_as_png,
+            folder_path=self.folder_path,
+            titles=self.titles,
+            figs=figs,
         )
         worker.signals.error.connect(self.view.save_html_error_message)
         self.thread_pool.start(worker)
