@@ -8,13 +8,14 @@ version = "2.1.1"
 description = "A GUI for analyzing beam scans"
 authors = [{ name = "Joshua Erbe", email = "j.erbe@oregon-physics.com" }]
 dependencies = [
-    "PySide6",
-    "qt-material",
-    "pandas",
-    "numpy",
-    "scipy",
-    "scikit-image",
-    "kaleido",
+    "pyside6 ~= 6.9.0",
+    "qt-material == 2.14",
+    "pandas ~= 2.2.3",
+    "numpy ~= 2.2.5",
+    "scipy ~= 1.15.2",
+    "scikit-image ~= 0.25.2",
+    "kaleido ~= 0.1.0",
+    "plotly ~= 6.0.1",
 ]
 
 [tool.setuptools.packages.find]
