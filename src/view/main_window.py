@@ -98,7 +98,8 @@ class MainWindow(QMainWindow):
         return inputs
 
     def select_csv_handler(self) -> None:
-        filepath = h.select_file()
+        default_dir = r'C:\\Teststand Data'
+        filepath = h.select_file(default_dir)
         if not filepath:
             return
         self.load_scan_data_sig.emit(filepath)
@@ -153,7 +154,8 @@ class MainWindow(QMainWindow):
         self.disable_interp_sig.emit(checked)
 
     def save_3d_surface_html(self) -> None:
-        filepath = h.get_html_save_filename()
+        default_dir = r'C:\\Teststand Data'
+        filepath = h.get_html_save_filename(default_dir)
         if not filepath:
             return
         self.filename_sig.emit(filepath)
@@ -163,7 +165,8 @@ class MainWindow(QMainWindow):
         self.save_html_figure_sig.emit(which, inputs)
 
     def save_heatmap_html(self) -> None:
-        filename = h.get_html_save_filename()
+        default_dir = r'C:\\Teststand Data'
+        filename = h.get_html_save_filename(default_dir)
         if not filename:
             return
         self.filename_sig.emit(filename)
@@ -173,7 +176,8 @@ class MainWindow(QMainWindow):
         self.save_html_figure_sig.emit(which, inputs)
 
     def save_xy_cross_section_html(self) -> None:
-        filename = h.get_html_save_filename()
+        default_dir = r'C:\\Teststand Data'
+        filename = h.get_html_save_filename(default_dir)
         if not filename:
             return
         self.filename_sig.emit(filename)
@@ -183,18 +187,19 @@ class MainWindow(QMainWindow):
         self.save_html_figure_sig.emit(which, inputs)
 
     def save_i_prime_html(self) -> None:
-        filename = h.get_html_save_filename()
+        default_dir = r'C:\\Teststand Data'
+        filename = h.get_html_save_filename(default_dir)
         if not filename:
             return
         self.filename_sig.emit(filename)
-
         self.file_type_sig.emit('html')
         inputs = self._get_inputs()
         which = 'i_prime'
         self.save_html_figure_sig.emit(which, inputs)
 
     def save_all_html(self) -> None:
-        folder_path = h.select_folder()
+        default_dir = r'C:\\Teststand Data'
+        folder_path = h.select_folder(default_dir)
         if not folder_path:
             return
         self.folder_path_sig.emit(folder_path)
@@ -204,7 +209,8 @@ class MainWindow(QMainWindow):
         self.save_html_figure_sig.emit(which, inputs)
 
     def save_all_png(self) -> None:
-        folder_path = h.select_folder()
+        default_dir = r'C:\\Teststand Data'
+        folder_path = h.select_folder(default_dir)
         if not folder_path:
             return
         self.folder_path_sig.emit(folder_path)
