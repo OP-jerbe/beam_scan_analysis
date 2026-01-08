@@ -22,6 +22,7 @@ class Worker(QRunnable):
     @Slot()
     def run(self) -> None:
         complete = False
+        obj = None
         try:
             obj = self.fn(*self.args, **self.kwargs)
             complete = True
@@ -31,4 +32,4 @@ class Worker(QRunnable):
         finally:
             self.signals.finished.emit(complete)
             if self.rtn and complete:
-                self.signals.rtn.emit(obj)  # type: ignore
+                self.signals.rtn.emit(obj)
