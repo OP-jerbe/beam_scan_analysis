@@ -59,12 +59,14 @@ class MainWindow(QMainWindow):
         self.override_centroid_option.triggered.connect(self.override_centroid_handler)
         self.disable_interp_option.triggered.connect(self.disable_interp_handler)
         self.exit_option.triggered.connect(QApplication.quit)
-        self.save_3D_surface_option.triggered.connect(self.save_3d_surface_html)
-        self.save_heatmap_option.triggered.connect(self.save_heatmap_html)
-        self.save_xy_profiles_option.triggered.connect(self.save_xy_cross_section_html)
-        self.save_i_prime_option.triggered.connect(self.save_i_prime_html)
-        self.save_all_html_option.triggered.connect(self.save_all_html)
-        self.save_all_png_option.triggered.connect(self.save_all_png)
+        self.save_3D_surface_option.triggered.connect(self.save_3d_surface_html_handler)
+        self.save_heatmap_option.triggered.connect(self.save_heatmap_html_handler)
+        self.save_xy_profiles_option.triggered.connect(
+            self.save_xy_cross_section_html_handler
+        )
+        self.save_i_prime_option.triggered.connect(self.save_i_prime_html_handler)
+        self.save_all_html_option.triggered.connect(self.save_all_html_handler)
+        self.save_all_png_option.triggered.connect(self.save_all_png_handler)
         self.open_quick_start_guide.triggered.connect(
             self.open_quick_start_guide_handler
         )
@@ -75,7 +77,35 @@ class MainWindow(QMainWindow):
         self.model.centroid_coords_sig.connect(self.receive_centroid_coords_sig)
         self.model.create_grid_failed_sig.connect(self.create_grid_failed_error_message)
 
-    # --- Create the event handlers ---
+    # --- Internal Helpers ---
+
+    @property
+    def _default_dir(self) -> Path:
+        dir = Path(r'C:\\Teststand Data')
+        return dir
+
+    def _get_filename_info(self) -> str:
+        scan_datetime: str = self.model.bs.scan_datetime
+        date_obj = datetime.strptime(scan_datetime, '%m/%d/%Y %I:%M %p')
+        scan_datetime = date_obj.strftime('%Y-%m-%d %H_%M')
+        serial_number: str = self.serial_number_input.text().strip()
+        beam_voltage: str = self.beam_voltage_input.text().strip()
+        ext_voltage: str = self.ext_voltage_input.text().strip()
+        solenoid_current: str = self.solenoid_current_input.text().strip()
+        power: str = self.power_input.text().strip()
+        test_stand: str = self.test_stand_input.text().strip()
+        filename = f'{scan_datetime} SN-{serial_number} on TS{test_stand} @ {power} W, {beam_voltage},{ext_voltage} kV, {solenoid_current} A'
+        return filename
+
+    def _make_titles(self, filetype: Literal['html', 'png']) -> list[str]:
+        prefix: str = self._get_filename_info()
+        titles: list[str] = [
+            prefix + ' heatmap.' + filetype,
+            prefix + ' ang_int_vs_div_ang.' + filetype,
+            prefix + ' suface.' + filetype,
+            prefix + ' xy_cross_section.' + filetype,
+        ]
+        return titles
 
     def _get_inputs(self) -> dict:
         lower_bound = None
@@ -100,8 +130,10 @@ class MainWindow(QMainWindow):
         }
         return inputs
 
+    # --- Event handlers ---
+
     def select_csv_handler(self) -> None:
-        dir = str(self.default_dir)
+        dir = str(self._default_dir)
         filepath = h.select_file(dir)
         if not filepath:
             return
@@ -120,7 +152,7 @@ class MainWindow(QMainWindow):
             self.plot_i_prime_sig.emit(inputs)
 
     def export_to_csv_handler(self) -> None:
-        dir: Path = self.default_dir
+        dir: Path = self._default_dir
         filename_info = Path(self._get_filename_info() + '.csv')
         default_name = str(dir / filename_info)
         filename = h.get_csv_save_filename(default_name)
@@ -158,26 +190,8 @@ class MainWindow(QMainWindow):
         checked: bool = self.disable_interp_option.isChecked()
         self.disable_interp_sig.emit(checked)
 
-    @property
-    def default_dir(self) -> Path:
-        dir = Path(r'C:\\Teststand Data')
-        return dir
-
-    def _get_filename_info(self) -> str:
-        scan_datetime: str = self.model.bs.scan_datetime
-        date_obj = datetime.strptime(scan_datetime, '%m/%d/%Y %I:%M %p')
-        scan_datetime = date_obj.strftime('%Y-%m-%d %H_%M')
-        serial_number: str = self.serial_number_input.text().strip()
-        beam_voltage: str = self.beam_voltage_input.text().strip()
-        ext_voltage: str = self.ext_voltage_input.text().strip()
-        solenoid_current: str = self.solenoid_current_input.text().strip()
-        power: str = self.power_input.text().strip()
-        test_stand: str = self.test_stand_input.text().strip()
-        filename = f'{scan_datetime} SN-{serial_number} on TS{test_stand} @ {power} W, {beam_voltage},{ext_voltage} kV, {solenoid_current} A'
-        return filename
-
-    def save_3d_surface_html(self) -> None:
-        dir: Path = self.default_dir
+    def save_3d_surface_html_handler(self) -> None:
+        dir: Path = self._default_dir
         filename = Path(self._get_filename_info() + ' 3D_surface.html')
         default_name = str(dir / filename)
         filepath: str = h.get_html_save_filename(default_name)
@@ -189,8 +203,8 @@ class MainWindow(QMainWindow):
         which = 'surface'
         self.save_html_figure_sig.emit(which, inputs)
 
-    def save_heatmap_html(self) -> None:
-        dir: Path = self.default_dir
+    def save_heatmap_html_handler(self) -> None:
+        dir: Path = self._default_dir
         filename = Path(self._get_filename_info() + ' heatmap.html')
         default_name = str(dir / filename)
         filepath: str = h.get_html_save_filename(default_name)
@@ -202,8 +216,8 @@ class MainWindow(QMainWindow):
         which = 'heatmap'
         self.save_html_figure_sig.emit(which, inputs)
 
-    def save_xy_cross_section_html(self) -> None:
-        dir: Path = self.default_dir
+    def save_xy_cross_section_html_handler(self) -> None:
+        dir: Path = self._default_dir
         filename = Path(self._get_filename_info() + ' xy_cross_sections.html')
         default_name = str(dir / filename)
         filepath: str = h.get_html_save_filename(default_name)
@@ -215,8 +229,8 @@ class MainWindow(QMainWindow):
         which = 'xy_cross_section'
         self.save_html_figure_sig.emit(which, inputs)
 
-    def save_i_prime_html(self) -> None:
-        dir: Path = self.default_dir
+    def save_i_prime_html_handler(self) -> None:
+        dir: Path = self._default_dir
         filename = Path(self._get_filename_info() + ' ang_int_vs_div_ang.html')
         default_name = str(dir / filename)
         filepath: str = h.get_html_save_filename(default_name)
@@ -228,18 +242,8 @@ class MainWindow(QMainWindow):
         which = 'i_prime'
         self.save_html_figure_sig.emit(which, inputs)
 
-    def _make_titles(self, filetype: Literal['html', 'png']) -> list[str]:
-        prefix: str = self._get_filename_info()
-        titles: list[str] = [
-            prefix + ' heatmap.' + filetype,
-            prefix + ' ang_int_vs_div_ang.' + filetype,
-            prefix + ' suface.' + filetype,
-            prefix + ' xy_cross_section.' + filetype,
-        ]
-        return titles
-
-    def save_all_html(self) -> None:
-        dir = str(self.default_dir)
+    def save_all_html_handler(self) -> None:
+        dir = str(self._default_dir)
         folder_path: str = h.select_folder(dir)
         if not folder_path:
             return
@@ -252,8 +256,8 @@ class MainWindow(QMainWindow):
         which = 'all'
         self.save_html_figure_sig.emit(which, inputs)
 
-    def save_all_png(self) -> None:
-        dir = str(self.default_dir)
+    def save_all_png_handler(self) -> None:
+        dir = str(self._default_dir)
         folder_path: str = h.select_folder(dir)
         if not folder_path:
             return
@@ -273,6 +277,8 @@ class MainWindow(QMainWindow):
             self.quick_start_guide_error_message(self)
             return
         webbrowser.open_new_tab(filepath.resolve().as_uri())
+
+    # --- General GUI methods ---
 
     def create_gui(self) -> None:
         input_box_height = 28
