@@ -1,5 +1,6 @@
 import sys
 import webbrowser
+from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QObject, QRegularExpression, Qt, Signal, Slot
@@ -117,8 +118,10 @@ class MainWindow(QMainWindow):
             self.plot_i_prime_sig.emit(inputs)
 
     def export_to_csv_handler(self) -> None:
-        # default_filename = f'{scan_date} SN-{serial_number} @ {beam_voltage}_{ext_voltage} kV & {solenoid_current} A on TS{test_stand}.csv'
-        filename = h.get_csv_save_filename()
+        default_dir = Path(r'C:\\Teststand Data')
+        filename_info = Path(self._get_filename_info() + '.csv')
+        default_name = str(default_dir / filename_info)
+        filename = h.get_csv_save_filename(default_name)
         if not filename:
             return
         inputs = {
@@ -152,6 +155,18 @@ class MainWindow(QMainWindow):
     def disable_interp_handler(self) -> None:
         checked: bool = self.disable_interp_option.isChecked()
         self.disable_interp_sig.emit(checked)
+
+    def _get_filename_info(self) -> str:
+        scan_datetime: str = self.model.bs.scan_datetime
+        date_obj = datetime.strptime(scan_datetime, '%m/%d/%Y %I:%M %p')
+        scan_datetime = date_obj.strftime('%Y-%m-%d %H_%M')
+        serial_number = self.serial_number_input.text().strip()
+        beam_voltage = self.beam_voltage_input.text().strip()
+        ext_voltage = self.ext_voltage_input.text().strip()
+        solenoid_current = self.solenoid_current_input.text().strip()
+        power = self.power_input.text().strip()
+        test_stand = self.test_stand_input.text().strip()
+        return f'{scan_datetime} SN-{serial_number} on TS{test_stand} @ {power} W, {beam_voltage},{ext_voltage} kV, {solenoid_current} A'
 
     def save_3d_surface_html(self) -> None:
         default_dir = r'C:\\Teststand Data'
