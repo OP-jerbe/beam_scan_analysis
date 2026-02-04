@@ -688,7 +688,9 @@ class BeamScan:
     def peak_location(self) -> tuple[float, float]:
         """GETTER: Get the (x,y) coordinate of the peak cup current."""
         peak_idx = self._peak_idx
-        return self.x_location[peak_idx], self.y_location[peak_idx]
+        x = self.x_location[peak_idx]
+        y = self.y_location[peak_idx]
+        return round(x, 1), round(y, 1)
 
     @property
     def hm_contour(self) -> tuple[NDArray[float64], NDArray[float64]] | None:
