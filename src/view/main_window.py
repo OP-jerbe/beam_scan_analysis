@@ -91,10 +91,11 @@ class MainWindow(QMainWindow):
         serial_number: str = self.serial_number_input.text().strip()
         beam_voltage: str = self.beam_voltage_input.text().strip()
         ext_voltage: str = self.ext_voltage_input.text().strip()
+        lens_voltage: str = self.lens_voltage_input.text().strip()
         solenoid_current: str = self.solenoid_current_input.text().strip()
         power: str = self.power_input.text().strip()
         test_stand: str = self.test_stand_input.text().strip()
-        filename = f'{scan_datetime} SN-{serial_number} on TS{test_stand} @ {power} W, {beam_voltage},{ext_voltage} kV, {solenoid_current} A'
+        filename = f'{scan_datetime} SN-{serial_number} on TS{test_stand} @ {power} W, {beam_voltage},{ext_voltage},{lens_voltage} kV, {solenoid_current} A'
         return filename
 
     def _make_titles(self, filetype: Literal['html', 'png']) -> list[str]:
