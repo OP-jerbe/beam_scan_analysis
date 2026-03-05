@@ -1,0 +1,5 @@
+Copyright 2026 Oregon Physics LLC
+
+All rights reserved. This software, including all original code and assets,
+is the sole property of Oregon Physics LLC and is protected by copyright law.
+Unauthorized copying or redistribution is strictly prohibited.
