@@ -50,6 +50,7 @@ class Model(QObject):
         pressure = self.bs.pressure
         beam_voltage = self.bs.beam_voltage
         ext_voltage = self.bs.extractor_voltage
+        lens_voltage = self.bs.lens_voltage
         beam_supply_current = self.bs.beam_supply_current
         centroid = self.bs.weighted_centroid
         peak_location = self.bs.peak_location
@@ -74,6 +75,7 @@ class Model(QObject):
             'pressure': str(pressure),
             'beam_voltage': str(beam_voltage),
             'ext_voltage': str(ext_voltage),
+            'lens_voltage': str(lens_voltage),
             'beam_supply_current': str(beam_supply_current),
             'centroid_x': str(centroid[0]),
             'centroid_y': str(centroid[1]),
@@ -122,6 +124,7 @@ class Model(QObject):
         serial_number: str = inputs['serial_number']
         beam_voltage: str = inputs['beam_voltage']
         ext_voltage: str = inputs['ext_voltage']
+        lens_voltage: str = inputs['lens_voltage']
         solenoid_current: str = inputs['solenoid_current']
         power: str = inputs['power']
         test_stand: str = inputs['test_stand']
@@ -140,12 +143,13 @@ class Model(QObject):
         )
 
         with open(filename, 'w') as f:
-            f.write('CSV export version,3\n')
+            f.write('CSV export version,4\n')
             f.write(f'Serial Number,{serial_number}\n')
             f.write(f'Scan Datetime,{scan_datetime}\n')
             f.write(f'Step Size (mm),{step_size}\n')
             f.write(f'Beam Voltage (kV),{beam_voltage}\n')
             f.write(f'Extractor Voltage (kV),{ext_voltage}\n')
+            f.write(f'Lens Voltage (kV),{lens_voltage}\n')
             f.write(f'Solenoid Current (A),{solenoid_current}\n')
             f.write(f'Test Stand,{test_stand}\n')
             f.write(f'Beam Supply Current (uA),{beam_supply_current}\n')

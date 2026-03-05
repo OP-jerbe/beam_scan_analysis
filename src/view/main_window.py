@@ -357,6 +357,9 @@ class MainWindow(QMainWindow):
         self.ext_voltage_input = QLineEdit()
         self.ext_voltage_input.setFixedHeight(input_box_height)
         self.ext_voltage_input.setValidator(validator)
+        self.lens_voltage_input = QLineEdit()
+        self.lens_voltage_input.setFixedHeight(input_box_height)
+        self.lens_voltage_input.setValidator(validator)
         self.solenoid_current_input = QLineEdit()
         self.solenoid_current_input.setFixedHeight(input_box_height)
         self.solenoid_current_input.setValidator(validator)
@@ -410,6 +413,7 @@ class MainWindow(QMainWindow):
         self.stat_pressure = QLabel()
         self.stat_beam_voltage = QLabel()
         self.stat_ext_voltage = QLabel()
+        self.stat_lens_voltage = QLabel()
         self.stat_beam_supply_current = QLabel()
         self.stat_centroid_location = QLabel()
         self.stat_peak_location = QLabel()
@@ -427,6 +431,7 @@ class MainWindow(QMainWindow):
         editables_layout.addRow('Serial Number', self.serial_number_input)
         editables_layout.addRow('Beam Voltage (kV)', self.beam_voltage_input)
         editables_layout.addRow('Extractor Voltage (kV)', self.ext_voltage_input)
+        editables_layout.addRow('Lens Voltage (kV)', self.lens_voltage_input)
         editables_layout.addRow('Solenoid Current (A)', self.solenoid_current_input)
         editables_layout.addRow('RF Power (W)', self.power_input)
         editables_layout.addRow('Test Stand', self.test_stand_input)
@@ -462,6 +467,7 @@ class MainWindow(QMainWindow):
         v_sub2_main_layout.addRow('Pressure (mBar): ', self.stat_pressure)
         v_sub2_main_layout.addRow('Beam Voltage (kV): ', self.stat_beam_voltage)
         v_sub2_main_layout.addRow('Ext Voltage (kV): ', self.stat_ext_voltage)
+        v_sub2_main_layout.addRow('Lens Voltage (kV):', self.stat_lens_voltage)
         v_sub2_main_layout.addRow(
             'Beam Supply Current (µA): ', self.stat_beam_supply_current
         )
@@ -556,6 +562,7 @@ class MainWindow(QMainWindow):
         self.stat_fwhm_area.setText(stats['hm_contour_area'])
         self.stat_fwhm_max_diam.setText(stats['hm_max_diam'])
         self.stat_fwhm_min_diam.setText(stats['hm_min_diam'])
+        self.stat_lens_voltage.setText(stats['lens_voltage'])
         self.stat_peak_cup_current.setText(stats['peak_cup_current'])
         self.stat_peak_location.setText(
             f'({stats["peak_location_x"]}, {stats["peak_location_y"]})'
@@ -575,6 +582,7 @@ class MainWindow(QMainWindow):
         self.serial_number_input.setText(stats['serial_number'])
         self.beam_voltage_input.setText(stats['beam_voltage'])
         self.ext_voltage_input.setText(stats['ext_voltage'])
+        self.lens_voltage_input.setText(stats['lens_voltage'])
         self.solenoid_current_input.setText(stats['solenoid_current'])
         self.power_input.setText(stats['power'])
         self.test_stand_input.setText(stats['test_stand'])

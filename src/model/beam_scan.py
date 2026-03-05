@@ -27,6 +27,8 @@ class BeamScan:
 
         csv_version = self._check_version(filepath)
         match csv_version:
+            case 4:
+                self._metadata, self._data = self._load_v4_csv(filepath)
             case 3:
                 self._metadata, self._data = self._load_v3_csv(filepath)
             case 2:
@@ -97,6 +99,8 @@ class BeamScan:
             df: pd.DataFrame = pd.read_csv(filepath, header=None, usecols=[1], nrows=1)
             csv_version: str = str(df.iloc[0, 0])
         match csv_version:
+            case '4':
+                return 4
             case '3':
                 return 3
             case '2':
@@ -108,8 +112,65 @@ class BeamScan:
             case _:
                 raise pd.errors.ParserError('Could not determine csv version.')
 
+    def _load_v4_csv(self, filepath: str) -> tuple[dict, DataFrame]:
+        """
+        Load in metadata from beam scan.
+        v4 adds lens voltage data.
+        """
+
+        df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=13, usecols=[1])
+
+        csv_version: str = str(df.iloc[0, 0])
+        serial_number = str(df.iloc[1, 0])
+        scan_datetime = str(df.iloc[2, 0])
+        step_size = float(pd.to_numeric(df.iloc[3, 0]))
+        beam_voltage = float(str(df.iloc[4, 0]))
+        extractor_voltage = float(str(df.iloc[5, 0]))
+        lens_voltage = float(str(df.iloc[6, 0]))
+        solenoid_current = float(str(df.iloc[7, 0]))
+        test_stand = str(df.iloc[8, 0]).replace('nan', '')
+        beam_supply_current = float(pd.to_numeric(df.iloc[9, 0]))
+        pressure = float(pd.to_numeric(df.iloc[10, 0]))
+        fcup_distance = float(str(df.iloc[11, 0]))
+        fcup_diameter = float(str(df.iloc[12, 0]))
+        power = float(str(df.iloc[13, 0]))
+
+        if beam_voltage.is_integer():
+            beam_voltage = int(beam_voltage)
+        if extractor_voltage.is_integer():
+            extractor_voltage = int(extractor_voltage)
+        if lens_voltage.is_integer():
+            lens_voltage = int(lens_voltage)
+        if power.is_integer():
+            power = int(power)
+
+        # Get the scan data (y, x, cup current, screen current)
+        data: pd.DataFrame = pd.read_csv(filepath, skiprows=13)
+
+        metadata: dict = {
+            'csv_version': csv_version,
+            'serial_number': serial_number,
+            'scan_datetime': scan_datetime,
+            'step_size': step_size,
+            'beam_voltage': beam_voltage,
+            'extractor_voltage': extractor_voltage,
+            'lens_voltage': lens_voltage,
+            'solenoid_current': solenoid_current,
+            'test_stand': test_stand,
+            'beam_supply_current': beam_supply_current,
+            'pressure': pressure,
+            'fcup_distance': fcup_distance,
+            'fcup_diameter': fcup_diameter,
+            'power': power,
+        }
+
+        return metadata, data
+
     def _load_v3_csv(self, filepath: str) -> tuple[dict, DataFrame]:
-        # Load in the metadata from the csv file.
+        """
+        Load in metadata from beam scan.
+        v3 adds RF power data.
+        """
         df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=13, usecols=[1])
 
         csv_version: str = str(df.iloc[0, 0])
@@ -155,7 +216,10 @@ class BeamScan:
         return metadata, data
 
     def _load_v2_csv(self, filepath: str) -> tuple[dict, DataFrame]:
-        # Load in the metadata from the csv file.
+        """
+        Load in metadata from beam scan.
+        v2 adds beam supply current, pressure, and f-cup data.
+        """
         df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=12, usecols=[1])
 
         csv_version: str = str(df.iloc[0, 0])
@@ -583,6 +647,11 @@ class BeamScan:
     def extractor_voltage(self) -> float:
         """GETTER: Gets the extractor voltage setting in kilovolts."""
         return self._metadata['extractor_voltage']
+
+    @property
+    def lens_voltage(self) -> float:
+        """GETTER: Gets the lens voltage setting in kilovolts."""
+        return self._metadata['lens_voltage']
 
     @property
     def solenoid_current(self) -> float:
