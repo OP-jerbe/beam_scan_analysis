@@ -118,7 +118,7 @@ class BeamScan:
         v4 adds lens voltage data.
         """
 
-        df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=13, usecols=[1])
+        df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=14, usecols=[1])
 
         csv_version: str = str(df.iloc[0, 0])
         serial_number = str(df.iloc[1, 0])
@@ -145,7 +145,7 @@ class BeamScan:
             power = int(power)
 
         # Get the scan data (y, x, cup current, screen current)
-        data: pd.DataFrame = pd.read_csv(filepath, skiprows=13)
+        data: pd.DataFrame = pd.read_csv(filepath, skiprows=14)
 
         metadata: dict = {
             'csv_version': csv_version,
@@ -179,6 +179,7 @@ class BeamScan:
         step_size = float(pd.to_numeric(df.iloc[3, 0]))
         beam_voltage = float(str(df.iloc[4, 0]))
         extractor_voltage = float(str(df.iloc[5, 0]))
+        lens_voltage = float('nan')
         solenoid_current = float(str(df.iloc[6, 0]))
         test_stand = str(df.iloc[7, 0]).replace('nan', '')
         beam_supply_current = float(pd.to_numeric(df.iloc[8, 0]))
@@ -204,6 +205,7 @@ class BeamScan:
             'step_size': step_size,
             'beam_voltage': beam_voltage,
             'extractor_voltage': extractor_voltage,
+            'lens_voltage': lens_voltage,
             'solenoid_current': solenoid_current,
             'test_stand': test_stand,
             'beam_supply_current': beam_supply_current,
@@ -228,6 +230,7 @@ class BeamScan:
         step_size = float(pd.to_numeric(df.iloc[3, 0]))
         beam_voltage = float(str(df.iloc[4, 0]))
         extractor_voltage = float(str(df.iloc[5, 0]))
+        lens_voltage = float('nan')
         solenoid_current = float(str(df.iloc[6, 0]))
         test_stand = str(df.iloc[7, 0]).replace('nan', '')
         beam_supply_current = float(pd.to_numeric(df.iloc[8, 0]))
@@ -251,6 +254,7 @@ class BeamScan:
             'step_size': step_size,
             'beam_voltage': beam_voltage,
             'extractor_voltage': extractor_voltage,
+            'lens_voltage': lens_voltage,
             'solenoid_current': solenoid_current,
             'test_stand': test_stand,
             'beam_supply_current': beam_supply_current,
@@ -276,6 +280,7 @@ class BeamScan:
         step_size = float(pd.to_numeric(df.iloc[3, 0]))
         beam_voltage = float(str(df.iloc[4, 0]))
         extractor_voltage = float(str(df.iloc[5, 0]))
+        lens_voltage = float('nan')
         solenoid_current = float(str(df.iloc[6, 0]))
         test_stand = str(df.iloc[7, 0]).replace('nan', '')
         beam_supply_current = float('nan')
@@ -299,6 +304,7 @@ class BeamScan:
             'step_size': step_size,
             'beam_voltage': beam_voltage,
             'extractor_voltage': extractor_voltage,
+            'lens_voltage': lens_voltage,
             'solenoid_current': solenoid_current,
             'test_stand': test_stand,
             'beam_supply_current': beam_supply_current,
@@ -358,6 +364,7 @@ class BeamScan:
         pressure_data = pressure_data.replace('#Chamber Pressure:  ', '')  # mBar
         pressure = float(pressure_data)
 
+        lens_voltage = float('nan')
         solenoid_current = float('nan')
         test_stand = ''
         fcup_distance = float('nan')
@@ -388,6 +395,7 @@ class BeamScan:
             'step_size': step_size,
             'beam_voltage': beam_voltage,
             'extractor_voltage': extractor_voltage,
+            'lens_voltage': lens_voltage,
             'solenoid_current': solenoid_current,
             'test_stand': test_stand,
             'beam_supply_current': beam_supply_current,
