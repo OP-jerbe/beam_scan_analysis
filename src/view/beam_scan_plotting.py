@@ -198,7 +198,7 @@ class Heatmap(Plotter):
             yref='paper',
             text=f'Cup current = {self.bs.peak_cup_current:.1f} nA <br>'
             f'Total current = {self.bs.peak_total_current:.3f} µA <br>'
-            f'Settings = {self.inputs["beam_voltage"]}/{self.inputs["ext_voltage"]} kV & {self.inputs["solenoid_current"]} A',
+            f'Settings = {self.inputs["beam_voltage"]}/{self.inputs["ext_voltage"]}/{self.inputs["lens_voltage"]} kV & {self.inputs["solenoid_current"]} A',
             showarrow=False,
             align='left',
             xanchor='left',
