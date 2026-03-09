@@ -120,6 +120,7 @@ class MainWindow(QMainWindow):
             'test_stand': self.test_stand_input.text().strip(),
             'beam_voltage': self.beam_voltage_input.text().strip(),
             'ext_voltage': self.ext_voltage_input.text().strip(),
+            'lens_voltage': self.lens_voltage_input.text().strip(),
             'power': self.power_input.text().strip(),
             'solenoid_current': self.solenoid_current_input.text().strip(),
             'z_scale_low': lower_bound,
