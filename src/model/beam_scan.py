@@ -27,6 +27,8 @@ class BeamScan:
 
         csv_version = self._check_version(filepath)
         match csv_version:
+            case 5:
+                self._metadata, self._data = self._load_v5_csv(filepath)
             case 4:
                 self._metadata, self._data = self._load_v4_csv(filepath)
             case 3:
@@ -99,6 +101,8 @@ class BeamScan:
             df: pd.DataFrame = pd.read_csv(filepath, header=None, usecols=[1], nrows=1)
             csv_version: str = str(df.iloc[0, 0])
         match csv_version:
+            case '5':
+                return 5
             case '4':
                 return 4
             case '3':
@@ -111,6 +115,50 @@ class BeamScan:
                 return 0
             case _:
                 raise pd.errors.ParserError('Could not determine csv version.')
+
+    def _load_v5_csv(self, filepath: str) -> tuple[dict, DataFrame]:
+        """
+        Load in metadata from beam scan.
+        v5 loads in custom beam scan.
+        """
+
+        df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=3, usecols=[1])
+
+        csv_version: str = str(df.iloc[0, 0])
+        serial_number = ''
+        scan_datetime = str(df.iloc[1, 0])
+        step_size = float(pd.to_numeric(df.iloc[2, 0]))
+        beam_voltage = 0.0
+        extractor_voltage = 0.0
+        lens_voltage = 0.0
+        solenoid_current = 0.0
+        test_stand = ''
+        beam_supply_current = 0.0
+        pressure = 0.0
+        fcup_distance = 205
+        fcup_diameter = 2.5
+        power = 0.0
+
+        data: pd.DataFrame = pd.read_csv(filepath, skiprows=3)
+
+        metadata: dict = {
+            'csv_version': csv_version,
+            'serial_number': serial_number,
+            'scan_datetime': scan_datetime,
+            'step_size': step_size,
+            'beam_voltage': beam_voltage,
+            'extractor_voltage': extractor_voltage,
+            'lens_voltage': lens_voltage,
+            'solenoid_current': solenoid_current,
+            'test_stand': test_stand,
+            'beam_supply_current': beam_supply_current,
+            'pressure': pressure,
+            'fcup_distance': fcup_distance,
+            'fcup_diameter': fcup_diameter,
+            'power': power,
+        }
+
+        return metadata, data
 
     def _load_v4_csv(self, filepath: str) -> tuple[dict, DataFrame]:
         """
