@@ -233,7 +233,7 @@ class Heatmap(Plotter):
             ),
             yaxis=dict(
                 title='Y Location',
-                range=[self.bs.grid_x.max(), self.bs.grid_x.min()],
+                range=[self.bs.grid_y.max(), self.bs.grid_y.min()],
                 scaleanchor='x',
                 showgrid=True,
                 autorange=False,
