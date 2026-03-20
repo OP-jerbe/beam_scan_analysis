@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
     plot_i_prime_sig = Signal(dict)
     export_to_csv_sig = Signal(str, dict)
     override_centroid_sig = Signal(tuple)
-    disable_interp_sig = Signal(bool)
+    enable_interp_sig = Signal(bool)
     save_html_figure_sig = Signal(str, dict)
     save_png_figure_sig = Signal(str, dict)
     open_quick_start_guide_sig = Signal()
@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
         self.plot_button.clicked.connect(self.plot_beam_scan_handler)
         self.export_csv_option.triggered.connect(self.export_to_csv_handler)
         self.override_centroid_option.triggered.connect(self.override_centroid_handler)
-        self.disable_interp_option.triggered.connect(self.disable_interp_handler)
+        self.enable_interp_option.triggered.connect(self.enable_interp_handler)
         self.exit_option.triggered.connect(QApplication.quit)
         self.save_3D_surface_option.triggered.connect(self.save_3d_surface_html_handler)
         self.save_heatmap_option.triggered.connect(self.save_heatmap_html_handler)
@@ -189,9 +189,9 @@ class MainWindow(QMainWindow):
         else:
             self.centroid_coords = self.model.bs.weighted_centroid
 
-    def disable_interp_handler(self) -> None:
-        checked: bool = self.disable_interp_option.isChecked()
-        self.disable_interp_sig.emit(checked)
+    def enable_interp_handler(self) -> None:
+        checked: bool = self.enable_interp_option.isChecked()
+        self.enable_interp_sig.emit(checked)
 
     def save_3d_surface_html_handler(self) -> None:
         dir: Path = self._default_dir
@@ -321,9 +321,9 @@ class MainWindow(QMainWindow):
         self.override_centroid_option = QAction('Override Centroid', self)
         self.override_centroid_option.setCheckable(True)
         self.override_centroid_option.setEnabled(False)
-        self.disable_interp_option = QAction('Disable Interpolation', self)
-        self.disable_interp_option.setCheckable(True)
-        self.disable_interp_option.setEnabled(False)
+        self.enable_interp_option = QAction('Enable Interpolation', self)
+        self.enable_interp_option.setCheckable(True)
+        self.enable_interp_option.setEnabled(False)
         self.save_3D_surface_option = QAction('Save 3D Surface', self)
         self.save_3D_surface_option.setEnabled(False)
         self.save_heatmap_option = QAction('Save Heatmap', self)
@@ -342,7 +342,7 @@ class MainWindow(QMainWindow):
         self.file_menu.addAction(self.export_csv_option)
         self.file_menu.addAction(self.exit_option)
         self.options_menu.addAction(self.override_centroid_option)
-        self.options_menu.addAction(self.disable_interp_option)
+        self.options_menu.addAction(self.enable_interp_option)
         self.save_menu.addAction(self.save_3D_surface_option)
         self.save_menu.addAction(self.save_heatmap_option)
         self.save_menu.addAction(self.save_xy_profiles_option)
@@ -611,12 +611,12 @@ class MainWindow(QMainWindow):
             self.override_centroid_option.setChecked(False)
 
         # Activate the disable interpolation option
-        if not self.disable_interp_option.isEnabled():
-            self.disable_interp_option.setEnabled(True)
+        if not self.enable_interp_option.isEnabled():
+            self.enable_interp_option.setEnabled(True)
 
         # Uncheck disable interpolation option when new data is loaded
-        if self.disable_interp_option.isChecked():
-            self.disable_interp_option.setChecked(False)
+        if self.enable_interp_option.isChecked():
+            self.enable_interp_option.setChecked(False)
 
         # Activate the save options
         if not self.save_3D_surface_option.isEnabled():

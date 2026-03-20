@@ -40,12 +40,12 @@ class BeamScan:
             case 0:
                 self._metadata, self._data = self._load_v0_csv(filepath)
 
-        # Generate the interpolated grid
-        self.create_grid(self.interp_num)
+        # Generate the grid
+        self.create_grid()
 
-    def create_grid(self, interp_num: int | None) -> None:
+    def create_grid(self, interp_num: int | None = None) -> None:
         """
-        Create the interpolated meshgrid from the scan data.
+        Create the meshgrid from the scan data.
 
         Args:
             interp_num (int | None): The number of points on each axis of the grid.

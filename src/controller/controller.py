@@ -43,7 +43,7 @@ class Controller(QObject):
         )
         self.view.plot_i_prime_sig.connect(self.receive_plot_i_prime_sig)
         self.view.export_to_csv_sig.connect(self.receive_export_to_csv_sig)
-        self.view.disable_interp_sig.connect(self.receive_disable_interp_sig)
+        self.view.enable_interp_sig.connect(self.receive_enable_interp_sig)
         self.view.save_html_figure_sig.connect(self.receive_save_html_figure_sig)
         self.view.save_png_figure_sig.connect(self.receive_save_png_figure_sig)
         self.view.folder_path_sig.connect(self.receive_folder_path_sig)
@@ -57,14 +57,14 @@ class Controller(QObject):
     def receive_load_scan_data_sig(self, filepath: str) -> None:
         self.model.load_scan_data(filepath)
 
-    # --- Disable Interpolation ---
+    # --- Enable Interpolation ---
 
     @Slot()
-    def receive_disable_interp_sig(self, checked: bool) -> None:
+    def receive_enable_interp_sig(self, checked: bool) -> None:
         if checked:
-            self.model.create_grid(interp_num=None)
-        else:
             self.model.create_grid(interp_num=self.model.bs.interp_num)
+        else:
+            self.model.create_grid(interp_num=None)
 
     # --- Export to data to csv ---
 
