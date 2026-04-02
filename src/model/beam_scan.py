@@ -119,7 +119,7 @@ class BeamScan:
     def _load_v5_csv(self, filepath: str) -> tuple[dict, DataFrame]:
         """
         Load in metadata from beam scan.
-        v5 loads in custom beam scan.
+        v5 loads in beam scan data generated from Stage Controller project.
         """
 
         df: pd.DataFrame = pd.read_csv(filepath, header=None, nrows=3, usecols=[1])
