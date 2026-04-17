@@ -766,8 +766,14 @@ class BeamScan:
     def polarity(self) -> str:
         if self._metadata['beam_voltage'] < 0:
             return 'NEG'
-        else:
+        elif self._metadata['beam_voltage'] >= 0:
             return 'POS'
+        else:
+            # No beam voltage metadata. Calculate.
+            if self.cup_current.sum() >= 0:
+                return 'POS'
+            else:
+                return 'NEG'
 
     @property
     def peak_cup_current(self) -> float:
